@@ -1531,7 +1531,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <button class="btn btn-sage" onclick="showView('onboarding')" style="font-size:.75rem;padding:6px 14px">+ Nouveau dossier</button>
-              <span class="card-action" onclick="showView('onboarding')">Voir tout</span>
+              <span class="card-action" onclick="showView('dossiers')">Voir tout</span>
             </div>
           </div>
           <!-- Table head -->
@@ -1546,7 +1546,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
           <!-- Dynamic rows -->
           <div id="dossiers-table-body"></div>
           <div style="padding:12px 20px;border-top:1px solid var(--border)">
-            <button class="btn btn-outline" id="btn-all-dossiers" style="width:100%;justify-content:center;font-size:.78rem" onclick="showView('onboarding')">Afficher tous les dossiers →</button>
+            <button class="btn btn-outline" id="btn-all-dossiers" style="width:100%;justify-content:center;font-size:.78rem" onclick="showView('dossiers')">Afficher tous les dossiers →</button>
           </div>
         </div>
 
@@ -1606,30 +1606,12 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
             <div class="card-head">
               <div class="card-head-left">
                 <span class="card-head-icon">📅</span>
-                <span class="card-title">Agenda — Mars 2026</span>
+                <span class="card-title"><span id="cal-title">Agenda</span></span>
               </div>
               <span class="card-action" onclick="alert('→ Agenda complet')">Voir tout</span>
             </div>
-            <div class="cal-grid">
-              <div class="cal-day-name">L</div><div class="cal-day-name">M</div><div class="cal-day-name">M</div>
-              <div class="cal-day-name">J</div><div class="cal-day-name">V</div><div class="cal-day-name">S</div><div class="cal-day-name">D</div>
-              <div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day empty"></div>
-              <div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day">1</div><div class="cal-day">2</div>
-              <div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day has-event">5</div>
-              <div class="cal-day has-event">6</div><div class="cal-day has-event">7</div><div class="cal-day">8</div><div class="cal-day">9</div>
-              <div class="cal-day">10</div><div class="cal-day">11</div><div class="cal-day has-event">12</div>
-              <div class="cal-day">13</div><div class="cal-day has-event">14</div><div class="cal-day">15</div><div class="cal-day">16</div>
-              <div class="cal-day">17</div><div class="cal-day">18</div><div class="cal-day has-event">19</div>
-              <div class="cal-day has-event">20</div><div class="cal-day">21</div><div class="cal-day">22</div><div class="cal-day">23</div>
-              <div class="cal-day">24</div><div class="cal-day">25</div><div class="cal-day today has-event">26</div>
-              <div class="cal-day has-event">27</div><div class="cal-day">28</div><div class="cal-day">29</div><div class="cal-day">30</div>
-              <div class="cal-day">31</div>
-            </div>
-            <div class="cal-event-list">
-              <div class="cal-event"><div class="cal-event-dot" style="background:var(--danger-fg)"></div><div class="cal-event-text">Renouvellement doc. DURAND</div><div class="cal-event-time">Urgent</div></div>
-              <div class="cal-event"><div class="cal-event-dot" style="background:var(--warn-fg)"></div><div class="cal-event-text">Revue KYC ATLAS Holdings</div><div class="cal-event-time">Auj.</div></div>
-              <div class="cal-event"><div class="cal-event-dot" style="background:var(--sage)"></div><div class="cal-event-text">Screening FIBEX Management</div><div class="cal-event-time">31 mars</div></div>
-            </div>
+            <div id="cal-grid-dynamic"></div>
+            <div id="cal-event-list-dynamic"></div>
           </div>
 
         </div>
@@ -1757,13 +1739,13 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
   <nav class="sidebar-nav">
     <div class="nav-section">Principal</div>
     <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
-    <div class="nav-item active"><span class="nav-icon">📁</span> Dossiers clients</div>
-    <div class="nav-item"><span class="nav-icon">🔍</span> Screening KYC</div>
-    <div class="nav-item"><span class="nav-icon">📋</span> Questionnaire OAL</div>
+    <div class="nav-item active" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients</div>
+    <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
+    <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
     <div class="nav-section" style="margin-top:10px">Compliance</div>
-    <div class="nav-item"><span class="nav-icon">📊</span> Journal d'audit</div>
-    <div class="nav-item"><span class="nav-icon">⚠️</span> Alertes <span style="margin-left:auto;background:var(--danger-fg);color:white;font-size:.6rem;padding:1px 6px;border-radius:99px">3</span></div>
-    <div class="nav-item"><span class="nav-icon">📈</span> Rapports</div>
+    <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
+    <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">⚠️</span> Alertes <span style="margin-left:auto;background:var(--danger-fg);color:white;font-size:.6rem;padding:1px 6px;border-radius:99px">3</span></div>
+    <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📈</span> Rapports</div>
     <div class="nav-section" style="margin-top:10px">Cabinet</div>
     <div class="nav-item"><span class="nav-icon">👥</span> Collaborateurs</div>
     <div class="nav-item"><span class="nav-icon">⚙️</span> Paramètres</div>
@@ -3931,6 +3913,7 @@ function initDashboardFromDB() {
   renderDossiersTable();
   renderAlerts();
   updateHeroBand();
+  renderCalendar();
 }
 
 // ══ HEURES & FACTURATION ══
@@ -4044,6 +4027,15 @@ function viewDossier(ref) {
   const totalH = dossierHours.reduce((s,e) => s + e.hours, 0);
   const totalA = dossierHours.reduce((s,e) => s + e.amount, 0);
 
+  // Notes for this dossier
+  const dossierNotes = DB.load('dossier-notes-' + ref, []);
+  const notesHtml = dossierNotes.length > 0
+    ? dossierNotes.map(n => `<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px dashed var(--border);font-size:.78rem">
+        <span style="font-weight:600;color:var(--charcoal);white-space:nowrap">${n.date}</span>
+        <span style="color:var(--mid);flex:1">${n.text}</span>
+      </div>`).join('')
+    : '<div style="font-size:.78rem;color:var(--light);padding:8px 0">Aucune note pour ce dossier.</div>';
+
   content.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Client</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.clientName}</div></div>
@@ -4055,19 +4047,328 @@ function viewDossier(ref) {
       <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Statut</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${statusLabel}</div></div>
       <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Date</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${dateStr}</div></div>
     </div>
-    <div style="background:var(--info-bg);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between">
+    <div style="background:var(--info-bg);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div><div style="font-size:.68rem;font-weight:700;color:var(--info-fg);text-transform:uppercase;letter-spacing:.06em">Heures encodées</div><div style="font-size:.72rem;color:var(--mid);margin-top:2px">${dossierHours.length} entrée(s)</div></div>
       <div style="display:flex;gap:16px;align-items:center">
         <span style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)">${totalH}h</span>
         <span style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--ok-fg)">${Math.round(totalA).toLocaleString('fr-FR')} €</span>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);margin-bottom:8px">Changer le statut</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="changeDossierStatus('${ref}','actif');viewDossier('${ref}')">✅ Activer</button>
+        <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="changeDossierStatus('${ref}','suspendu');viewDossier('${ref}')">⏸ Suspendre</button>
+        <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="changeDossierStatus('${ref}','archive');viewDossier('${ref}')">📦 Archiver</button>
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);margin-bottom:8px">Notes</div>
+      ${notesHtml}
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input type="text" id="dm-note-input" placeholder="Ajouter une note..." style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Figtree',sans-serif;font-size:.82rem;outline:none"/>
+        <button class="btn btn-sage" style="font-size:.78rem;padding:7px 14px" onclick="addDossierNote('${ref}')">Ajouter</button>
       </div>
     </div>`;
 
   modal.classList.remove('hidden');
 }
 
+function addDossierNote(ref) {
+  const input = document.getElementById('dm-note-input');
+  const text = input?.value?.trim();
+  if(!text) return;
+  const notes = DB.load('dossier-notes-' + ref, []);
+  notes.unshift({ text, date: new Date().toLocaleDateString('fr-LU', {day:'numeric', month:'short', year:'numeric'}), createdAt: new Date().toISOString() });
+  DB.save('dossier-notes-' + ref, notes);
+  DB.addAudit({ type:'note', dot:'var(--info-fg)', title:'📝 Note ajoutée — ' + ref, detail: text, tags:[{t:'Note',c:'b'}] });
+  showToast('Note ajoutée','Note enregistrée pour ' + ref, 'ok', '📝');
+  viewDossier(ref);
+}
+
 function closeDossierModal() {
   document.getElementById('dossier-modal').classList.add('hidden');
+}
+
+// ══ DOSSIERS LIST VIEW ══
+let dossiersSearch = '';
+let dossiersStatusFilter = 'all';
+let dossiersScopeFilter = 'all';
+let dossiersSort = 'date-desc';
+let dossiersPage = 1;
+const DOSSIERS_PER_PAGE = 20;
+
+function renderDossiersList() {
+  let dossiers = DB.getDossiers();
+  const allDossiers = dossiers.slice();
+
+  // Filters
+  if(dossiersSearch) {
+    const q = dossiersSearch.toLowerCase();
+    dossiers = dossiers.filter(d => d.clientName.toLowerCase().includes(q) || d.ref.toLowerCase().includes(q) || (d.missionLabel||'').toLowerCase().includes(q));
+  }
+  if(dossiersStatusFilter !== 'all') {
+    dossiers = dossiers.filter(d => d.status === dossiersStatusFilter);
+  }
+  if(dossiersScopeFilter !== 'all') {
+    dossiers = dossiers.filter(d => dossiersScopeFilter === 'in' ? d.inScope : !d.inScope);
+  }
+
+  // Sort
+  if(dossiersSort === 'date-desc') dossiers.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  else if(dossiersSort === 'date-asc') dossiers.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+  else if(dossiersSort === 'name-asc') dossiers.sort((a,b) => a.clientName.localeCompare(b.clientName));
+
+  // Stats
+  const el = id => document.getElementById(id);
+  if(el('ds-total')) el('ds-total').textContent = allDossiers.length;
+  if(el('ds-actifs')) el('ds-actifs').textContent = allDossiers.filter(d => d.status === 'actif').length;
+  if(el('ds-suspendus')) el('ds-suspendus').textContent = allDossiers.filter(d => d.status === 'suspendu').length;
+  if(el('ds-inscope')) el('ds-inscope').textContent = allDossiers.filter(d => d.inScope).length;
+  if(el('ds-outscope')) el('ds-outscope').textContent = allDossiers.filter(d => !d.inScope).length;
+
+  // Results count
+  const countEl = el('dossiers-results-count');
+  if(countEl) countEl.textContent = dossiers.length + ' dossier(s) trouvé(s)' + (dossiers.length !== allDossiers.length ? ' sur ' + allDossiers.length : '');
+
+  // Paginate
+  const paginated = dossiers.slice(0, dossiersPage * DOSSIERS_PER_PAGE);
+  const loadMoreBtn = el('dossiers-load-more');
+  if(loadMoreBtn) loadMoreBtn.style.display = paginated.length < dossiers.length ? '' : 'none';
+
+  const container = el('dossiers-list-body');
+  if(!container) return;
+
+  if(dossiers.length === 0) {
+    container.innerHTML = '<div style="padding:32px 20px;text-align:center;color:var(--light)"><div style="font-size:2rem;margin-bottom:8px">📂</div><div style="font-size:.85rem;font-weight:600;margin-bottom:4px">Aucun dossier trouvé</div><div style="font-size:.76rem">Modifiez vos filtres ou créez un nouveau dossier.</div></div>';
+    return;
+  }
+
+  container.innerHTML = paginated.map(d => {
+    const initials = getInitials(d.clientName);
+    const isAlert = d.status === 'suspendu' || d.status === 'refuse' || d.screeningResult === 'alerte';
+    const vigPill = d.vigilance === 'renforcee' ? '<span class="pill vig-r">🔴 Renforcée</span>' :
+                    d.vigilance === 'normal-plus' ? '<span class="pill vig-w">🟡 Normale+</span>' :
+                    d.vigilance === 'normal' ? '<span class="pill vig-n">🟢 Normale</span>' :
+                    '<span class="pill" style="background:var(--cream2);color:var(--light)">—</span>';
+    const scPill = d.screeningResult === 'negatif' ? '<span class="pill sc-ok">✓ Négatif</span>' :
+                   d.screeningResult === 'alerte' ? '<span class="pill" style="background:var(--danger-bg);color:var(--danger-fg)">⚠ Alerte</span>' :
+                   '<span class="pill sc-pend">⏳ Planifié</span>';
+    const statusPill = d.status === 'actif' ? '<span class="pill in">Actif</span>' :
+                       d.status === 'suspendu' ? '<span class="pill vig-w">Suspendu</span>' :
+                       d.status === 'refuse' ? '<span class="pill vig-r">Refusé</span>' :
+                       d.status === 'archive' ? '<span class="pill out">Archivé</span>' :
+                       '<span class="pill out">' + (d.status||'—') + '</span>';
+    const dateStr = new Date(d.createdAt).toLocaleDateString('fr-LU', {day:'numeric', month:'short'});
+    return `<div class="dos-row${isAlert?' alert-row':''}" style="grid-template-columns:2fr 1.2fr 70px 90px 90px 80px 70px 90px;cursor:pointer" onclick="viewDossier('${d.ref}')">
+      <div class="dos-client"><div class="dos-av ${d.clientType}">${initials}</div><div><div class="dos-name">${d.clientName}</div><div class="dos-ref">${d.ref}</div></div></div>
+      <div class="dos-mission">${d.missionLabel || d.missionLabels?.[0] || '—'}</div>
+      <div><span class="pill ${d.inScope?'in':'out'}">${d.inScope?'IN':'OUT'}</span></div>
+      <div>${vigPill}</div>
+      <div>${scPill}</div>
+      <div>${statusPill}</div>
+      <div class="dos-date">${dateStr}</div>
+      <div style="display:flex;gap:4px;align-items:center">
+        <button class="btn btn-outline" style="font-size:.65rem;padding:4px 8px" onclick="event.stopPropagation();viewDossier('${d.ref}')" title="Détail">👁</button>
+        <button class="btn btn-outline" style="font-size:.65rem;padding:4px 8px" onclick="event.stopPropagation();openHoursModal();setTimeout(()=>{document.getElementById('hours-dossier').value='${d.ref}'},100)" title="Heures">⏱</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function dossiersLoadMore() {
+  dossiersPage++;
+  renderDossiersList();
+}
+
+function filterDossiersList() {
+  dossiersSearch = (document.getElementById('dossiers-search')?.value || '').trim();
+  dossiersStatusFilter = document.getElementById('dossiers-status-filter')?.value || 'all';
+  dossiersScopeFilter = document.getElementById('dossiers-scope-filter')?.value || 'all';
+  dossiersSort = document.getElementById('dossiers-sort')?.value || 'date-desc';
+  dossiersPage = 1;
+  renderDossiersList();
+}
+
+function exportDossiersCSV() {
+  const dossiers = DB.getDossiers();
+  if(dossiers.length === 0) { showToast('Export impossible','Aucun dossier à exporter','warn','⚠️'); return; }
+  const headers = ['Ref','Client','Type','Mission','Scope','Vigilance','Screening','Decision','Status','Date'];
+  const rows = dossiers.map(d => [
+    d.ref,
+    '"' + (d.clientName||'').replace(/"/g,'""') + '"',
+    d.clientType === 'pp' ? 'Personne physique' : 'Personne morale',
+    '"' + (d.missionLabel || d.missionLabels?.[0] || '').replace(/"/g,'""') + '"',
+    d.inScope ? 'IN SCOPE' : 'OUT OF SCOPE',
+    d.vigilance || '',
+    d.screeningResult || '',
+    d.decision || '',
+    d.status || '',
+    d.createdAt ? new Date(d.createdAt).toISOString().split('T')[0] : ''
+  ].join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'norvy_dossiers_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Export CSV','Fichier CSV téléchargé avec ' + dossiers.length + ' dossier(s)','ok','📥');
+  DB.addAudit({type:'export',dot:'var(--info-fg)',title:'📥 Export CSV dossiers',detail:dossiers.length + ' dossiers exportés',tags:[{t:'CSV',c:'b'}]});
+}
+
+function exportBackupJSON() {
+  const backup = {};
+  const keys = ['dossiers','users','auditLog','screenings','hours','settings','refCounter'];
+  keys.forEach(k => { const v = localStorage.getItem('norvy_' + k); if(v) backup[k] = JSON.parse(v); });
+  // Also grab any dossier notes
+  for(let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if(key && key.startsWith('norvy_dossier-notes-')) {
+      backup[key.replace('norvy_','')] = JSON.parse(localStorage.getItem(key));
+    }
+  }
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'norvy_backup_' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Backup JSON','Sauvegarde complète téléchargée','ok','💾');
+  DB.addAudit({type:'export',dot:'var(--info-fg)',title:'💾 Backup JSON exporté',detail:'Sauvegarde complète de toutes les données',tags:[{t:'Backup',c:'b'}]});
+}
+
+function importBackupJSON(file) {
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      Object.keys(data).forEach(k => {
+        localStorage.setItem('norvy_' + k, JSON.stringify(data[k]));
+      });
+      showToast('Restauration terminée','Toutes les données ont été restaurées avec succès','ok','✅');
+      DB.addAudit({type:'import',dot:'var(--ok-fg)',title:'📂 Backup restauré',detail:'Données restaurées depuis fichier JSON',tags:[{t:'Import',c:'g'}]});
+      renderDossiersList();
+      initDashboardFromDB();
+    } catch(err) {
+      showToast('Erreur','Fichier JSON invalide','danger','❌');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function changeDossierStatus(ref, newStatus) {
+  const dossiers = DB.getDossiers();
+  const idx = dossiers.findIndex(d => d.ref === ref);
+  if(idx === -1) return;
+  const oldStatus = dossiers[idx].status;
+  dossiers[idx].status = newStatus;
+  DB.saveDossiers(dossiers);
+  const statusLabels = {actif:'Actif',suspendu:'Suspendu',refuse:'Refusé',archive:'Archivé'};
+  DB.addAudit({
+    type:'status',
+    dot: newStatus === 'actif' ? 'var(--ok-fg)' : newStatus === 'suspendu' ? 'var(--warn-fg)' : newStatus === 'archive' ? 'var(--light)' : 'var(--danger-fg)',
+    title:'🔄 Statut modifié — ' + dossiers[idx].clientName,
+    detail: ref + ' · ' + (statusLabels[oldStatus]||oldStatus) + ' → ' + (statusLabels[newStatus]||newStatus),
+    tags:[{t:statusLabels[newStatus]||newStatus, c: newStatus==='actif'?'g':newStatus==='suspendu'?'o':'r'}]
+  });
+  showToast('Statut modifié', dossiers[idx].clientName + ' → ' + (statusLabels[newStatus]||newStatus), 'ok', '🔄');
+  renderDossiersList();
+}
+
+// ══ CALENDRIER DYNAMIQUE ══
+function renderCalendar() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+  // Set title
+  const titleEl = document.getElementById('cal-title');
+  if(titleEl) titleEl.textContent = 'Agenda — ' + monthNames[month] + ' ' + year;
+
+  // Build event days from dossier data
+  const dossiers = DB.getDossiers();
+  const screenings = DB.getScreenings();
+  const eventDays = new Set();
+  const events = [];
+
+  dossiers.forEach(d => {
+    const dt = new Date(d.createdAt);
+    if(dt.getFullYear() === year && dt.getMonth() === month) {
+      eventDays.add(dt.getDate());
+    }
+    // Suspended dossiers = urgent reminders
+    if(d.status === 'suspendu') {
+      events.push({text:'Suivi dossier ' + d.clientName, color:'var(--danger-fg)', time:'Urgent', priority:1});
+      const cdt = new Date(d.createdAt);
+      if(cdt.getFullYear() === year && cdt.getMonth() === month) eventDays.add(cdt.getDate());
+    }
+  });
+
+  screenings.forEach(s => {
+    const dt = new Date(s.date);
+    if(dt.getFullYear() === year && dt.getMonth() === month) {
+      eventDays.add(dt.getDate());
+    }
+  });
+
+  // Add upcoming events based on real data
+  const recentDossiers = dossiers.filter(d => {
+    const dt = new Date(d.createdAt);
+    return dt.getFullYear() === year && dt.getMonth() === month;
+  }).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  recentDossiers.slice(0, 2).forEach(d => {
+    const dt = new Date(d.createdAt);
+    events.push({text:'Revue KYC ' + d.clientName, color:'var(--sage)', time:dt.getDate() + ' ' + monthNames[month].substring(0,3).toLowerCase(), priority:3});
+  });
+
+  // Always mark today
+  eventDays.add(now.getDate());
+
+  // Build calendar grid
+  const firstDay = new Date(year, month, 1).getDay();
+  const startOffset = firstDay === 0 ? 6 : firstDay - 1; // Monday=0
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = now.getDate();
+
+  let gridHtml = '<div class="cal-grid">';
+  const dayNames = ['L','M','M','J','V','S','D'];
+  dayNames.forEach(n => { gridHtml += '<div class="cal-day-name">' + n + '</div>'; });
+  for(let i = 0; i < startOffset; i++) gridHtml += '<div class="cal-day empty"></div>';
+  for(let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === today;
+    const hasEvent = eventDays.has(d);
+    let cls = 'cal-day';
+    if(isToday) cls += ' today';
+    if(hasEvent) cls += ' has-event';
+    gridHtml += '<div class="' + cls + '">' + d + '</div>';
+  }
+  gridHtml += '</div>';
+
+  const gridEl = document.getElementById('cal-grid-dynamic');
+  if(gridEl) gridEl.innerHTML = gridHtml;
+
+  // Sort events by priority
+  events.sort((a,b) => a.priority - b.priority);
+
+  // Build event list
+  let eventsHtml = '<div class="cal-event-list">';
+  if(events.length === 0) {
+    eventsHtml += '<div style="font-size:.78rem;color:var(--light);padding:6px 0">Aucun événement ce mois.</div>';
+  } else {
+    events.slice(0, 4).forEach(ev => {
+      eventsHtml += '<div class="cal-event"><div class="cal-event-dot" style="background:' + ev.color + '"></div><div class="cal-event-text">' + ev.text + '</div><div class="cal-event-time">' + ev.time + '</div></div>';
+    });
+  }
+  eventsHtml += '</div>';
+
+  const evEl = document.getElementById('cal-event-list-dynamic');
+  if(evEl) evEl.innerHTML = eventsHtml;
 }
 
 // ══ DONNÉES DE DÉMONSTRATION ══
@@ -4135,9 +4436,13 @@ window.showView=function(name){
     const oc=n.getAttribute('onclick')||'';
     n.classList.toggle('active',oc.includes(`'${name}'`));
   });
+  if(name==='dossiers'){
+    renderDossiersList();
+  }
   if(name==='dashboard'){
     animateDashboard();
     initDashboardFromDB();
+    renderCalendar();
     setTimeout(()=>{
       const dossiers = DB.getDossiers();
       const screenings = DB.getScreenings();
@@ -4700,7 +5005,7 @@ window.addEventListener('load',()=>{
     <nav class="sidebar-nav">
       <div class="nav-sec">Principal</div>
       <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
-      <div class="nav-item" onclick="showView('onboarding')"><span class="nav-icon">📁</span> Dossiers clients</div>
+      <div class="nav-item" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients</div>
       <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
       <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
       <div class="nav-sec" style="margin-top:10px">Compliance</div>
