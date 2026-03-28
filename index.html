@@ -1200,6 +1200,55 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
 </div>
 <!-- TOASTS -->
 <div class="toast-container" id="toast-container"></div>
+
+<!-- MODAL HEURES -->
+<div class="ctrl-modal hidden" id="hours-modal" onclick="if(event.target===this)closeHoursModal()">
+  <div style="background:white;border-radius:16px;padding:28px 24px;width:100%;max-width:480px;position:relative;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)">Encoder des heures</div>
+      <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="closeHoursModal()">✕</span>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);display:block;margin-bottom:5px">Dossier</label>
+      <select id="hours-dossier" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.85rem;background:white"></select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div>
+        <label style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);display:block;margin-bottom:5px">Heures</label>
+        <input type="number" id="hours-value" min="0.25" max="24" step="0.25" value="1" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.85rem"/>
+      </div>
+      <div>
+        <label style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);display:block;margin-bottom:5px">Date</label>
+        <input type="date" id="hours-date" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.85rem"/>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);display:block;margin-bottom:5px">Description</label>
+      <textarea id="hours-desc" rows="2" placeholder="Analyse documents, rédaction rapport..." style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.85rem;resize:vertical"></textarea>
+    </div>
+    <div style="margin-bottom:18px">
+      <label style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);display:block;margin-bottom:5px">Taux horaire (EUR)</label>
+      <input type="number" id="hours-rate" min="0" step="10" value="250" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.85rem"/>
+    </div>
+    <button onclick="saveHours()" style="width:100%;padding:12px;font-family:'Figtree',sans-serif;font-size:.88rem;font-weight:700;background:linear-gradient(135deg,var(--sage),var(--sage2));color:white;border:none;border-radius:9px;cursor:pointer">Enregistrer les heures</button>
+    <div id="hours-history" style="margin-top:20px"></div>
+  </div>
+</div>
+
+<!-- MODAL DÉTAIL DOSSIER -->
+<div class="ctrl-modal hidden" id="dossier-modal" onclick="if(event.target===this)closeDossierModal()">
+  <div style="background:white;border-radius:16px;padding:28px 24px;width:100%;max-width:560px;position:relative;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)" id="dm-title">Détail du dossier</div>
+      <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="closeDossierModal()">✕</span>
+    </div>
+    <div id="dm-content"></div>
+    <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">
+      <button class="btn btn-sage" style="font-size:.78rem;padding:8px 16px" onclick="openHoursModalForDossier()">⏱ Encoder des heures</button>
+      <button class="btn btn-outline" style="font-size:.78rem;padding:8px 16px" onclick="closeDossierModal()">Fermer</button>
+    </div>
+  </div>
+</div>
 <!-- MODAL CONTRÔLE OAL -->
 <div class="ctrl-modal hidden" id="ctrl-modal">
   <div class="ctrl-card">
@@ -1267,13 +1316,13 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
       <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
       <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
       <div class="nav-sec" style="margin-top:10px">Compliance</div>
-      <div class="nav-item" onclick="alert('→ Journal d\'audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
-      <div class="nav-item" onclick="alert('→ Alertes')"><span class="nav-icon">⚠️</span> Alertes <span class="nav-badge-pill red">3</span></div>
-      <div class="nav-item" onclick="alert('→ Rapports')"><span class="nav-icon">📈</span> Rapports</div>
-      <div class="nav-item" onclick="alert('→ Facturation')"><span class="nav-icon">💶</span> Facturation</div>
+      <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
+      <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">⚠️</span> Alertes <span class="nav-badge-pill red">3</span></div>
+      <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📈</span> Rapports</div>
+      <div class="nav-item" onclick="openHoursModal()"><span class="nav-icon">💶</span> Heures / Facturation</div>
       <div class="nav-sec" style="margin-top:10px">Cabinet</div>
-      <div class="nav-item" onclick="alert('→ Collaborateurs')"><span class="nav-icon">👥</span> Collaborateurs</div>
-      <div class="nav-item" onclick="alert('→ Paramètres')"><span class="nav-icon">⚙️</span> Paramètres</div>
+      <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening global</div>
+      <div class="nav-item" onclick="doLogout()"><span class="nav-icon">⏻</span> Déconnexion</div>
     </nav>
     <div class="sidebar-user">
       <div class="user-av">MD</div>
@@ -1294,7 +1343,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
       </div>
       <div class="topbar-right">
         <button class="btn-ctrl" onclick="startCtrlOAL()" style="margin-right:4px">🏛️ Contrôle OAL</button>
-        <div class="notif-btn" onclick="alert('→ 3 alertes')">🔔<div class="notif-count">3</div></div>
+        <div class="notif-btn" onclick="showView('audit')">🔔<div class="notif-count">3</div></div>
         <span style="font-size:.8rem;color:var(--mid)">Maître Dupont</span>
         <div class="tb-avatar">MD</div>
       </div>
@@ -1335,26 +1384,26 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
             <span class="kpi-sub">31 in scope</span>
           </div>
         </div>
-        <div class="kpi" style="animation-delay:.1s">
+        <div class="kpi" style="animation-delay:.1s" onclick="openHoursModal()">
           <div class="kpi-header">
             <span class="kpi-label">Heures encodées</span>
             <div class="kpi-icon-wrap blue">⏱️</div>
           </div>
-          <div class="kpi-val animated" id="kpi-heures">284</div>
+          <div class="kpi-val animated" id="kpi-heures">0</div>
           <div class="kpi-footer">
-            <span class="kpi-trend up">↑ +32h vs mars dernier</span>
+            <span class="kpi-trend neutral">Cliquez pour encoder</span>
             <span class="kpi-sub">ce mois</span>
           </div>
         </div>
-        <div class="kpi" style="animation-delay:.15s">
+        <div class="kpi" style="animation-delay:.15s" onclick="openHoursModal()">
           <div class="kpi-header">
-            <span class="kpi-label">Facturation du mois</span>
+            <span class="kpi-label">Facturation</span>
             <div class="kpi-icon-wrap gold">💶</div>
           </div>
-          <div class="kpi-val animated" style="font-size:1.55rem" id="kpi-factu">38 450 €</div>
+          <div class="kpi-val animated" style="font-size:1.55rem" id="kpi-factu">0 €</div>
           <div class="kpi-footer">
-            <span class="kpi-trend up">↑ +12% vs fév.</span>
-            <span class="kpi-sub">Objectif : 45 000 €</span>
+            <span class="kpi-trend neutral">Basé sur les heures</span>
+            <span class="kpi-sub">taux horaire</span>
           </div>
         </div>
         <div class="kpi" style="animation-delay:.2s">
@@ -1389,7 +1438,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
           <div class="qa-label">Nouveau dossier client</div>
           <div class="qa-sublabel">Onboarding KYC · 7 étapes</div>
         </div>
-        <div class="qa" style="animation-delay:.1s" onclick="alert('→ Lancer un screening manuel')">
+        <div class="qa" style="animation-delay:.1s" onclick="showView('screening')">
           <span class="qa-icon">🔍</span>
           <div class="qa-label">Lancer un screening</div>
           <div class="qa-sublabel">Vérification sanctions & PPE</div>
@@ -1399,12 +1448,12 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
           <div class="qa-label">Questionnaire OAL</div>
           <div class="qa-sublabel">Générer le PDF annuel</div>
         </div>
-        <div class="qa" style="animation-delay:.2s" onclick="alert('→ Encoder des heures')">
+        <div class="qa" style="animation-delay:.2s" onclick="openHoursModal()">
           <span class="qa-icon">⏱️</span>
           <div class="qa-label">Encoder des heures</div>
           <div class="qa-sublabel">Time tracking & facturation</div>
         </div>
-        <div class="qa" style="animation-delay:.25s" onclick="alert('→ Journal d\'audit complet')">
+        <div class="qa" style="animation-delay:.25s" onclick="showView('audit')">
           <span class="qa-icon">📊</span>
           <div class="qa-label">Journal d'audit</div>
           <div class="qa-sublabel">Historique compliance</div>
@@ -1438,7 +1487,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
         <div class="metric-card" style="animation-delay:.15s">
           <div class="metric-header">
             <div class="metric-title">💶 Facturation — Mars 2026</div>
-            <span class="metric-more" onclick="alert('→ Module facturation')">Détail →</span>
+            <span class="metric-more" onclick="openHoursModal()">Détail →</span>
           </div>
           <div class="factu-amount">38 450 €</div>
           <div class="factu-sub">Objectif mensuel : 45 000 € · Atteinte : 85%</div>
@@ -1455,7 +1504,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
         <div class="metric-card" style="animation-delay:.2s">
           <div class="metric-header">
             <div class="metric-title">⏱️ Heures encodées — Mars 2026</div>
-            <span class="metric-more" onclick="alert('→ Time tracking')">Détail →</span>
+            <span class="metric-more" onclick="openHoursModal()">Détail →</span>
           </div>
           <div class="hours-display">284 h</div>
           <div class="factu-sub">Objectif mensuel : 320h · Atteinte : 89%</div>
@@ -1482,7 +1531,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <button class="btn btn-sage" onclick="showView('onboarding')" style="font-size:.75rem;padding:6px 14px">+ Nouveau dossier</button>
-              <span class="card-action" onclick="alert('→ Liste complète')">Voir tout</span>
+              <span class="card-action" onclick="showView('onboarding')">Voir tout</span>
             </div>
           </div>
           <!-- Table head -->
@@ -1512,7 +1561,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
                 <span class="card-title">Alertes compliance</span>
                 <span class="card-count" style="background:var(--danger-bg);color:var(--danger-fg)">3</span>
               </div>
-              <span class="card-action" onclick="alert('→ Toutes les alertes')">Voir tout</span>
+              <span class="card-action" onclick="showView('audit')">Voir tout</span>
             </div>
             <div class="alert-list" id="alerts-list"></div>
           </div>
@@ -1525,7 +1574,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
                 <span class="card-title">Alertes screening</span>
                 <span class="card-count" style="background:var(--ok-bg);color:var(--ok-fg)">0 alerte</span>
               </div>
-              <span class="card-action" onclick="alert('→ Lancer screening global')">Lancer tout</span>
+              <span class="card-action" onclick="showView('screening')">Lancer tout</span>
             </div>
             <div style="padding:16px 18px;background:var(--ok-bg);margin:12px;border-radius:9px;border:1px solid rgba(61,92,74,.15)">
               <div style="font-size:.83rem;font-weight:700;color:var(--ok-fg);margin-bottom:3px">✅ Aucune correspondance détectée</div>
@@ -1966,9 +2015,9 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
         <div class="next-box" id="r-next"></div>
 
         <div class="btn-row" style="margin-top:22px;justify-content:center;flex-wrap:wrap;gap:10px">
-          <button class="btn btn-success" onclick="alert('→ Module KYC complet')">📋 Compléter le KYC</button>
-          <button class="btn btn-primary" onclick="alert('→ Screening planifié')">🔍 Planifier le screening</button>
-          <button class="btn btn-secondary" onclick="showView('oal')">📋 Voir questionnaire OAL</button>
+          <button class="btn btn-success" onclick="showView('dashboard')">← Tableau de bord</button>
+          <button class="btn btn-primary" onclick="showView('screening')">🔍 Screening KYC</button>
+          <button class="btn btn-secondary" onclick="showView('oal')">📋 Questionnaire OAL</button>
           <button class="btn btn-ghost" onclick="resetAll()">+ Nouveau dossier</button>
         </div>
       </div>
@@ -3703,7 +3752,7 @@ function renderDossiersTable() {
                      d.status === 'refuse' ? ' <span class="dos-alert-tag">🚫 Refusé</span>' :
                      d.screeningResult === 'alerte' ? ' <span class="dos-alert-tag">⚠ Alerte</span>' : '';
     const dateStr = new Date(d.createdAt).toLocaleDateString('fr-LU', {day:'numeric', month:'short'});
-    return `<div class="dos-row${isAlert?' alert-row':''}" onclick="alert('→ Dossier ${d.clientName} ${d.ref}')">
+    return `<div class="dos-row${isAlert?' alert-row':''}" onclick="viewDossier('${d.ref}')">
       <div class="dos-client"><div class="dos-av ${d.clientType}">${initials}</div><div><div class="dos-name">${d.clientName}</div><div class="dos-ref">${d.ref}${alertTag}</div></div></div>
       <div class="dos-mission">${d.missionLabel || d.missionLabels?.[0] || '—'}</div>
       <div><span class="pill ${d.inScope?'in':'out'}">${d.inScope?'IN':'OUT'}</span></div>
@@ -3789,6 +3838,143 @@ function initDashboardFromDB() {
   updateHeroBand();
 }
 
+// ══ HEURES & FACTURATION ══
+function openHoursModal() {
+  const modal = document.getElementById('hours-modal');
+  modal.classList.remove('hidden');
+  document.getElementById('hours-date').value = new Date().toISOString().split('T')[0];
+  // Populate dossier select
+  const sel = document.getElementById('hours-dossier');
+  const dossiers = DB.getDossiers();
+  sel.innerHTML = '<option value="">— Sélectionner un dossier —</option>' +
+    dossiers.map(d => `<option value="${d.ref}">${d.ref} — ${d.clientName}</option>`).join('');
+  renderHoursHistory();
+}
+
+function openHoursModalForDossier() {
+  const ref = document.getElementById('dm-title').dataset.ref;
+  closeDossierModal();
+  openHoursModal();
+  if(ref) document.getElementById('hours-dossier').value = ref;
+}
+
+function closeHoursModal() {
+  document.getElementById('hours-modal').classList.add('hidden');
+}
+
+function saveHours() {
+  const ref = document.getElementById('hours-dossier').value;
+  const hours = parseFloat(document.getElementById('hours-value').value);
+  const date = document.getElementById('hours-date').value;
+  const desc = document.getElementById('hours-desc').value.trim();
+  const rate = parseFloat(document.getElementById('hours-rate').value) || 250;
+
+  if(!ref) { showToast('Erreur','Sélectionnez un dossier','warn','⚠️'); return; }
+  if(!hours || hours <= 0) { showToast('Erreur','Indiquez un nombre d\'heures valide','warn','⚠️'); return; }
+  if(!date) { showToast('Erreur','Indiquez une date','warn','⚠️'); return; }
+
+  const dossier = DB.getDossiers().find(d => d.ref === ref);
+  const entry = { id: Date.now(), ref, clientName: dossier?.clientName || ref, hours, date, desc, rate, amount: Math.round(hours * rate * 100) / 100, createdAt: new Date().toISOString() };
+
+  const allHours = DB.load('hours', []);
+  allHours.unshift(entry);
+  DB.save('hours', allHours);
+
+  DB.addAudit({
+    type: 'kyc',
+    dot: 'var(--info-fg)',
+    title: '⏱ Heures encodées — ' + (dossier?.clientName || ref),
+    detail: hours + 'h · ' + (desc || 'Sans description') + ' · ' + Math.round(entry.amount).toLocaleString('fr-FR') + ' €',
+    tags: [{t: hours + 'h', c:'b'}, {t: Math.round(entry.amount) + ' €', c:'g'}]
+  });
+
+  showToast('Heures enregistrées', hours + 'h pour ' + (dossier?.clientName || ref) + ' · ' + Math.round(entry.amount).toLocaleString('fr-FR') + ' €', 'ok', '⏱');
+  document.getElementById('hours-desc').value = '';
+  document.getElementById('hours-value').value = '1';
+  renderHoursHistory();
+}
+
+function renderHoursHistory() {
+  const container = document.getElementById('hours-history');
+  if(!container) return;
+  const allHours = DB.load('hours', []);
+  const totalHours = allHours.reduce((s, e) => s + e.hours, 0);
+  const totalAmount = allHours.reduce((s, e) => s + e.amount, 0);
+
+  if(allHours.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--light);font-size:.8rem;padding:12px">Aucune heure encodée</div>';
+    return;
+  }
+  container.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:10px 12px;background:var(--sage-pale);border-radius:9px">
+      <div><span style="font-size:.72rem;font-weight:700;color:var(--sage);text-transform:uppercase;letter-spacing:.06em">Total</span></div>
+      <div style="display:flex;gap:16px">
+        <span style="font-size:.88rem;font-weight:700;color:var(--sage)">${totalHours}h</span>
+        <span style="font-size:.88rem;font-weight:700;color:var(--ok-fg)">${Math.round(totalAmount).toLocaleString('fr-FR')} €</span>
+      </div>
+    </div>
+    <div style="font-size:.72rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Dernières entrées</div>
+    ${allHours.slice(0, 8).map(e => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:.78rem">
+      <span style="font-weight:700;color:var(--charcoal);min-width:32px">${e.hours}h</span>
+      <div style="flex:1;min-width:0"><div style="font-weight:600;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.clientName}</div><div style="color:var(--light);font-size:.72rem">${e.desc || 'Sans description'} · ${e.date}</div></div>
+      <span style="font-weight:600;color:var(--ok-fg);white-space:nowrap">${Math.round(e.amount).toLocaleString('fr-FR')} €</span>
+    </div>`).join('')}`;
+}
+
+function getTotalHours() {
+  return DB.load('hours', []).reduce((s, e) => s + e.hours, 0);
+}
+
+function getTotalBilling() {
+  return DB.load('hours', []).reduce((s, e) => s + e.amount, 0);
+}
+
+// ══ DÉTAIL DOSSIER ══
+function viewDossier(ref) {
+  const d = DB.getDossiers().find(d => d.ref === ref);
+  if(!d) return;
+  const modal = document.getElementById('dossier-modal');
+  const title = document.getElementById('dm-title');
+  const content = document.getElementById('dm-content');
+  title.textContent = d.ref + ' — ' + d.clientName;
+  title.dataset.ref = ref;
+
+  const vigLabel = d.vigilance === 'renforcee' ? '🔴 Renforcée' : d.vigilance === 'normal-plus' ? '🟡 Normale+' : d.vigilance === 'normal' ? '🟢 Normale' : '—';
+  const statusLabel = d.status === 'actif' ? '✅ Actif' : d.status === 'suspendu' ? '⏸ Suspendu' : d.status === 'refuse' ? '🚫 Refusé' : d.status;
+  const scLabel = d.screeningResult === 'negatif' ? '✅ Négatif' : d.screeningResult === 'alerte' ? '⚠️ Alerte' : '⏳ Non effectué';
+  const dateStr = new Date(d.createdAt).toLocaleDateString('fr-LU', {day:'numeric', month:'long', year:'numeric'});
+
+  // Hours for this dossier
+  const dossierHours = DB.load('hours', []).filter(h => h.ref === ref);
+  const totalH = dossierHours.reduce((s,e) => s + e.hours, 0);
+  const totalA = dossierHours.reduce((s,e) => s + e.amount, 0);
+
+  content.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Client</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.clientName}</div></div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Type</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.clientType === 'pp' ? '👤 Personne physique' : '🏢 Personne morale'}</div></div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Mission</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.missionLabel || d.missionLabels?.[0] || '—'}</div></div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Scope</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.inScope ? '✅ IN SCOPE' : '⚡ OUT OF SCOPE'}</div></div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Vigilance</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${vigLabel}</div></div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Screening</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${scLabel}</div></div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Statut</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${statusLabel}</div></div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Date</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${dateStr}</div></div>
+    </div>
+    <div style="background:var(--info-bg);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between">
+      <div><div style="font-size:.68rem;font-weight:700;color:var(--info-fg);text-transform:uppercase;letter-spacing:.06em">Heures encodées</div><div style="font-size:.72rem;color:var(--mid);margin-top:2px">${dossierHours.length} entrée(s)</div></div>
+      <div style="display:flex;gap:16px;align-items:center">
+        <span style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)">${totalH}h</span>
+        <span style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--ok-fg)">${Math.round(totalA).toLocaleString('fr-FR')} €</span>
+      </div>
+    </div>`;
+
+  modal.classList.remove('hidden');
+}
+
+function closeDossierModal() {
+  document.getElementById('dossier-modal').classList.add('hidden');
+}
+
 // ══ DONNÉES DE DÉMONSTRATION ══
 function seedDemoData() {
   if(DB.getDossiers().length > 0) return;
@@ -3813,6 +3999,16 @@ function seedDemoData() {
     { ref:'NRV-2026-1005', clientName:'MARTIN Paul-Henri', result:'negatif', lists:6, date:new Date(now-6*86400000).toISOString() },
   ];
   DB.saveScreenings(demoScreenings);
+
+  const demoHours = [
+    { id:1, ref:'NRV-2026-1001', clientName:'DURAND Jean-Pierre', hours:4.5, date:'2026-03-24', desc:'Analyse documents KYC', rate:250, amount:1125, createdAt:new Date(now-2*86400000).toISOString() },
+    { id:2, ref:'NRV-2026-1002', clientName:'ATLAS Holdings S.à r.l.', hours:8, date:'2026-03-21', desc:'Due diligence UBO + schéma actionnariat', rate:300, amount:2400, createdAt:new Date(now-5*86400000).toISOString() },
+    { id:3, ref:'NRV-2026-1003', clientName:'FIBEX Management S.A.', hours:3, date:'2026-03-23', desc:'Rédaction statuts + screening', rate:250, amount:750, createdAt:new Date(now-3*86400000).toISOString() },
+    { id:4, ref:'NRV-2026-1005', clientName:'MARTIN Paul-Henri', hours:2, date:'2026-03-20', desc:'Conseil fiscal initial', rate:250, amount:500, createdAt:new Date(now-6*86400000).toISOString() },
+    { id:5, ref:'NRV-2026-1001', clientName:'DURAND Jean-Pierre', hours:2.5, date:'2026-03-26', desc:'Revue contrat immobilier', rate:250, amount:625, createdAt:new Date(now-0.5*86400000).toISOString() },
+    { id:6, ref:'NRV-2026-1002', clientName:'ATLAS Holdings S.à r.l.', hours:5, date:'2026-03-25', desc:'Réunion compliance + rapport', rate:300, amount:1500, createdAt:new Date(now-1*86400000).toISOString() },
+  ];
+  DB.save('hours', demoHours);
 
   const demoAudit = [
     {type:'dossier',dot:'var(--sage)',title:'📁 Dossier créé — DURAND Jean-Pierre',detail:'NRV-2026-1001 · Personne physique · Transaction immobilière · IN SCOPE',tags:[{t:'IN SCOPE',c:'g'},{t:'Renforcée',c:'r'}],time:'26/03 14:28',user:'Norvy'},
@@ -3853,11 +4049,11 @@ window.showView=function(name){
       const alerts = computeAlerts();
       const activeDossiers = dossiers.filter(d => d.status === 'actif').length;
       animateCounter(document.getElementById('kpi-dossiers'), activeDossiers);
-      animateCounter(document.getElementById('kpi-heures'), Math.round(dossiers.length * 6.2));
+      animateCounter(document.getElementById('kpi-heures'), getTotalHours() || 0);
       animateCounter(document.getElementById('kpi-screening'), screenings.length);
       animateCounter(document.getElementById('kpi-alertes'), alerts.length);
       // Facturation
-      const factuTotal = Math.round(dossiers.filter(d=>d.status==='actif').length * 820);
+      const factuTotal = Math.round(getTotalBilling()) || 0;
       const f=document.getElementById('kpi-factu');
       if(f){let v=0;const s=factuTotal/62;const ti=setInterval(()=>{v=Math.min(v+s,factuTotal);f.textContent=Math.round(v).toLocaleString('fr-FR')+' €';if(v>=factuTotal)clearInterval(ti);},16);}
     },250);
