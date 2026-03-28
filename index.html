@@ -1131,7 +1131,8 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
   <div class="login-view">
     <div class="login-bg"></div>
     <div class="login-grid"></div>
-    <div class="login-card">
+    <!-- LOGIN CARD -->
+    <div class="login-card" id="login-card">
       <div class="login-logo">
         <div class="login-logo-mark">N</div>
         <div class="login-logo-name">Norvy</div>
@@ -1140,23 +1141,114 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
       <div class="login-title">Connexion à votre espace cabinet</div>
       <div class="login-fg">
         <div class="login-label">Email professionnel</div>
-        <input class="login-input" id="login-email" type="email" value="m.dupont@nc-advocat.lu"/>
+        <input class="login-input" id="login-email" type="email" placeholder="votre@email.lu"/>
       </div>
       <div class="login-fg">
         <div class="login-label">Mot de passe</div>
-        <input class="login-input" id="login-pwd" type="password" value="norvy2026"/>
+        <input class="login-input" id="login-pwd" type="password" placeholder="Mot de passe"/>
       </div>
-      <div class="login-hint">🎯 <span><strong style="color:rgba(255,255,255,.7)">Mode démo</strong> — Identifiants pré-remplis. Cliquez sur Se connecter.</span></div>
+      <div id="login-error" style="display:none;padding:8px 12px;background:rgba(154,16,16,.2);border:1px solid rgba(154,16,16,.3);border-radius:8px;margin-bottom:14px;font-size:.76rem;color:#ff6b6b"></div>
       <button class="login-btn" id="login-btn" onclick="doLogin()">
         <span id="login-btn-text">Se connecter →</span>
         <div class="login-loading" id="login-loading"><div class="login-spinner"></div><span>Connexion en cours...</span></div>
       </button>
-      <div class="login-footer">NC Advocat Sàrl · Plan Professionnel · Norvy v1.0<br/>© 2026 Norvy · Luxembourg · contact@norvy.io</div>
+      <div style="text-align:center;margin-top:16px"><span style="font-size:.78rem;color:rgba(255,255,255,.4);cursor:pointer;text-decoration:underline;text-underline-offset:2px" onclick="toggleAuthCard('register')">Pas encore de compte ? Créer un compte</span></div>
+      <div class="login-footer">Norvy v1.0 · Luxembourg<br/>© 2026 Norvy · contact@norvy.io</div>
+    </div>
+
+    <!-- REGISTER CARD -->
+    <div class="login-card" id="register-card" style="display:none">
+      <div class="login-logo">
+        <div class="login-logo-mark">N</div>
+        <div class="login-logo-name">Norvy</div>
+        <div class="login-logo-tag">Plateforme Compliance LegalTech · Luxembourg</div>
+      </div>
+      <div class="login-title">Créer votre compte cabinet</div>
+      <div class="login-fg">
+        <div class="login-label">Nom complet</div>
+        <input class="login-input" id="reg-name" type="text" placeholder="Ex: Maître Dupont"/>
+      </div>
+      <div class="login-fg">
+        <div class="login-label">Email professionnel</div>
+        <input class="login-input" id="reg-email" type="email" placeholder="votre@cabinet.lu"/>
+      </div>
+      <div class="login-fg">
+        <div class="login-label">Nom du cabinet</div>
+        <input class="login-input" id="reg-cabinet" type="text" placeholder="Ex: NC Advocat Sàrl"/>
+      </div>
+      <div class="login-fg">
+        <div class="login-label">Mot de passe (min. 8 caractères)</div>
+        <input class="login-input" id="reg-pwd" type="password" placeholder="Mot de passe"/>
+      </div>
+      <div class="login-fg">
+        <div class="login-label">Confirmer le mot de passe</div>
+        <input class="login-input" id="reg-pwd2" type="password" placeholder="Confirmer"/>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+        <input type="checkbox" id="reg-demo" checked style="accent-color:var(--sage)"/>
+        <label for="reg-demo" style="font-size:.76rem;color:rgba(255,255,255,.5);cursor:pointer">Charger les données de démonstration</label>
+      </div>
+      <div id="reg-error" style="display:none;padding:8px 12px;background:rgba(154,16,16,.2);border:1px solid rgba(154,16,16,.3);border-radius:8px;margin-bottom:14px;font-size:.76rem;color:#ff6b6b"></div>
+      <button class="login-btn" id="reg-btn" onclick="doRegister()">
+        <span id="reg-btn-text">Créer mon compte →</span>
+        <div class="login-loading" id="reg-loading"><div class="login-spinner"></div><span>Création en cours...</span></div>
+      </button>
+      <div style="text-align:center;margin-top:16px"><span style="font-size:.78rem;color:rgba(255,255,255,.4);cursor:pointer;text-decoration:underline;text-underline-offset:2px" onclick="toggleAuthCard('login')">Déjà inscrit ? Se connecter</span></div>
+      <div class="login-footer">Norvy v1.0 · Luxembourg<br/>© 2026 Norvy · contact@norvy.io</div>
     </div>
   </div>
 </div>
 <!-- TOASTS -->
 <div class="toast-container" id="toast-container"></div>
+
+<!-- MODAL HEURES -->
+<div class="ctrl-modal hidden" id="hours-modal" onclick="if(event.target===this)closeHoursModal()">
+  <div style="background:white;border-radius:16px;padding:28px 24px;width:100%;max-width:480px;position:relative;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)">Encoder des heures</div>
+      <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="closeHoursModal()">✕</span>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);display:block;margin-bottom:5px">Dossier</label>
+      <select id="hours-dossier" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.85rem;background:white"></select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div>
+        <label style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);display:block;margin-bottom:5px">Heures</label>
+        <input type="number" id="hours-value" min="0.25" max="24" step="0.25" value="1" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.85rem"/>
+      </div>
+      <div>
+        <label style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);display:block;margin-bottom:5px">Date</label>
+        <input type="date" id="hours-date" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.85rem"/>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);display:block;margin-bottom:5px">Description</label>
+      <textarea id="hours-desc" rows="2" placeholder="Analyse documents, rédaction rapport..." style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.85rem;resize:vertical"></textarea>
+    </div>
+    <div style="margin-bottom:18px">
+      <label style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);display:block;margin-bottom:5px">Taux horaire (EUR)</label>
+      <input type="number" id="hours-rate" min="0" step="10" value="250" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.85rem"/>
+    </div>
+    <button onclick="saveHours()" style="width:100%;padding:12px;font-family:'Figtree',sans-serif;font-size:.88rem;font-weight:700;background:linear-gradient(135deg,var(--sage),var(--sage2));color:white;border:none;border-radius:9px;cursor:pointer">Enregistrer les heures</button>
+    <div id="hours-history" style="margin-top:20px"></div>
+  </div>
+</div>
+
+<!-- MODAL DÉTAIL DOSSIER -->
+<div class="ctrl-modal hidden" id="dossier-modal" onclick="if(event.target===this)closeDossierModal()">
+  <div style="background:white;border-radius:16px;padding:28px 24px;width:100%;max-width:560px;position:relative;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)" id="dm-title">Détail du dossier</div>
+      <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="closeDossierModal()">✕</span>
+    </div>
+    <div id="dm-content"></div>
+    <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">
+      <button class="btn btn-sage" style="font-size:.78rem;padding:8px 16px" onclick="openHoursModalForDossier()">⏱ Encoder des heures</button>
+      <button class="btn btn-outline" style="font-size:.78rem;padding:8px 16px" onclick="closeDossierModal()">Fermer</button>
+    </div>
+  </div>
+</div>
 <!-- MODAL CONTRÔLE OAL -->
 <div class="ctrl-modal hidden" id="ctrl-modal">
   <div class="ctrl-card">
@@ -1220,17 +1312,17 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
     <nav class="sidebar-nav">
       <div class="nav-sec">Principal</div>
       <div class="nav-item active" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
-      <div class="nav-item" onclick="showView('onboarding')"><span class="nav-icon">📁</span> Dossiers clients <span class="nav-badge-pill" style="background:var(--sage-pale);color:var(--sage)">47</span></div>
+      <div class="nav-item" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients <span class="nav-badge-pill" style="background:var(--sage-pale);color:var(--sage)">47</span></div>
       <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
       <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
       <div class="nav-sec" style="margin-top:10px">Compliance</div>
-      <div class="nav-item" onclick="alert('→ Journal d\'audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
-      <div class="nav-item" onclick="alert('→ Alertes')"><span class="nav-icon">⚠️</span> Alertes <span class="nav-badge-pill red">3</span></div>
-      <div class="nav-item" onclick="alert('→ Rapports')"><span class="nav-icon">📈</span> Rapports</div>
-      <div class="nav-item" onclick="alert('→ Facturation')"><span class="nav-icon">💶</span> Facturation</div>
+      <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
+      <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">⚠️</span> Alertes <span class="nav-badge-pill red">3</span></div>
+      <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📈</span> Rapports</div>
+      <div class="nav-item" onclick="openHoursModal()"><span class="nav-icon">💶</span> Heures / Facturation</div>
       <div class="nav-sec" style="margin-top:10px">Cabinet</div>
-      <div class="nav-item" onclick="alert('→ Collaborateurs')"><span class="nav-icon">👥</span> Collaborateurs</div>
-      <div class="nav-item" onclick="alert('→ Paramètres')"><span class="nav-icon">⚙️</span> Paramètres</div>
+      <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening global</div>
+      <div class="nav-item" onclick="doLogout()"><span class="nav-icon">⏻</span> Déconnexion</div>
     </nav>
     <div class="sidebar-user">
       <div class="user-av">MD</div>
@@ -1238,6 +1330,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
         <div class="user-name">Maître Dupont</div>
         <div class="user-role">NC Advocat Sàrl · Associé</div>
       </div>
+      <span style="cursor:pointer;font-size:.85rem;opacity:.4;margin-left:auto" onclick="doLogout()" title="Déconnexion">⏻</span>
     </div>
   </aside>
 
@@ -1250,7 +1343,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
       </div>
       <div class="topbar-right">
         <button class="btn-ctrl" onclick="startCtrlOAL()" style="margin-right:4px">🏛️ Contrôle OAL</button>
-        <div class="notif-btn" onclick="alert('→ 3 alertes')">🔔<div class="notif-count">3</div></div>
+        <div class="notif-btn" onclick="showView('audit')">🔔<div class="notif-count">3</div></div>
         <span style="font-size:.8rem;color:var(--mid)">Maître Dupont</span>
         <div class="tb-avatar">MD</div>
       </div>
@@ -1291,26 +1384,26 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
             <span class="kpi-sub">31 in scope</span>
           </div>
         </div>
-        <div class="kpi" style="animation-delay:.1s">
+        <div class="kpi" style="animation-delay:.1s" onclick="openHoursModal()">
           <div class="kpi-header">
             <span class="kpi-label">Heures encodées</span>
             <div class="kpi-icon-wrap blue">⏱️</div>
           </div>
-          <div class="kpi-val animated" id="kpi-heures">284</div>
+          <div class="kpi-val animated" id="kpi-heures">0</div>
           <div class="kpi-footer">
-            <span class="kpi-trend up">↑ +32h vs mars dernier</span>
+            <span class="kpi-trend neutral">Cliquez pour encoder</span>
             <span class="kpi-sub">ce mois</span>
           </div>
         </div>
-        <div class="kpi" style="animation-delay:.15s">
+        <div class="kpi" style="animation-delay:.15s" onclick="openHoursModal()">
           <div class="kpi-header">
-            <span class="kpi-label">Facturation du mois</span>
+            <span class="kpi-label">Facturation</span>
             <div class="kpi-icon-wrap gold">💶</div>
           </div>
-          <div class="kpi-val animated" style="font-size:1.55rem" id="kpi-factu">38 450 €</div>
+          <div class="kpi-val animated" style="font-size:1.55rem" id="kpi-factu">0 €</div>
           <div class="kpi-footer">
-            <span class="kpi-trend up">↑ +12% vs fév.</span>
-            <span class="kpi-sub">Objectif : 45 000 €</span>
+            <span class="kpi-trend neutral">Basé sur les heures</span>
+            <span class="kpi-sub">taux horaire</span>
           </div>
         </div>
         <div class="kpi" style="animation-delay:.2s">
@@ -1345,7 +1438,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
           <div class="qa-label">Nouveau dossier client</div>
           <div class="qa-sublabel">Onboarding KYC · 7 étapes</div>
         </div>
-        <div class="qa" style="animation-delay:.1s" onclick="alert('→ Lancer un screening manuel')">
+        <div class="qa" style="animation-delay:.1s" onclick="showView('screening')">
           <span class="qa-icon">🔍</span>
           <div class="qa-label">Lancer un screening</div>
           <div class="qa-sublabel">Vérification sanctions & PPE</div>
@@ -1355,12 +1448,12 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
           <div class="qa-label">Questionnaire OAL</div>
           <div class="qa-sublabel">Générer le PDF annuel</div>
         </div>
-        <div class="qa" style="animation-delay:.2s" onclick="alert('→ Encoder des heures')">
+        <div class="qa" style="animation-delay:.2s" onclick="openHoursModal()">
           <span class="qa-icon">⏱️</span>
           <div class="qa-label">Encoder des heures</div>
           <div class="qa-sublabel">Time tracking & facturation</div>
         </div>
-        <div class="qa" style="animation-delay:.25s" onclick="alert('→ Journal d\'audit complet')">
+        <div class="qa" style="animation-delay:.25s" onclick="showView('audit')">
           <span class="qa-icon">📊</span>
           <div class="qa-label">Journal d'audit</div>
           <div class="qa-sublabel">Historique compliance</div>
@@ -1394,7 +1487,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
         <div class="metric-card" style="animation-delay:.15s">
           <div class="metric-header">
             <div class="metric-title">💶 Facturation — Mars 2026</div>
-            <span class="metric-more" onclick="alert('→ Module facturation')">Détail →</span>
+            <span class="metric-more" onclick="openHoursModal()">Détail →</span>
           </div>
           <div class="factu-amount">38 450 €</div>
           <div class="factu-sub">Objectif mensuel : 45 000 € · Atteinte : 85%</div>
@@ -1411,7 +1504,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
         <div class="metric-card" style="animation-delay:.2s">
           <div class="metric-header">
             <div class="metric-title">⏱️ Heures encodées — Mars 2026</div>
-            <span class="metric-more" onclick="alert('→ Time tracking')">Détail →</span>
+            <span class="metric-more" onclick="openHoursModal()">Détail →</span>
           </div>
           <div class="hours-display">284 h</div>
           <div class="factu-sub">Objectif mensuel : 320h · Atteinte : 89%</div>
@@ -1438,7 +1531,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <button class="btn btn-sage" onclick="showView('onboarding')" style="font-size:.75rem;padding:6px 14px">+ Nouveau dossier</button>
-              <span class="card-action" onclick="alert('→ Liste complète')">Voir tout</span>
+              <span class="card-action" onclick="showView('dossiers')">Voir tout</span>
             </div>
           </div>
           <!-- Table head -->
@@ -1450,57 +1543,10 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
             <div class="dos-head-cell">Screening</div>
             <div class="dos-head-cell">Date</div>
           </div>
-          <!-- Rows -->
-          <div class="dos-row alert-row" onclick="alert('→ Dossier DURAND NRV-2026-4821')">
-            <div class="dos-client"><div class="dos-av pp">JD</div><div><div class="dos-name">DURAND Jean-Pierre</div><div class="dos-ref">NRV-2026-4821 <span class="dos-alert-tag">⚠ Doc. expiré</span></div></div></div>
-            <div class="dos-mission">Transaction immobilière</div>
-            <div><span class="pill in">IN</span></div>
-            <div><span class="pill vig-r">🔴 Renforcée</span></div>
-            <div><span class="pill sc-ok">✓ Négatif</span></div>
-            <div class="dos-date">24 mars</div>
-          </div>
-          <div class="dos-row alert-row" onclick="alert('→ Dossier ATLAS NRV-2026-4818')">
-            <div class="dos-client"><div class="dos-av pm">AT</div><div><div class="dos-name">ATLAS Holdings S.à r.l.</div><div class="dos-ref">NRV-2026-4818 <span class="dos-alert-tag">⚠ Revue KYC</span></div></div></div>
-            <div class="dos-mission">Gestion de fonds</div>
-            <div><span class="pill in">IN</span></div>
-            <div><span class="pill vig-r">🔴 Renforcée</span></div>
-            <div><span class="pill sc-ok">✓ Négatif</span></div>
-            <div class="dos-date">21 mars</div>
-          </div>
-          <div class="dos-row" onclick="alert('→ Dossier FIBEX NRV-2026-4820')">
-            <div class="dos-client"><div class="dos-av pm">FM</div><div><div class="dos-name">FIBEX Management S.A.</div><div class="dos-ref">NRV-2026-4820</div></div></div>
-            <div class="dos-mission">Constitution de société</div>
-            <div><span class="pill in">IN</span></div>
-            <div><span class="pill vig-n">🟢 Normale</span></div>
-            <div><span class="pill sc-ok">✓ Négatif</span></div>
-            <div class="dos-date">23 mars</div>
-          </div>
-          <div class="dos-row" onclick="alert('→ Dossier LAMBERT NRV-2026-4819')">
-            <div class="dos-client"><div class="dos-av pp">SL</div><div><div class="dos-name">LAMBERT Sophie</div><div class="dos-ref">NRV-2026-4819</div></div></div>
-            <div class="dos-mission">Représentation judiciaire</div>
-            <div><span class="pill out">OUT</span></div>
-            <div><span class="pill" style="background:var(--cream2);color:var(--light)">—</span></div>
-            <div><span class="pill sc-ok">✓ Négatif</span></div>
-            <div class="dos-date">22 mars</div>
-          </div>
-          <div class="dos-row" onclick="alert('→ Dossier MARTIN NRV-2026-4817')">
-            <div class="dos-client"><div class="dos-av pp">MP</div><div><div class="dos-name">MARTIN Paul-Henri</div><div class="dos-ref">NRV-2026-4817</div></div></div>
-            <div class="dos-mission">Conseil fiscal</div>
-            <div><span class="pill in">IN</span></div>
-            <div><span class="pill vig-n">🟢 Normale</span></div>
-            <div><span class="pill sc-ok">✓ Négatif</span></div>
-            <div class="dos-date">20 mars</div>
-          </div>
-          <div class="dos-row" onclick="alert('→ Dossier WEBER NRV-2026-4816')">
-            <div class="dos-client"><div class="dos-av pp">KW</div><div><div class="dos-name">WEBER Klaus</div><div class="dos-ref">NRV-2026-4816</div></div></div>
-            <div class="dos-mission">Transaction immobilière</div>
-            <div><span class="pill in">IN</span></div>
-            <div><span class="pill vig-w">🟡 Normale+</span></div>
-            <div><span class="pill sc-pend">⏳ Planifié</span></div>
-            <div class="dos-date">18 mars</div>
-          </div>
+          <!-- Dynamic rows -->
+          <div id="dossiers-table-body"></div>
           <div style="padding:12px 20px;border-top:1px solid var(--border)">
-            <button class="btn btn-outline" style="width:100%;justify-content:center;font-size:.78rem" onclick="alert('→ Tous les dossiers')">Afficher tous les dossiers (47) →</button>
+            <button class="btn btn-outline" id="btn-all-dossiers" style="width:100%;justify-content:center;font-size:.78rem" onclick="showView('dossiers')">Afficher tous les dossiers →</button>
           </div>
         </div>
 
@@ -1515,37 +1561,9 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
                 <span class="card-title">Alertes compliance</span>
                 <span class="card-count" style="background:var(--danger-bg);color:var(--danger-fg)">3</span>
               </div>
-              <span class="card-action" onclick="alert('→ Toutes les alertes')">Voir tout</span>
+              <span class="card-action" onclick="showView('audit')">Voir tout</span>
             </div>
-            <div class="alert-list">
-              <div class="al-item" onclick="alert('→ Dossier DURAND — Renouveler passeport')">
-                <div class="al-severity crit">🔴</div>
-                <div class="al-body">
-                  <div class="al-title">Document expiré — DURAND J-P</div>
-                  <div class="al-sub">Passeport expiré depuis 3 jours. Mission suspendue jusqu'à renouvellement.</div>
-                  <div class="al-meta"><span class="al-ref">NRV-2026-4821</span></div>
-                </div>
-                <div class="al-time">Maintenant</div>
-              </div>
-              <div class="al-item" onclick="alert('→ Dossier ATLAS — Lancer revue KYC')">
-                <div class="al-severity warn">🟡</div>
-                <div class="al-body">
-                  <div class="al-title">Revue KYC en retard — ATLAS Holdings</div>
-                  <div class="al-sub">Revue annuelle due depuis 12 jours. Vigilance renforcée.</div>
-                  <div class="al-meta"><span class="al-ref">NRV-2026-4818</span></div>
-                </div>
-                <div class="al-time">12j</div>
-              </div>
-              <div class="al-item" onclick="alert('→ Dossier FIBEX — Screening à planifier')">
-                <div class="al-severity info">🔵</div>
-                <div class="al-body">
-                  <div class="al-title">Screening planifié — FIBEX Mgmt</div>
-                  <div class="al-sub">Screening semestriel dû dans 5 jours.</div>
-                  <div class="al-meta"><span class="al-ref">NRV-2026-4820</span></div>
-                </div>
-                <div class="al-time">Dans 5j</div>
-              </div>
-            </div>
+            <div class="alert-list" id="alerts-list"></div>
           </div>
 
           <!-- DOSSIERS EN ALERTE SCREENING -->
@@ -1556,7 +1574,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
                 <span class="card-title">Alertes screening</span>
                 <span class="card-count" style="background:var(--ok-bg);color:var(--ok-fg)">0 alerte</span>
               </div>
-              <span class="card-action" onclick="alert('→ Lancer screening global')">Lancer tout</span>
+              <span class="card-action" onclick="showView('screening')">Lancer tout</span>
             </div>
             <div style="padding:16px 18px;background:var(--ok-bg);margin:12px;border-radius:9px;border:1px solid rgba(61,92,74,.15)">
               <div style="font-size:.83rem;font-weight:700;color:var(--ok-fg);margin-bottom:3px">✅ Aucune correspondance détectée</div>
@@ -1588,35 +1606,112 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
             <div class="card-head">
               <div class="card-head-left">
                 <span class="card-head-icon">📅</span>
-                <span class="card-title">Agenda — Mars 2026</span>
+                <span class="card-title"><span id="cal-title">Agenda</span></span>
               </div>
               <span class="card-action" onclick="alert('→ Agenda complet')">Voir tout</span>
             </div>
-            <div class="cal-grid">
-              <div class="cal-day-name">L</div><div class="cal-day-name">M</div><div class="cal-day-name">M</div>
-              <div class="cal-day-name">J</div><div class="cal-day-name">V</div><div class="cal-day-name">S</div><div class="cal-day-name">D</div>
-              <div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day empty"></div>
-              <div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day">1</div><div class="cal-day">2</div>
-              <div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day has-event">5</div>
-              <div class="cal-day has-event">6</div><div class="cal-day has-event">7</div><div class="cal-day">8</div><div class="cal-day">9</div>
-              <div class="cal-day">10</div><div class="cal-day">11</div><div class="cal-day has-event">12</div>
-              <div class="cal-day">13</div><div class="cal-day has-event">14</div><div class="cal-day">15</div><div class="cal-day">16</div>
-              <div class="cal-day">17</div><div class="cal-day">18</div><div class="cal-day has-event">19</div>
-              <div class="cal-day has-event">20</div><div class="cal-day">21</div><div class="cal-day">22</div><div class="cal-day">23</div>
-              <div class="cal-day">24</div><div class="cal-day">25</div><div class="cal-day today has-event">26</div>
-              <div class="cal-day has-event">27</div><div class="cal-day">28</div><div class="cal-day">29</div><div class="cal-day">30</div>
-              <div class="cal-day">31</div>
-            </div>
-            <div class="cal-event-list">
-              <div class="cal-event"><div class="cal-event-dot" style="background:var(--danger-fg)"></div><div class="cal-event-text">Renouvellement doc. DURAND</div><div class="cal-event-time">Urgent</div></div>
-              <div class="cal-event"><div class="cal-event-dot" style="background:var(--warn-fg)"></div><div class="cal-event-text">Revue KYC ATLAS Holdings</div><div class="cal-event-time">Auj.</div></div>
-              <div class="cal-event"><div class="cal-event-dot" style="background:var(--sage)"></div><div class="cal-event-text">Screening FIBEX Management</div><div class="cal-event-time">31 mars</div></div>
-            </div>
+            <div id="cal-grid-dynamic"></div>
+            <div id="cal-event-list-dynamic"></div>
           </div>
 
         </div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     VUE DOSSIERS CLIENTS
+═══════════════════════════════════════════════════════ -->
+<div class="view" id="view-dossiers">
+  <aside class="sidebar" id="dos-sb">
+    <div class="sidebar-logo"><div class="logo-mark">N</div><div class="logo-text-wrap"><div class="logo-name">Norvy</div><div class="logo-tagline">LegalTech · Luxembourg</div></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-sec">Principal</div>
+      <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
+      <div class="nav-item active" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients</div>
+      <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
+      <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
+      <div class="nav-sec" style="margin-top:10px">Compliance</div>
+      <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
+      <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">⚠️</span> Alertes <span class="nav-badge-pill red">3</span></div>
+    </nav>
+    <div class="sidebar-user"><div class="user-av">MD</div><div class="user-info"><div class="user-name">Maître Dupont</div><div class="user-role">NC Advocat Sàrl · Associé</div></div><span style="cursor:pointer;font-size:.85rem;opacity:.4;margin-left:auto" onclick="doLogout()" title="Déconnexion">⏻</span></div>
+  </aside>
+  <div class="ob-main">
+    <header class="ob-topbar">
+      <div class="breadcrumb">
+        <span style="cursor:pointer;color:var(--sage)" onclick="showView('dashboard')">← Tableau de bord</span>
+        <span>›</span>
+        <span class="cur">Dossiers clients</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:.8rem;color:var(--mid)">Maître Dupont</span>
+        <div class="avatar">MD</div>
+      </div>
+    </header>
+    <div class="ob-content" style="max-width:1200px">
+      <!-- Title -->
+      <div style="margin-bottom:20px">
+        <div style="font-family:'DM Serif Display',serif;font-size:1.55rem;color:var(--charcoal);margin-bottom:4px">Dossiers clients</div>
+        <div style="font-size:.83rem;color:var(--mid)">Gestion complète de vos dossiers KYC/AML — Recherche, filtrage, export et suivi.</div>
+      </div>
+      <!-- Action bar -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="btn btn-sage" onclick="showView('onboarding')">+ Nouveau dossier</button>
+        <button class="btn btn-outline" onclick="exportDossiersCSV()">📥 Export CSV</button>
+        <button class="btn btn-outline" onclick="exportBackupJSON()">💾 Backup JSON</button>
+        <label class="btn btn-outline" style="cursor:pointer;margin:0">📂 Restaurer <input type="file" accept=".json" onchange="importBackupJSON(this.files[0])" style="display:none"/></label>
+      </div>
+      <!-- Stats bar -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px" id="dossiers-stats">
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--charcoal)" id="ds-total">0</div><div style="font-size:.68rem;color:var(--mid)">Total dossiers</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--ok-fg)" id="ds-actifs">0</div><div style="font-size:.68rem;color:var(--mid)">Actifs</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--warn-fg)" id="ds-suspendus">0</div><div style="font-size:.68rem;color:var(--mid)">Suspendus</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--sage)" id="ds-inscope">0</div><div style="font-size:.68rem;color:var(--mid)">In Scope</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--light)" id="ds-outscope">0</div><div style="font-size:.68rem;color:var(--mid)">Out Scope</div></div>
+      </div>
+      <!-- Filter bar -->
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+        <input type="text" placeholder="🔍 Rechercher un client, une référence..." style="flex:1;min-width:200px;padding:9px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.84rem;outline:none;transition:all .2s" id="dossiers-search" oninput="filterDossiersList()"/>
+        <select style="padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.82rem;cursor:pointer;appearance:none;background:white url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238fa89e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\") no-repeat right 12px center" id="dossiers-status-filter" onchange="filterDossiersList()">
+          <option value="all">Tous les statuts</option>
+          <option value="actif">Actif</option>
+          <option value="suspendu">Suspendu</option>
+          <option value="refuse">Refusé</option>
+          <option value="archive">Archivé</option>
+        </select>
+        <select style="padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.82rem;cursor:pointer;appearance:none;background:white url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238fa89e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\") no-repeat right 12px center" id="dossiers-scope-filter" onchange="filterDossiersList()">
+          <option value="all">Tous les scopes</option>
+          <option value="in">In Scope</option>
+          <option value="out">Out Scope</option>
+        </select>
+        <select style="padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.82rem;cursor:pointer;appearance:none;background:white url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238fa89e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\") no-repeat right 12px center" id="dossiers-sort" onchange="filterDossiersList()">
+          <option value="date-desc">Date (récent)</option>
+          <option value="date-asc">Date (ancien)</option>
+          <option value="name-asc">Nom A-Z</option>
+        </select>
+      </div>
+      <!-- Results count -->
+      <div style="font-size:.75rem;color:var(--light);margin-bottom:10px" id="dossiers-results-count"></div>
+      <!-- Table -->
+      <div class="card">
+        <div class="dos-head" style="grid-template-columns:2fr 1.2fr 70px 90px 90px 80px 70px 90px">
+          <div class="dos-head-cell">Client</div>
+          <div class="dos-head-cell">Mission</div>
+          <div class="dos-head-cell">Scope</div>
+          <div class="dos-head-cell">Vigilance</div>
+          <div class="dos-head-cell">Screening</div>
+          <div class="dos-head-cell">Statut</div>
+          <div class="dos-head-cell">Date</div>
+          <div class="dos-head-cell">Actions</div>
+        </div>
+        <div id="dossiers-list-body"></div>
+        <div style="padding:14px 20px;border-top:1px solid var(--border);text-align:center">
+          <button class="btn btn-outline" style="font-size:.78rem" id="dossiers-load-more" onclick="dossiersLoadMore()" style="display:none">Afficher plus →</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1644,13 +1739,13 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
   <nav class="sidebar-nav">
     <div class="nav-section">Principal</div>
     <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
-    <div class="nav-item active"><span class="nav-icon">📁</span> Dossiers clients</div>
-    <div class="nav-item"><span class="nav-icon">🔍</span> Screening KYC</div>
-    <div class="nav-item"><span class="nav-icon">📋</span> Questionnaire OAL</div>
+    <div class="nav-item active" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients</div>
+    <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
+    <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
     <div class="nav-section" style="margin-top:10px">Compliance</div>
-    <div class="nav-item"><span class="nav-icon">📊</span> Journal d'audit</div>
-    <div class="nav-item"><span class="nav-icon">⚠️</span> Alertes <span style="margin-left:auto;background:var(--danger-fg);color:white;font-size:.6rem;padding:1px 6px;border-radius:99px">3</span></div>
-    <div class="nav-item"><span class="nav-icon">📈</span> Rapports</div>
+    <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
+    <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">⚠️</span> Alertes <span style="margin-left:auto;background:var(--danger-fg);color:white;font-size:.6rem;padding:1px 6px;border-radius:99px">3</span></div>
+    <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📈</span> Rapports</div>
     <div class="nav-section" style="margin-top:10px">Cabinet</div>
     <div class="nav-item"><span class="nav-icon">👥</span> Collaborateurs</div>
     <div class="nav-item"><span class="nav-icon">⚙️</span> Paramètres</div>
@@ -1997,9 +2092,9 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
         <div class="next-box" id="r-next"></div>
 
         <div class="btn-row" style="margin-top:22px;justify-content:center;flex-wrap:wrap;gap:10px">
-          <button class="btn btn-success" onclick="alert('→ Module KYC complet')">📋 Compléter le KYC</button>
-          <button class="btn btn-primary" onclick="alert('→ Screening planifié')">🔍 Planifier le screening</button>
-          <button class="btn btn-secondary" onclick="showView('oal')">📋 Voir questionnaire OAL</button>
+          <button class="btn btn-success" onclick="showView('dashboard')">← Tableau de bord</button>
+          <button class="btn btn-primary" onclick="showView('screening')">🔍 Screening KYC</button>
+          <button class="btn btn-secondary" onclick="showView('oal')">📋 Questionnaire OAL</button>
           <button class="btn btn-ghost" onclick="resetAll()">+ Nouveau dossier</button>
         </div>
       </div>
@@ -2028,14 +2123,14 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
     <nav class="sidebar-nav">
       <div class="nav-sec">Principal</div>
       <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
-      <div class="nav-item" onclick="showView('onboarding')"><span class="nav-icon">📁</span> Dossiers clients</div>
+      <div class="nav-item" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients</div>
       <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
       <div class="nav-item active"><span class="nav-icon">📋</span> Questionnaire OAL</div>
       <div class="nav-sec" style="margin-top:10px">Compliance</div>
       <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
       <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">⚠️</span> Alertes <span class="nav-badge-pill red">3</span></div>
     </nav>
-    <div class="sidebar-user"><div class="user-av">MD</div><div class="user-info"><div class="user-name">Maître Dupont</div><div class="user-role">NC Advocat Sàrl · Associé</div></div></div>
+    <div class="sidebar-user"><div class="user-av">MD</div><div class="user-info"><div class="user-name">Maître Dupont</div><div class="user-role">NC Advocat Sàrl · Associé</div></div><span style="cursor:pointer;font-size:.85rem;opacity:.4;margin-left:auto" onclick="doLogout()" title="Déconnexion">⏻</span></div>
   </aside>
 
   <!-- Main OAL -->
@@ -2598,6 +2693,60 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
 
 
 <script>
+// ══ PERSISTENCE LAYER (DB) ══
+const DB = {
+  _prefix: 'norvy_',
+  save(key, value) { try { localStorage.setItem(this._prefix + key, JSON.stringify(value)); } catch(e) { console.warn('DB.save error:', e); } },
+  load(key, fallback=null) { try { const v = localStorage.getItem(this._prefix + key); return v ? JSON.parse(v) : fallback; } catch(e) { return fallback; } },
+  remove(key) { localStorage.removeItem(this._prefix + key); },
+
+  getUsers() { return this.load('users', []); },
+  saveUsers(arr) { this.save('users', arr); },
+
+  getDossiers() { return this.load('dossiers', []); },
+  saveDossiers(arr) { this.save('dossiers', arr); },
+
+  getAuditLog() { return this.load('audit', []); },
+  saveAuditLog(arr) { this.save('audit', arr); },
+
+  getScreenings() { return this.load('screenings', []); },
+  saveScreenings(arr) { this.save('screenings', arr); },
+
+  getSession() { return this.load('session', null); },
+  saveSession(obj) { this.save('session', obj); },
+  clearSession() { this.remove('session'); },
+
+  getSettings() { return this.load('settings', {}); },
+  saveSettings(obj) { this.save('settings', obj); },
+
+  nextRef() {
+    let counter = this.load('refCounter', 1000);
+    counter++;
+    this.save('refCounter', counter);
+    return 'NRV-' + new Date().getFullYear() + '-' + String(counter);
+  },
+
+  addAudit(entry) {
+    const log = this.getAuditLog();
+    const session = this.getSession();
+    log.unshift({
+      ...entry,
+      id: Date.now(),
+      time: new Date().toLocaleString('fr-LU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }),
+      user: entry.user || session?.name || 'Systeme'
+    });
+    this.saveAuditLog(log);
+  }
+};
+
+async function hashPassword(pwd) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pwd);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 // ══ NAVIGATION ══
 function showView(name){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -2653,8 +2802,7 @@ function animateDashboard(){
   },300);
 }
 
-// Init au chargement
-window.addEventListener('load', animateDashboard);
+// Init au chargement (animateDashboard called from INIT after auth check)
 
 // ══ ONBOARDING SCRIPT ══
 
@@ -3149,10 +3297,63 @@ function renderMonitoring(){
 
 // ── STEP 7 ───────────────────────────────────────────────────────────────
 function renderStep7(){
-  const ref='NRV-'+new Date().getFullYear()+'-'+String(Math.floor(Math.random()*9000)+1000);
+  const ref=DB.nextRef();
   const today=new Date().toLocaleDateString('fr-LU',{day:'2-digit',month:'long',year:'numeric'});
   const dec=S.decision;
   const lv=vigilanceLevel();
+
+  // ── Save dossier to DB ──
+  const isPPsave = S.clientType === 'pp';
+  const clientName = isPPsave
+    ? ((document.getElementById('pp-nom')?.value||'').toUpperCase() + ' ' + (document.getElementById('pp-pre')?.value||'')).trim()
+    : (document.getElementById('pm-den')?.value||'').trim();
+  const missionLabels = S.missions.map(m => MISSION_LABELS[m] || m);
+  const statusMap = { accepter:'actif', suspendre:'suspendu', refuser:'refuse', declaration:'actif' };
+  const dossier = {
+    ref,
+    clientType: S.clientType,
+    clientName: clientName || 'Client sans nom',
+    nom: isPPsave ? (document.getElementById('pp-nom')?.value||'') : '',
+    prenom: isPPsave ? (document.getElementById('pp-pre')?.value||'') : '',
+    denomination: !isPPsave ? (document.getElementById('pm-den')?.value||'') : '',
+    missions: [...S.missions],
+    missionLabels,
+    missionLabel: missionLabels[0] || '',
+    inScope: isInScope(),
+    vigilance: lv,
+    gafi: S.gafi,
+    ppe: S.ppe,
+    dist: S.dist,
+    screeningResult: S.screeningDone ? (S.ppe === 'oui' ? 'alerte' : 'negatif') : 'non-effectue',
+    screeningDone: S.screeningDone,
+    decision: dec,
+    status: statusMap[dec] || 'actif',
+    createdAt: new Date().toISOString(),
+    createdBy: DB.getSession()?.userId || null
+  };
+  const dossiers = DB.getDossiers();
+  dossiers.unshift(dossier);
+  DB.saveDossiers(dossiers);
+
+  // Log audit
+  DB.addAudit({
+    type: 'dossier',
+    dot: 'var(--sage)',
+    title: '📁 Dossier créé — ' + clientName,
+    detail: ref + ' · ' + (isPPsave ? 'Personne physique' : 'Personne morale') + ' · ' + (missionLabels[0]||'') + ' · ' + (isInScope() ? 'IN SCOPE' : 'OUT OF SCOPE'),
+    tags: [
+      { t: isInScope() ? 'IN SCOPE' : 'OUT OF SCOPE', c: isInScope() ? 'g' : 'o' },
+      ...(lv === 'renforcee' ? [{t:'Renforcée',c:'r'}] : lv === 'normal-plus' ? [{t:'Normale+',c:'o'}] : lv === 'normal' ? [{t:'Normale',c:'g'}] : []),
+      { t: statusMap[dec] ? statusMap[dec].charAt(0).toUpperCase() + statusMap[dec].slice(1) : 'Actif', c: dec === 'refuser' ? 'r' : dec === 'suspendre' ? 'o' : 'g' }
+    ]
+  });
+
+  // Log screening if done
+  if(S.screeningDone) {
+    const screenings = DB.getScreenings();
+    screenings.unshift({ ref, clientName, result: S.ppe === 'oui' ? 'alerte' : 'negatif', lists: 6, date: new Date().toISOString() });
+    DB.saveScreenings(screenings);
+  }
 
   const icons={accepter:'✅',suspendre:'⏸️',refuser:'🚫',declaration:'📢'};
   const titles={accepter:'Dossier créé et accepté',suspendre:'Dossier créé — En attente',refuser:'Dossier créé — Mission refusée',declaration:'Dossier créé — DS transmise'};
@@ -3286,19 +3487,115 @@ function initOAL(){
 }
 
 
-// ══ LOGIN ══
-function doLogin(){
+// ══ LOGIN & AUTH ══
+function toggleAuthCard(mode) {
+  document.getElementById('login-card').style.display = mode === 'login' ? '' : 'none';
+  document.getElementById('register-card').style.display = mode === 'register' ? '' : 'none';
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('reg-error').style.display = 'none';
+}
+
+async function doLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const pwd = document.getElementById('login-pwd').value;
+  const errEl = document.getElementById('login-error');
+  if(!email || !pwd) { errEl.textContent = 'Veuillez remplir tous les champs.'; errEl.style.display = 'block'; return; }
+
   const btn=document.getElementById('login-btn');
   const txt=document.getElementById('login-btn-text');
   const ld=document.getElementById('login-loading');
   btn.disabled=true; txt.style.display='none'; ld.style.display='flex';
+  errEl.style.display='none';
+
+  const hash = await hashPassword(pwd);
+  const users = DB.getUsers();
+  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
   setTimeout(()=>{
     btn.disabled=false; txt.style.display=''; ld.style.display='none';
+    if(!user || user.passwordHash !== hash) {
+      errEl.textContent = 'Identifiants incorrects. Vérifiez votre email et mot de passe.';
+      errEl.style.display = 'block';
+      return;
+    }
+    const session = { userId: user.id, email: user.email, name: user.name, cabinet: user.cabinet, loggedInAt: new Date().toISOString() };
+    DB.saveSession(session);
+    DB.addAudit({ type:'kyc', dot:'var(--info-fg)', title:'🔐 Connexion — ' + user.name, detail:'Connexion réussie depuis le navigateur', tags:[{t:'Connexion',c:'b'}] });
+    initDashboardFromDB();
     showView('dashboard');
-    setTimeout(()=>showToast('Bienvenue, Maître Dupont','NC Advocat Sàrl · 3 alertes compliance en attente','info','👋'),600);
-    setTimeout(()=>showToast('Document expiré — DURAND J-P','Passeport expiré depuis 3 jours · Action requise immédiate','danger','⚠️'),2800);
-    setTimeout(()=>showToast('Screening planifié — FIBEX Mgmt','Screening semestriel dû dans 5 jours','warn','🔍'),5500);
-  },1800);
+    const alertCount = computeAlerts().length;
+    setTimeout(()=>showToast('Bienvenue, ' + user.name, user.cabinet + ' · ' + alertCount + ' alerte(s) en attente','info','👋'),600);
+  }, 800);
+}
+
+async function doRegister(){
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const cabinet = document.getElementById('reg-cabinet').value.trim();
+  const pwd = document.getElementById('reg-pwd').value;
+  const pwd2 = document.getElementById('reg-pwd2').value;
+  const wantDemo = document.getElementById('reg-demo').checked;
+  const errEl = document.getElementById('reg-error');
+
+  if(!name || !email || !cabinet || !pwd) { errEl.textContent = 'Veuillez remplir tous les champs.'; errEl.style.display = 'block'; return; }
+  if(pwd.length < 8) { errEl.textContent = 'Le mot de passe doit contenir au moins 8 caractères.'; errEl.style.display = 'block'; return; }
+  if(pwd !== pwd2) { errEl.textContent = 'Les mots de passe ne correspondent pas.'; errEl.style.display = 'block'; return; }
+  if(DB.getUsers().some(u => u.email.toLowerCase() === email.toLowerCase())) { errEl.textContent = 'Un compte existe déjà avec cet email.'; errEl.style.display = 'block'; return; }
+
+  const btn=document.getElementById('reg-btn');
+  const txt=document.getElementById('reg-btn-text');
+  const ld=document.getElementById('reg-loading');
+  btn.disabled=true; txt.style.display='none'; ld.style.display='flex';
+  errEl.style.display='none';
+
+  const hash = await hashPassword(pwd);
+  const user = { id: Date.now(), name, email, passwordHash: hash, cabinet, createdAt: new Date().toISOString() };
+  DB.saveUsers([...DB.getUsers(), user]);
+
+  const session = { userId: user.id, email: user.email, name: user.name, cabinet: user.cabinet, loggedInAt: new Date().toISOString() };
+  DB.saveSession(session);
+
+  if(wantDemo) seedDemoData();
+
+  DB.addAudit({ type:'kyc', dot:'var(--info-fg)', title:'🆕 Compte créé — ' + user.name, detail: user.cabinet + ' · Inscription initiale', tags:[{t:'Inscription',c:'b'}] });
+
+  setTimeout(()=>{
+    btn.disabled=false; txt.style.display=''; ld.style.display='none';
+    initDashboardFromDB();
+    showView('dashboard');
+    showToast('Bienvenue sur Norvy, ' + name, cabinet + ' · Votre espace compliance est prêt', 'ok', '🎉');
+  }, 800);
+}
+
+function doLogout(){
+  const session = DB.getSession();
+  if(session) DB.addAudit({ type:'kyc', dot:'var(--info-fg)', title:'🔓 Déconnexion — ' + session.name, detail:'Déconnexion manuelle', tags:[{t:'Déconnexion',c:'b'}] });
+  DB.clearSession();
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-login').classList.add('active');
+  toggleAuthCard('login');
+  showToast('Déconnexion','Vous avez été déconnecté avec succès','info','👋');
+}
+
+function getInitials(name) {
+  const parts = name.trim().split(/\s+/);
+  if(parts.length >= 2) return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+  return name.substring(0,2).toUpperCase();
+}
+
+function updateUIForUser(session) {
+  if(!session) return;
+  const initials = getInitials(session.name);
+  document.querySelectorAll('.user-name').forEach(el => el.textContent = session.name);
+  document.querySelectorAll('.user-role').forEach(el => el.textContent = session.cabinet);
+  document.querySelectorAll('.user-av, .tb-avatar').forEach(el => el.textContent = initials);
+  const heroGreeting = document.querySelector('.hero-greeting');
+  if(heroGreeting) heroGreeting.textContent = 'Bonjour, ' + session.name + ' · ' + session.cabinet;
+  const topbarName = document.querySelector('.topbar-right > span');
+  if(topbarName) topbarName.textContent = session.name;
+  // Update onboarding sidebar footer
+  const sbFooter = document.querySelector('.sidebar-footer');
+  if(sbFooter) sbFooter.innerHTML = session.cabinet + ' · Plan Professionnel<br/><span style="color:rgba(255,255,255,.12)">v1.0 · © 2026 Norvy</span>';
 }
 
 // ══ TOASTS ══
@@ -3380,26 +3677,44 @@ function finalizeSc(name,isAlert){
   // Résultat PPE issu du screening
   S.ppe = isAlert ? 'oui' : 'non';
   S.screeningDone = true;
+
+  // Persist screening
+  const screenings = DB.getScreenings();
+  screenings.unshift({ ref: null, clientName: name, result: isAlert ? 'alerte' : 'negatif', lists: 6, date: new Date().toISOString() });
+  DB.saveScreenings(screenings);
+  DB.addAudit({
+    type: 'screening',
+    dot: isAlert ? 'var(--danger-fg)' : 'var(--ok-fg)',
+    title: (isAlert ? '⚠️ Screening alerte' : '🔍 Screening négatif') + ' — ' + name,
+    detail: '6 listes · UE, OFAC, ONU, UK, PPE, Adverse Media · Résultat : ' + (isAlert ? 'Correspondance' : 'Négatif'),
+    tags: [{t: isAlert ? 'Alerte' : 'Négatif', c: isAlert ? 'r' : 'g'}, {t:'6 listes', c:'b'}]
+  });
+}
+
+// ══ SCREENING HISTORY ══
+function renderScreeningHistory() {
+  const hist = document.getElementById('sc-history');
+  if(!hist) return;
+  const screenings = DB.getScreenings();
+  const countEl = hist.closest('.card')?.querySelector('.card-count');
+  if(countEl) countEl.textContent = screenings.length + ' ce mois';
+  if(screenings.length === 0) {
+    hist.innerHTML = '<div style="padding:20px;text-align:center;color:var(--light);font-size:.83rem">Aucun screening effectué</div>';
+    return;
+  }
+  hist.innerHTML = screenings.slice(0, 10).map(s => {
+    const isAlert = s.result === 'alerte';
+    const dateStr = new Date(s.date).toLocaleDateString('fr-LU', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+    return `<div class="sc-hist-row"><div class="sc-hist-dot" style="background:${isAlert?'var(--danger-fg)':'var(--ok-fg)'}"></div><div class="sc-hist-info"><div class="sc-hist-name">${s.clientName}</div><div class="sc-hist-detail">${s.lists} listes${s.ref ? ' · '+s.ref : ''}</div></div><span class="sc-hist-result" style="background:${isAlert?'var(--danger-bg)':'var(--ok-bg)'};color:${isAlert?'var(--danger-fg)':'var(--ok-fg)'}">${isAlert?'⚠ Alerte':'✓ Négatif'}</span><span class="sc-hist-date">${dateStr}</span></div>`;
+  }).join('') + '<div class="sc-hist-row" id="sc-new-row" style="display:none"></div>';
 }
 
 // ══ JOURNAL D'AUDIT ══
-const AUDIT_DATA=[
-  {type:'dossier',dot:'var(--sage)',title:'📁 Dossier créé — DURAND Jean-Pierre',detail:'NRV-2026-4821 · Personne physique · Transaction immobilière · IN SCOPE',tags:[{t:'IN SCOPE',c:'g'},{t:'Renforcée',c:'r'}],time:'26/03 14:28',user:'Me Dupont'},
-  {type:'screening',dot:'var(--ok-fg)',title:'🔍 Screening — DURAND Jean-Pierre',detail:'6 listes · UE, OFAC, ONU, UK, PPE, Adverse Media · Résultat : Négatif',tags:[{t:'Négatif',c:'g'},{t:'6 listes',c:'b'}],time:'26/03 14:29',user:'Norvy Auto'},
-  {type:'alerte',dot:'var(--danger-fg)',title:'⚠️ Alerte — Document expiré DURAND',detail:'Passeport expiré depuis le 23/03/2026 · Mission suspendue · Relance envoyée',tags:[{t:'Urgent',c:'r'},{t:'Document',c:'o'}],time:'26/03 09:00',user:'Norvy Auto'},
-  {type:'kyc',dot:'var(--info-fg)',title:'📋 KYC complété — ATLAS Holdings',detail:'NRV-2026-4818 · 3 UBO identifiés · Schéma actionnariat · Comptes annuels',tags:[{t:'IN SCOPE',c:'g'},{t:'KYC complet',c:'b'},{t:'Renforcée',c:'r'}],time:'24/03 11:15',user:'Me Lambert'},
-  {type:'screening',dot:'var(--ok-fg)',title:'🔍 Screening mensuel — ATLAS Holdings',detail:'4 entités screenées · 6 listes · Résultat : Négatif',tags:[{t:'Négatif',c:'g'},{t:'Mensuel',c:'b'}],time:'21/03 09:15',user:'Norvy Auto'},
-  {type:'decision',dot:'var(--ok-fg)',title:'✅ Mission acceptée — FIBEX Management',detail:'NRV-2026-4820 · Dossier complet · Screening négatif · Monitoring activé',tags:[{t:'Accepté',c:'g'},{t:'IN SCOPE',c:'g'}],time:'23/03 11:44',user:'Me Dupont'},
-  {type:'kyc',dot:'var(--info-fg)',title:'📋 Document collecté — MARTIN Paul-Henri',detail:'Justificatif de domicile mis à jour · Facture EDF 15/03/2026',tags:[{t:'Document',c:'b'}],time:'20/03 14:22',user:'Me Fernandez'},
-  {type:'dossier',dot:'var(--sage)',title:'📁 Dossier OUT OF SCOPE — LAMBERT Sophie',detail:'NRV-2026-4819 · Représentation judiciaire · Screening sanctions effectué',tags:[{t:'OUT OF SCOPE',c:'o'},{t:'Screening OK',c:'g'}],time:'22/03 10:05',user:'Me Dupont'},
-  {type:'alerte',dot:'var(--warn-fg)',title:'⚠️ Alerte — Revue KYC en retard ATLAS',detail:'Revue annuelle due depuis le 14/03/2026 · Relance automatique · Délai 14j',tags:[{t:'Retard 12j',c:'o'},{t:'Revue KYC',c:'o'}],time:'26/03 08:00',user:'Norvy Auto'},
-  {type:'decision',dot:'var(--danger-fg)',title:'🚫 Mission refusée — dossier anonymisé',detail:'Documents refusés après 2 relances · DS évaluée : non caractérisée · Archivé',tags:[{t:'Refusé',c:'r'},{t:'Archivé',c:'b'}],time:'15/03 16:30',user:'Me Dupont'},
-];
 let auditFilter='all',auditSearch='',auditCount=8;
 function renderAuditFeed(){
   const feed=document.getElementById('audit-feed');
   if(!feed)return;
-  let data=AUDIT_DATA;
+  let data=DB.getAuditLog();
   if(auditFilter!=='all')data=data.filter(e=>e.type===auditFilter);
   if(auditSearch)data=data.filter(e=>(e.title+e.detail).toLowerCase().includes(auditSearch.toLowerCase()));
   const shown=data.slice(0,auditCount);
@@ -3422,6 +3737,25 @@ function filterAudit(type,btn){
 }
 function searchAudit(v){auditSearch=v;renderAuditFeed();}
 function loadMoreAudit(){auditCount+=6;renderAuditFeed();}
+
+function updateAuditKPIs(){
+  const log = DB.getAuditLog();
+  const dossiers = DB.getDossiers();
+  const screenings = DB.getScreenings();
+  // Update the 4 KPI boxes in the audit view
+  const kpiBoxes = document.querySelectorAll('#view-audit [style*="grid-template-columns"]');
+  if(kpiBoxes.length > 0) {
+    const box = kpiBoxes[0];
+    const vals = box.querySelectorAll('[style*="DM Serif Display"]');
+    if(vals[0]) vals[0].textContent = log.length.toLocaleString('fr-FR');
+    if(vals[1]) vals[1].textContent = screenings.length.toLocaleString('fr-FR');
+    if(vals[2]) vals[2].textContent = dossiers.length.toLocaleString('fr-FR');
+    if(vals[3]) vals[3].textContent = '0';
+  }
+  // Update count display
+  const cnt = document.getElementById('audit-count');
+  if(cnt) cnt.textContent = log.length + ' entrée' + (log.length > 1 ? 's' : '');
+}
 
 // ══ CONTRÔLE OAL ══
 function startCtrlOAL(){
@@ -3452,6 +3786,639 @@ function startCtrlOAL(){
 function closeCtrl(){document.getElementById('ctrl-modal').classList.add('hidden');}
 document.addEventListener('click',e=>{const m=document.getElementById('ctrl-modal');if(m&&!m.classList.contains('hidden')&&e.target===m)closeCtrl();});
 
+// ══ DASHBOARD DYNAMIQUE ══
+function computeAlerts() {
+  const dossiers = DB.getDossiers();
+  const alerts = [];
+  dossiers.forEach(d => {
+    if(d.status === 'suspendu') {
+      alerts.push({ severity:'warn', icon:'🟡', title:'Dossier suspendu — ' + d.clientName, sub:'En attente de documents. Action requise.', ref: d.ref, time:'En attente' });
+    }
+    if(d.status === 'refuse') {
+      alerts.push({ severity:'crit', icon:'🔴', title:'Mission refusée — ' + d.clientName, sub:'Évaluer la nécessité d\'une déclaration de soupçon.', ref: d.ref, time:'Action' });
+    }
+    if(d.screeningResult === 'alerte') {
+      alerts.push({ severity:'crit', icon:'🔴', title:'Alerte screening — ' + d.clientName, sub:'Correspondance détectée. Qualification requise.', ref: d.ref, time:'Urgent' });
+    }
+    if(d.vigilance === 'renforcee' && d.status === 'actif') {
+      alerts.push({ severity:'info', icon:'🔵', title:'Vigilance renforcée — ' + d.clientName, sub:'Screening semestriel à planifier.', ref: d.ref, time:'Planifié' });
+    }
+  });
+  return alerts;
+}
+
+function renderDossiersTable() {
+  const container = document.getElementById('dossiers-table-body');
+  if(!container) return;
+  const dossiers = DB.getDossiers().slice(0, 8);
+  if(dossiers.length === 0) {
+    container.innerHTML = '<div style="padding:32px 20px;text-align:center;color:var(--light)"><div style="font-size:2rem;margin-bottom:8px">📂</div><div style="font-size:.85rem;font-weight:600;margin-bottom:4px">Aucun dossier</div><div style="font-size:.76rem">Cliquez <strong>+ Nouveau dossier</strong> pour commencer</div></div>';
+    return;
+  }
+  container.innerHTML = dossiers.map(d => {
+    const initials = getInitials(d.clientName);
+    const isAlert = d.status === 'suspendu' || d.status === 'refuse' || d.screeningResult === 'alerte';
+    const vigPill = d.vigilance === 'renforcee' ? '<span class="pill vig-r">🔴 Renforcée</span>' :
+                    d.vigilance === 'normal-plus' ? '<span class="pill vig-w">🟡 Normale+</span>' :
+                    d.vigilance === 'normal' ? '<span class="pill vig-n">🟢 Normale</span>' :
+                    '<span class="pill" style="background:var(--cream2);color:var(--light)">—</span>';
+    const scPill = d.screeningResult === 'negatif' ? '<span class="pill sc-ok">✓ Négatif</span>' :
+                   d.screeningResult === 'alerte' ? '<span class="pill" style="background:var(--danger-bg);color:var(--danger-fg)">⚠ Alerte</span>' :
+                   '<span class="pill sc-pend">⏳ Planifié</span>';
+    const alertTag = d.status === 'suspendu' ? ' <span class="dos-alert-tag">⏸ Suspendu</span>' :
+                     d.status === 'refuse' ? ' <span class="dos-alert-tag">🚫 Refusé</span>' :
+                     d.screeningResult === 'alerte' ? ' <span class="dos-alert-tag">⚠ Alerte</span>' : '';
+    const dateStr = new Date(d.createdAt).toLocaleDateString('fr-LU', {day:'numeric', month:'short'});
+    return `<div class="dos-row${isAlert?' alert-row':''}" onclick="viewDossier('${d.ref}')">
+      <div class="dos-client"><div class="dos-av ${d.clientType}">${initials}</div><div><div class="dos-name">${d.clientName}</div><div class="dos-ref">${d.ref}${alertTag}</div></div></div>
+      <div class="dos-mission">${d.missionLabel || d.missionLabels?.[0] || '—'}</div>
+      <div><span class="pill ${d.inScope?'in':'out'}">${d.inScope?'IN':'OUT'}</span></div>
+      <div>${vigPill}</div>
+      <div>${scPill}</div>
+      <div class="dos-date">${dateStr}</div>
+    </div>`;
+  }).join('');
+
+  // Update counts
+  const allDossiers = DB.getDossiers();
+  const activeCount = allDossiers.filter(d => d.status === 'actif').length;
+  const cardCount = document.querySelector('.card-count');
+  if(cardCount && cardCount.closest('.card-head-left')?.querySelector('.card-title')?.textContent === 'Dossiers récents') {
+    cardCount.textContent = activeCount + ' actifs';
+  }
+  const btnAll = document.getElementById('btn-all-dossiers');
+  if(btnAll) btnAll.textContent = 'Afficher tous les dossiers (' + allDossiers.length + ') →';
+
+  // Sidebar badge
+  const sidebarBadge = document.querySelector('#main-sb .nav-badge-pill[style*="sage"]');
+  if(sidebarBadge) sidebarBadge.textContent = allDossiers.length;
+}
+
+function renderAlerts() {
+  const container = document.getElementById('alerts-list');
+  if(!container) return;
+  const alerts = computeAlerts();
+  if(alerts.length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ok-fg);font-size:.83rem">✅ Aucune alerte en cours</div>';
+  } else {
+    container.innerHTML = alerts.slice(0, 5).map(a => `<div class="al-item">
+      <div class="al-severity ${a.severity}">${a.icon}</div>
+      <div class="al-body">
+        <div class="al-title">${a.title}</div>
+        <div class="al-sub">${a.sub}</div>
+        <div class="al-meta"><span class="al-ref">${a.ref}</span></div>
+      </div>
+      <div class="al-time">${a.time}</div>
+    </div>`).join('');
+  }
+  // Update alert count badge
+  const alertCountEl = document.querySelector('.card-count[style*="danger"]');
+  if(alertCountEl) alertCountEl.textContent = alerts.length;
+  // Update notification badges
+  document.querySelectorAll('.notif-count').forEach(el => el.textContent = alerts.length);
+  document.querySelectorAll('.nav-badge-pill.red').forEach(el => el.textContent = alerts.length);
+}
+
+function updateHeroBand() {
+  const dossiers = DB.getDossiers();
+  const alerts = computeAlerts();
+  const heroSub = document.querySelector('.hero-sub');
+  if(heroSub) {
+    const inScopeCount = dossiers.filter(d => d.inScope).length;
+    heroSub.innerHTML = '<strong>' + alerts.length + ' alerte(s)</strong> en attente · <strong>' + dossiers.length + '</strong> dossiers · <strong>' + inScopeCount + '</strong> in scope';
+  }
+  // Update sidebar in-scope count
+  const kpiSub = document.querySelector('#kpi-dossiers')?.closest('.kpi')?.querySelector('.kpi-sub');
+  if(kpiSub) kpiSub.textContent = dossiers.filter(d => d.inScope && d.status === 'actif').length + ' in scope';
+  // Update screening sub
+  const scSub = document.querySelector('#kpi-screening')?.closest('.kpi')?.querySelector('.kpi-sub');
+  if(scSub) {
+    const alertScreenings = DB.getScreenings().filter(s => s.result === 'alerte').length;
+    scSub.textContent = alertScreenings + ' alerte(s)';
+  }
+  // Update alert sub
+  const alSub = document.querySelector('#kpi-alertes')?.closest('.kpi')?.querySelector('.kpi-sub');
+  if(alSub) {
+    const critCount = computeAlerts().filter(a => a.severity === 'crit').length;
+    alSub.textContent = critCount + ' critique(s)';
+  }
+  // Update topbar date
+  const topDate = document.querySelector('.topbar-date');
+  if(topDate) topDate.textContent = new Date().toLocaleDateString('fr-LU', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+}
+
+function initDashboardFromDB() {
+  const session = DB.getSession();
+  if(session) updateUIForUser(session);
+  renderDossiersTable();
+  renderAlerts();
+  updateHeroBand();
+  renderCalendar();
+}
+
+// ══ HEURES & FACTURATION ══
+function openHoursModal() {
+  const modal = document.getElementById('hours-modal');
+  modal.classList.remove('hidden');
+  document.getElementById('hours-date').value = new Date().toISOString().split('T')[0];
+  // Populate dossier select
+  const sel = document.getElementById('hours-dossier');
+  const dossiers = DB.getDossiers();
+  sel.innerHTML = '<option value="">— Sélectionner un dossier —</option>' +
+    dossiers.map(d => `<option value="${d.ref}">${d.ref} — ${d.clientName}</option>`).join('');
+  renderHoursHistory();
+}
+
+function openHoursModalForDossier() {
+  const ref = document.getElementById('dm-title').dataset.ref;
+  closeDossierModal();
+  openHoursModal();
+  if(ref) document.getElementById('hours-dossier').value = ref;
+}
+
+function closeHoursModal() {
+  document.getElementById('hours-modal').classList.add('hidden');
+}
+
+function saveHours() {
+  const ref = document.getElementById('hours-dossier').value;
+  const hours = parseFloat(document.getElementById('hours-value').value);
+  const date = document.getElementById('hours-date').value;
+  const desc = document.getElementById('hours-desc').value.trim();
+  const rate = parseFloat(document.getElementById('hours-rate').value) || 250;
+
+  if(!ref) { showToast('Erreur','Sélectionnez un dossier','warn','⚠️'); return; }
+  if(!hours || hours <= 0) { showToast('Erreur','Indiquez un nombre d\'heures valide','warn','⚠️'); return; }
+  if(!date) { showToast('Erreur','Indiquez une date','warn','⚠️'); return; }
+
+  const dossier = DB.getDossiers().find(d => d.ref === ref);
+  const entry = { id: Date.now(), ref, clientName: dossier?.clientName || ref, hours, date, desc, rate, amount: Math.round(hours * rate * 100) / 100, createdAt: new Date().toISOString() };
+
+  const allHours = DB.load('hours', []);
+  allHours.unshift(entry);
+  DB.save('hours', allHours);
+
+  DB.addAudit({
+    type: 'kyc',
+    dot: 'var(--info-fg)',
+    title: '⏱ Heures encodées — ' + (dossier?.clientName || ref),
+    detail: hours + 'h · ' + (desc || 'Sans description') + ' · ' + Math.round(entry.amount).toLocaleString('fr-FR') + ' €',
+    tags: [{t: hours + 'h', c:'b'}, {t: Math.round(entry.amount) + ' €', c:'g'}]
+  });
+
+  showToast('Heures enregistrées', hours + 'h pour ' + (dossier?.clientName || ref) + ' · ' + Math.round(entry.amount).toLocaleString('fr-FR') + ' €', 'ok', '⏱');
+  document.getElementById('hours-desc').value = '';
+  document.getElementById('hours-value').value = '1';
+  renderHoursHistory();
+}
+
+function renderHoursHistory() {
+  const container = document.getElementById('hours-history');
+  if(!container) return;
+  const allHours = DB.load('hours', []);
+  const totalHours = allHours.reduce((s, e) => s + e.hours, 0);
+  const totalAmount = allHours.reduce((s, e) => s + e.amount, 0);
+
+  if(allHours.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--light);font-size:.8rem;padding:12px">Aucune heure encodée</div>';
+    return;
+  }
+  container.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:10px 12px;background:var(--sage-pale);border-radius:9px">
+      <div><span style="font-size:.72rem;font-weight:700;color:var(--sage);text-transform:uppercase;letter-spacing:.06em">Total</span></div>
+      <div style="display:flex;gap:16px">
+        <span style="font-size:.88rem;font-weight:700;color:var(--sage)">${totalHours}h</span>
+        <span style="font-size:.88rem;font-weight:700;color:var(--ok-fg)">${Math.round(totalAmount).toLocaleString('fr-FR')} €</span>
+      </div>
+    </div>
+    <div style="font-size:.72rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Dernières entrées</div>
+    ${allHours.slice(0, 8).map(e => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:.78rem">
+      <span style="font-weight:700;color:var(--charcoal);min-width:32px">${e.hours}h</span>
+      <div style="flex:1;min-width:0"><div style="font-weight:600;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.clientName}</div><div style="color:var(--light);font-size:.72rem">${e.desc || 'Sans description'} · ${e.date}</div></div>
+      <span style="font-weight:600;color:var(--ok-fg);white-space:nowrap">${Math.round(e.amount).toLocaleString('fr-FR')} €</span>
+    </div>`).join('')}`;
+}
+
+function getTotalHours() {
+  return DB.load('hours', []).reduce((s, e) => s + e.hours, 0);
+}
+
+function getTotalBilling() {
+  return DB.load('hours', []).reduce((s, e) => s + e.amount, 0);
+}
+
+// ══ DÉTAIL DOSSIER ══
+function viewDossier(ref) {
+  const d = DB.getDossiers().find(d => d.ref === ref);
+  if(!d) return;
+  const modal = document.getElementById('dossier-modal');
+  const title = document.getElementById('dm-title');
+  const content = document.getElementById('dm-content');
+  title.textContent = d.ref + ' — ' + d.clientName;
+  title.dataset.ref = ref;
+
+  const vigLabel = d.vigilance === 'renforcee' ? '🔴 Renforcée' : d.vigilance === 'normal-plus' ? '🟡 Normale+' : d.vigilance === 'normal' ? '🟢 Normale' : '—';
+  const statusLabel = d.status === 'actif' ? '✅ Actif' : d.status === 'suspendu' ? '⏸ Suspendu' : d.status === 'refuse' ? '🚫 Refusé' : d.status;
+  const scLabel = d.screeningResult === 'negatif' ? '✅ Négatif' : d.screeningResult === 'alerte' ? '⚠️ Alerte' : '⏳ Non effectué';
+  const dateStr = new Date(d.createdAt).toLocaleDateString('fr-LU', {day:'numeric', month:'long', year:'numeric'});
+
+  // Hours for this dossier
+  const dossierHours = DB.load('hours', []).filter(h => h.ref === ref);
+  const totalH = dossierHours.reduce((s,e) => s + e.hours, 0);
+  const totalA = dossierHours.reduce((s,e) => s + e.amount, 0);
+
+  // Notes for this dossier
+  const dossierNotes = DB.load('dossier-notes-' + ref, []);
+  const notesHtml = dossierNotes.length > 0
+    ? dossierNotes.map(n => `<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px dashed var(--border);font-size:.78rem">
+        <span style="font-weight:600;color:var(--charcoal);white-space:nowrap">${n.date}</span>
+        <span style="color:var(--mid);flex:1">${n.text}</span>
+      </div>`).join('')
+    : '<div style="font-size:.78rem;color:var(--light);padding:8px 0">Aucune note pour ce dossier.</div>';
+
+  content.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Client</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.clientName}</div></div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Type</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.clientType === 'pp' ? '👤 Personne physique' : '🏢 Personne morale'}</div></div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Mission</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.missionLabel || d.missionLabels?.[0] || '—'}</div></div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Scope</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.inScope ? '✅ IN SCOPE' : '⚡ OUT OF SCOPE'}</div></div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Vigilance</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${vigLabel}</div></div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Screening</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${scLabel}</div></div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Statut</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${statusLabel}</div></div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Date</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${dateStr}</div></div>
+    </div>
+    <div style="background:var(--info-bg);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div><div style="font-size:.68rem;font-weight:700;color:var(--info-fg);text-transform:uppercase;letter-spacing:.06em">Heures encodées</div><div style="font-size:.72rem;color:var(--mid);margin-top:2px">${dossierHours.length} entrée(s)</div></div>
+      <div style="display:flex;gap:16px;align-items:center">
+        <span style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)">${totalH}h</span>
+        <span style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--ok-fg)">${Math.round(totalA).toLocaleString('fr-FR')} €</span>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);margin-bottom:8px">Changer le statut</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="changeDossierStatus('${ref}','actif');viewDossier('${ref}')">✅ Activer</button>
+        <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="changeDossierStatus('${ref}','suspendu');viewDossier('${ref}')">⏸ Suspendre</button>
+        <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="changeDossierStatus('${ref}','archive');viewDossier('${ref}')">📦 Archiver</button>
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);margin-bottom:8px">Notes</div>
+      ${notesHtml}
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input type="text" id="dm-note-input" placeholder="Ajouter une note..." style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Figtree',sans-serif;font-size:.82rem;outline:none"/>
+        <button class="btn btn-sage" style="font-size:.78rem;padding:7px 14px" onclick="addDossierNote('${ref}')">Ajouter</button>
+      </div>
+    </div>`;
+
+  modal.classList.remove('hidden');
+}
+
+function addDossierNote(ref) {
+  const input = document.getElementById('dm-note-input');
+  const text = input?.value?.trim();
+  if(!text) return;
+  const notes = DB.load('dossier-notes-' + ref, []);
+  notes.unshift({ text, date: new Date().toLocaleDateString('fr-LU', {day:'numeric', month:'short', year:'numeric'}), createdAt: new Date().toISOString() });
+  DB.save('dossier-notes-' + ref, notes);
+  DB.addAudit({ type:'note', dot:'var(--info-fg)', title:'📝 Note ajoutée — ' + ref, detail: text, tags:[{t:'Note',c:'b'}] });
+  showToast('Note ajoutée','Note enregistrée pour ' + ref, 'ok', '📝');
+  viewDossier(ref);
+}
+
+function closeDossierModal() {
+  document.getElementById('dossier-modal').classList.add('hidden');
+}
+
+// ══ DOSSIERS LIST VIEW ══
+let dossiersSearch = '';
+let dossiersStatusFilter = 'all';
+let dossiersScopeFilter = 'all';
+let dossiersSort = 'date-desc';
+let dossiersPage = 1;
+const DOSSIERS_PER_PAGE = 20;
+
+function renderDossiersList() {
+  let dossiers = DB.getDossiers();
+  const allDossiers = dossiers.slice();
+
+  // Filters
+  if(dossiersSearch) {
+    const q = dossiersSearch.toLowerCase();
+    dossiers = dossiers.filter(d => d.clientName.toLowerCase().includes(q) || d.ref.toLowerCase().includes(q) || (d.missionLabel||'').toLowerCase().includes(q));
+  }
+  if(dossiersStatusFilter !== 'all') {
+    dossiers = dossiers.filter(d => d.status === dossiersStatusFilter);
+  }
+  if(dossiersScopeFilter !== 'all') {
+    dossiers = dossiers.filter(d => dossiersScopeFilter === 'in' ? d.inScope : !d.inScope);
+  }
+
+  // Sort
+  if(dossiersSort === 'date-desc') dossiers.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  else if(dossiersSort === 'date-asc') dossiers.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+  else if(dossiersSort === 'name-asc') dossiers.sort((a,b) => a.clientName.localeCompare(b.clientName));
+
+  // Stats
+  const el = id => document.getElementById(id);
+  if(el('ds-total')) el('ds-total').textContent = allDossiers.length;
+  if(el('ds-actifs')) el('ds-actifs').textContent = allDossiers.filter(d => d.status === 'actif').length;
+  if(el('ds-suspendus')) el('ds-suspendus').textContent = allDossiers.filter(d => d.status === 'suspendu').length;
+  if(el('ds-inscope')) el('ds-inscope').textContent = allDossiers.filter(d => d.inScope).length;
+  if(el('ds-outscope')) el('ds-outscope').textContent = allDossiers.filter(d => !d.inScope).length;
+
+  // Results count
+  const countEl = el('dossiers-results-count');
+  if(countEl) countEl.textContent = dossiers.length + ' dossier(s) trouvé(s)' + (dossiers.length !== allDossiers.length ? ' sur ' + allDossiers.length : '');
+
+  // Paginate
+  const paginated = dossiers.slice(0, dossiersPage * DOSSIERS_PER_PAGE);
+  const loadMoreBtn = el('dossiers-load-more');
+  if(loadMoreBtn) loadMoreBtn.style.display = paginated.length < dossiers.length ? '' : 'none';
+
+  const container = el('dossiers-list-body');
+  if(!container) return;
+
+  if(dossiers.length === 0) {
+    container.innerHTML = '<div style="padding:32px 20px;text-align:center;color:var(--light)"><div style="font-size:2rem;margin-bottom:8px">📂</div><div style="font-size:.85rem;font-weight:600;margin-bottom:4px">Aucun dossier trouvé</div><div style="font-size:.76rem">Modifiez vos filtres ou créez un nouveau dossier.</div></div>';
+    return;
+  }
+
+  container.innerHTML = paginated.map(d => {
+    const initials = getInitials(d.clientName);
+    const isAlert = d.status === 'suspendu' || d.status === 'refuse' || d.screeningResult === 'alerte';
+    const vigPill = d.vigilance === 'renforcee' ? '<span class="pill vig-r">🔴 Renforcée</span>' :
+                    d.vigilance === 'normal-plus' ? '<span class="pill vig-w">🟡 Normale+</span>' :
+                    d.vigilance === 'normal' ? '<span class="pill vig-n">🟢 Normale</span>' :
+                    '<span class="pill" style="background:var(--cream2);color:var(--light)">—</span>';
+    const scPill = d.screeningResult === 'negatif' ? '<span class="pill sc-ok">✓ Négatif</span>' :
+                   d.screeningResult === 'alerte' ? '<span class="pill" style="background:var(--danger-bg);color:var(--danger-fg)">⚠ Alerte</span>' :
+                   '<span class="pill sc-pend">⏳ Planifié</span>';
+    const statusPill = d.status === 'actif' ? '<span class="pill in">Actif</span>' :
+                       d.status === 'suspendu' ? '<span class="pill vig-w">Suspendu</span>' :
+                       d.status === 'refuse' ? '<span class="pill vig-r">Refusé</span>' :
+                       d.status === 'archive' ? '<span class="pill out">Archivé</span>' :
+                       '<span class="pill out">' + (d.status||'—') + '</span>';
+    const dateStr = new Date(d.createdAt).toLocaleDateString('fr-LU', {day:'numeric', month:'short'});
+    return `<div class="dos-row${isAlert?' alert-row':''}" style="grid-template-columns:2fr 1.2fr 70px 90px 90px 80px 70px 90px;cursor:pointer" onclick="viewDossier('${d.ref}')">
+      <div class="dos-client"><div class="dos-av ${d.clientType}">${initials}</div><div><div class="dos-name">${d.clientName}</div><div class="dos-ref">${d.ref}</div></div></div>
+      <div class="dos-mission">${d.missionLabel || d.missionLabels?.[0] || '—'}</div>
+      <div><span class="pill ${d.inScope?'in':'out'}">${d.inScope?'IN':'OUT'}</span></div>
+      <div>${vigPill}</div>
+      <div>${scPill}</div>
+      <div>${statusPill}</div>
+      <div class="dos-date">${dateStr}</div>
+      <div style="display:flex;gap:4px;align-items:center">
+        <button class="btn btn-outline" style="font-size:.65rem;padding:4px 8px" onclick="event.stopPropagation();viewDossier('${d.ref}')" title="Détail">👁</button>
+        <button class="btn btn-outline" style="font-size:.65rem;padding:4px 8px" onclick="event.stopPropagation();openHoursModal();setTimeout(()=>{document.getElementById('hours-dossier').value='${d.ref}'},100)" title="Heures">⏱</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function dossiersLoadMore() {
+  dossiersPage++;
+  renderDossiersList();
+}
+
+function filterDossiersList() {
+  dossiersSearch = (document.getElementById('dossiers-search')?.value || '').trim();
+  dossiersStatusFilter = document.getElementById('dossiers-status-filter')?.value || 'all';
+  dossiersScopeFilter = document.getElementById('dossiers-scope-filter')?.value || 'all';
+  dossiersSort = document.getElementById('dossiers-sort')?.value || 'date-desc';
+  dossiersPage = 1;
+  renderDossiersList();
+}
+
+function exportDossiersCSV() {
+  const dossiers = DB.getDossiers();
+  if(dossiers.length === 0) { showToast('Export impossible','Aucun dossier à exporter','warn','⚠️'); return; }
+  const headers = ['Ref','Client','Type','Mission','Scope','Vigilance','Screening','Decision','Status','Date'];
+  const rows = dossiers.map(d => [
+    d.ref,
+    '"' + (d.clientName||'').replace(/"/g,'""') + '"',
+    d.clientType === 'pp' ? 'Personne physique' : 'Personne morale',
+    '"' + (d.missionLabel || d.missionLabels?.[0] || '').replace(/"/g,'""') + '"',
+    d.inScope ? 'IN SCOPE' : 'OUT OF SCOPE',
+    d.vigilance || '',
+    d.screeningResult || '',
+    d.decision || '',
+    d.status || '',
+    d.createdAt ? new Date(d.createdAt).toISOString().split('T')[0] : ''
+  ].join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'norvy_dossiers_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Export CSV','Fichier CSV téléchargé avec ' + dossiers.length + ' dossier(s)','ok','📥');
+  DB.addAudit({type:'export',dot:'var(--info-fg)',title:'📥 Export CSV dossiers',detail:dossiers.length + ' dossiers exportés',tags:[{t:'CSV',c:'b'}]});
+}
+
+function exportBackupJSON() {
+  const backup = {};
+  const keys = ['dossiers','users','auditLog','screenings','hours','settings','refCounter'];
+  keys.forEach(k => { const v = localStorage.getItem('norvy_' + k); if(v) backup[k] = JSON.parse(v); });
+  // Also grab any dossier notes
+  for(let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if(key && key.startsWith('norvy_dossier-notes-')) {
+      backup[key.replace('norvy_','')] = JSON.parse(localStorage.getItem(key));
+    }
+  }
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'norvy_backup_' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Backup JSON','Sauvegarde complète téléchargée','ok','💾');
+  DB.addAudit({type:'export',dot:'var(--info-fg)',title:'💾 Backup JSON exporté',detail:'Sauvegarde complète de toutes les données',tags:[{t:'Backup',c:'b'}]});
+}
+
+function importBackupJSON(file) {
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      Object.keys(data).forEach(k => {
+        localStorage.setItem('norvy_' + k, JSON.stringify(data[k]));
+      });
+      showToast('Restauration terminée','Toutes les données ont été restaurées avec succès','ok','✅');
+      DB.addAudit({type:'import',dot:'var(--ok-fg)',title:'📂 Backup restauré',detail:'Données restaurées depuis fichier JSON',tags:[{t:'Import',c:'g'}]});
+      renderDossiersList();
+      initDashboardFromDB();
+    } catch(err) {
+      showToast('Erreur','Fichier JSON invalide','danger','❌');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function changeDossierStatus(ref, newStatus) {
+  const dossiers = DB.getDossiers();
+  const idx = dossiers.findIndex(d => d.ref === ref);
+  if(idx === -1) return;
+  const oldStatus = dossiers[idx].status;
+  dossiers[idx].status = newStatus;
+  DB.saveDossiers(dossiers);
+  const statusLabels = {actif:'Actif',suspendu:'Suspendu',refuse:'Refusé',archive:'Archivé'};
+  DB.addAudit({
+    type:'status',
+    dot: newStatus === 'actif' ? 'var(--ok-fg)' : newStatus === 'suspendu' ? 'var(--warn-fg)' : newStatus === 'archive' ? 'var(--light)' : 'var(--danger-fg)',
+    title:'🔄 Statut modifié — ' + dossiers[idx].clientName,
+    detail: ref + ' · ' + (statusLabels[oldStatus]||oldStatus) + ' → ' + (statusLabels[newStatus]||newStatus),
+    tags:[{t:statusLabels[newStatus]||newStatus, c: newStatus==='actif'?'g':newStatus==='suspendu'?'o':'r'}]
+  });
+  showToast('Statut modifié', dossiers[idx].clientName + ' → ' + (statusLabels[newStatus]||newStatus), 'ok', '🔄');
+  renderDossiersList();
+}
+
+// ══ CALENDRIER DYNAMIQUE ══
+function renderCalendar() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+  // Set title
+  const titleEl = document.getElementById('cal-title');
+  if(titleEl) titleEl.textContent = 'Agenda — ' + monthNames[month] + ' ' + year;
+
+  // Build event days from dossier data
+  const dossiers = DB.getDossiers();
+  const screenings = DB.getScreenings();
+  const eventDays = new Set();
+  const events = [];
+
+  dossiers.forEach(d => {
+    const dt = new Date(d.createdAt);
+    if(dt.getFullYear() === year && dt.getMonth() === month) {
+      eventDays.add(dt.getDate());
+    }
+    // Suspended dossiers = urgent reminders
+    if(d.status === 'suspendu') {
+      events.push({text:'Suivi dossier ' + d.clientName, color:'var(--danger-fg)', time:'Urgent', priority:1});
+      const cdt = new Date(d.createdAt);
+      if(cdt.getFullYear() === year && cdt.getMonth() === month) eventDays.add(cdt.getDate());
+    }
+  });
+
+  screenings.forEach(s => {
+    const dt = new Date(s.date);
+    if(dt.getFullYear() === year && dt.getMonth() === month) {
+      eventDays.add(dt.getDate());
+    }
+  });
+
+  // Add upcoming events based on real data
+  const recentDossiers = dossiers.filter(d => {
+    const dt = new Date(d.createdAt);
+    return dt.getFullYear() === year && dt.getMonth() === month;
+  }).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  recentDossiers.slice(0, 2).forEach(d => {
+    const dt = new Date(d.createdAt);
+    events.push({text:'Revue KYC ' + d.clientName, color:'var(--sage)', time:dt.getDate() + ' ' + monthNames[month].substring(0,3).toLowerCase(), priority:3});
+  });
+
+  // Always mark today
+  eventDays.add(now.getDate());
+
+  // Build calendar grid
+  const firstDay = new Date(year, month, 1).getDay();
+  const startOffset = firstDay === 0 ? 6 : firstDay - 1; // Monday=0
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = now.getDate();
+
+  let gridHtml = '<div class="cal-grid">';
+  const dayNames = ['L','M','M','J','V','S','D'];
+  dayNames.forEach(n => { gridHtml += '<div class="cal-day-name">' + n + '</div>'; });
+  for(let i = 0; i < startOffset; i++) gridHtml += '<div class="cal-day empty"></div>';
+  for(let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === today;
+    const hasEvent = eventDays.has(d);
+    let cls = 'cal-day';
+    if(isToday) cls += ' today';
+    if(hasEvent) cls += ' has-event';
+    gridHtml += '<div class="' + cls + '">' + d + '</div>';
+  }
+  gridHtml += '</div>';
+
+  const gridEl = document.getElementById('cal-grid-dynamic');
+  if(gridEl) gridEl.innerHTML = gridHtml;
+
+  // Sort events by priority
+  events.sort((a,b) => a.priority - b.priority);
+
+  // Build event list
+  let eventsHtml = '<div class="cal-event-list">';
+  if(events.length === 0) {
+    eventsHtml += '<div style="font-size:.78rem;color:var(--light);padding:6px 0">Aucun événement ce mois.</div>';
+  } else {
+    events.slice(0, 4).forEach(ev => {
+      eventsHtml += '<div class="cal-event"><div class="cal-event-dot" style="background:' + ev.color + '"></div><div class="cal-event-text">' + ev.text + '</div><div class="cal-event-time">' + ev.time + '</div></div>';
+    });
+  }
+  eventsHtml += '</div>';
+
+  const evEl = document.getElementById('cal-event-list-dynamic');
+  if(evEl) evEl.innerHTML = eventsHtml;
+}
+
+// ══ DONNÉES DE DÉMONSTRATION ══
+function seedDemoData() {
+  if(DB.getDossiers().length > 0) return;
+
+  const now = new Date();
+  const demoDossiers = [
+    { ref:'NRV-2026-1001', clientType:'pp', clientName:'DURAND Jean-Pierre', nom:'DURAND', prenom:'Jean-Pierre', denomination:'', missions:['immobilier'], missionLabels:['Transaction immobilière'], missionLabel:'Transaction immobilière', inScope:true, vigilance:'renforcee', gafi:'non', ppe:'oui', dist:'non', screeningResult:'negatif', screeningDone:true, decision:'accepter', status:'actif', createdAt:new Date(now-2*86400000).toISOString(), createdBy:null },
+    { ref:'NRV-2026-1002', clientType:'pm', clientName:'ATLAS Holdings S.à r.l.', nom:'', prenom:'', denomination:'ATLAS Holdings S.à r.l.', missions:['fonds'], missionLabels:['Gestion de fonds'], missionLabel:'Gestion de fonds', inScope:true, vigilance:'renforcee', gafi:'oui', ppe:'non', dist:'non', screeningResult:'negatif', screeningDone:true, decision:'accepter', status:'actif', createdAt:new Date(now-5*86400000).toISOString(), createdBy:null },
+    { ref:'NRV-2026-1003', clientType:'pm', clientName:'FIBEX Management S.A.', nom:'', prenom:'', denomination:'FIBEX Management S.A.', missions:['societe'], missionLabels:['Constitution de société'], missionLabel:'Constitution de société', inScope:true, vigilance:'normal', gafi:'non', ppe:'non', dist:'non', screeningResult:'negatif', screeningDone:true, decision:'accepter', status:'actif', createdAt:new Date(now-3*86400000).toISOString(), createdBy:null },
+    { ref:'NRV-2026-1004', clientType:'pp', clientName:'LAMBERT Sophie', nom:'LAMBERT', prenom:'Sophie', denomination:'', missions:['judiciaire'], missionLabels:['Représentation judiciaire'], missionLabel:'Représentation judiciaire', inScope:false, vigilance:null, gafi:'non', ppe:'non', dist:'non', screeningResult:'negatif', screeningDone:true, decision:'accepter', status:'actif', createdAt:new Date(now-4*86400000).toISOString(), createdBy:null },
+    { ref:'NRV-2026-1005', clientType:'pp', clientName:'MARTIN Paul-Henri', nom:'MARTIN', prenom:'Paul-Henri', denomination:'', missions:['fiscal'], missionLabels:['Conseil fiscal'], missionLabel:'Conseil fiscal', inScope:true, vigilance:'normal', gafi:'non', ppe:'non', dist:'non', screeningResult:'negatif', screeningDone:true, decision:'accepter', status:'actif', createdAt:new Date(now-6*86400000).toISOString(), createdBy:null },
+    { ref:'NRV-2026-1006', clientType:'pp', clientName:'WEBER Klaus', nom:'WEBER', prenom:'Klaus', denomination:'', missions:['immobilier'], missionLabels:['Transaction immobilière'], missionLabel:'Transaction immobilière', inScope:true, vigilance:'normal-plus', gafi:'non', ppe:'non', dist:'oui', screeningResult:'negatif', screeningDone:true, decision:'suspendre', status:'suspendu', createdAt:new Date(now-8*86400000).toISOString(), createdBy:null },
+  ];
+  DB.saveDossiers(demoDossiers);
+  DB.save('refCounter', 1006);
+
+  const demoScreenings = [
+    { ref:'NRV-2026-1001', clientName:'DURAND Jean-Pierre', result:'negatif', lists:6, date:new Date(now-2*86400000).toISOString() },
+    { ref:'NRV-2026-1002', clientName:'ATLAS Holdings S.à r.l.', result:'negatif', lists:6, date:new Date(now-5*86400000).toISOString() },
+    { ref:'NRV-2026-1003', clientName:'FIBEX Management S.A.', result:'negatif', lists:6, date:new Date(now-3*86400000).toISOString() },
+    { ref:'NRV-2026-1004', clientName:'LAMBERT Sophie', result:'negatif', lists:6, date:new Date(now-4*86400000).toISOString() },
+    { ref:'NRV-2026-1005', clientName:'MARTIN Paul-Henri', result:'negatif', lists:6, date:new Date(now-6*86400000).toISOString() },
+  ];
+  DB.saveScreenings(demoScreenings);
+
+  const demoHours = [
+    { id:1, ref:'NRV-2026-1001', clientName:'DURAND Jean-Pierre', hours:4.5, date:'2026-03-24', desc:'Analyse documents KYC', rate:250, amount:1125, createdAt:new Date(now-2*86400000).toISOString() },
+    { id:2, ref:'NRV-2026-1002', clientName:'ATLAS Holdings S.à r.l.', hours:8, date:'2026-03-21', desc:'Due diligence UBO + schéma actionnariat', rate:300, amount:2400, createdAt:new Date(now-5*86400000).toISOString() },
+    { id:3, ref:'NRV-2026-1003', clientName:'FIBEX Management S.A.', hours:3, date:'2026-03-23', desc:'Rédaction statuts + screening', rate:250, amount:750, createdAt:new Date(now-3*86400000).toISOString() },
+    { id:4, ref:'NRV-2026-1005', clientName:'MARTIN Paul-Henri', hours:2, date:'2026-03-20', desc:'Conseil fiscal initial', rate:250, amount:500, createdAt:new Date(now-6*86400000).toISOString() },
+    { id:5, ref:'NRV-2026-1001', clientName:'DURAND Jean-Pierre', hours:2.5, date:'2026-03-26', desc:'Revue contrat immobilier', rate:250, amount:625, createdAt:new Date(now-0.5*86400000).toISOString() },
+    { id:6, ref:'NRV-2026-1002', clientName:'ATLAS Holdings S.à r.l.', hours:5, date:'2026-03-25', desc:'Réunion compliance + rapport', rate:300, amount:1500, createdAt:new Date(now-1*86400000).toISOString() },
+  ];
+  DB.save('hours', demoHours);
+
+  const demoAudit = [
+    {type:'dossier',dot:'var(--sage)',title:'📁 Dossier créé — DURAND Jean-Pierre',detail:'NRV-2026-1001 · Personne physique · Transaction immobilière · IN SCOPE',tags:[{t:'IN SCOPE',c:'g'},{t:'Renforcée',c:'r'}],time:'26/03 14:28',user:'Norvy'},
+    {type:'screening',dot:'var(--ok-fg)',title:'🔍 Screening — DURAND Jean-Pierre',detail:'6 listes · UE, OFAC, ONU, UK, PPE, Adverse Media · Résultat : Négatif',tags:[{t:'Négatif',c:'g'},{t:'6 listes',c:'b'}],time:'26/03 14:29',user:'Norvy Auto'},
+    {type:'dossier',dot:'var(--sage)',title:'📁 Dossier créé — ATLAS Holdings',detail:'NRV-2026-1002 · Personne morale · Gestion de fonds · IN SCOPE',tags:[{t:'IN SCOPE',c:'g'},{t:'Renforcée',c:'r'}],time:'24/03 11:15',user:'Norvy'},
+    {type:'screening',dot:'var(--ok-fg)',title:'🔍 Screening — ATLAS Holdings',detail:'6 listes · Résultat : Négatif',tags:[{t:'Négatif',c:'g'},{t:'6 listes',c:'b'}],time:'24/03 11:16',user:'Norvy Auto'},
+    {type:'decision',dot:'var(--ok-fg)',title:'✅ Mission acceptée — FIBEX Management',detail:'NRV-2026-1003 · Dossier complet · Screening négatif · Monitoring activé',tags:[{t:'Accepté',c:'g'},{t:'IN SCOPE',c:'g'}],time:'23/03 11:44',user:'Norvy'},
+    {type:'dossier',dot:'var(--sage)',title:'📁 Dossier OUT OF SCOPE — LAMBERT Sophie',detail:'NRV-2026-1004 · Représentation judiciaire · Screening sanctions effectué',tags:[{t:'OUT OF SCOPE',c:'o'},{t:'Screening OK',c:'g'}],time:'22/03 10:05',user:'Norvy'},
+    {type:'dossier',dot:'var(--sage)',title:'📁 Dossier créé — MARTIN Paul-Henri',detail:'NRV-2026-1005 · Conseil fiscal · IN SCOPE',tags:[{t:'IN SCOPE',c:'g'},{t:'Normale',c:'g'}],time:'20/03 14:22',user:'Norvy'},
+    {type:'dossier',dot:'var(--warn-fg)',title:'⏸ Dossier suspendu — WEBER Klaus',detail:'NRV-2026-1006 · Transaction immobilière · Documents manquants',tags:[{t:'Suspendu',c:'o'},{t:'Normale+',c:'o'}],time:'18/03 09:30',user:'Norvy'},
+  ];
+  DB.saveAuditLog(demoAudit);
+}
+
 // ══ COMPTEURS ANIMÉS ══
 function animateCounter(el,target,dur=1000){
   if(!el)return;
@@ -3469,22 +4436,41 @@ window.showView=function(name){
     const oc=n.getAttribute('onclick')||'';
     n.classList.toggle('active',oc.includes(`'${name}'`));
   });
+  if(name==='dossiers'){
+    renderDossiersList();
+  }
   if(name==='dashboard'){
     animateDashboard();
+    initDashboardFromDB();
+    renderCalendar();
     setTimeout(()=>{
-      animateCounter(document.getElementById('kpi-dossiers'),47);
-      animateCounter(document.getElementById('kpi-heures'),284);
-      animateCounter(document.getElementById('kpi-screening'),128);
-      animateCounter(document.getElementById('kpi-alertes'),3);
+      const dossiers = DB.getDossiers();
+      const screenings = DB.getScreenings();
+      const alerts = computeAlerts();
+      const activeDossiers = dossiers.filter(d => d.status === 'actif').length;
+      animateCounter(document.getElementById('kpi-dossiers'), activeDossiers);
+      animateCounter(document.getElementById('kpi-heures'), getTotalHours() || 0);
+      animateCounter(document.getElementById('kpi-screening'), screenings.length);
+      animateCounter(document.getElementById('kpi-alertes'), alerts.length);
       // Facturation
+      const factuTotal = Math.round(getTotalBilling()) || 0;
       const f=document.getElementById('kpi-factu');
-      if(f){let v=0;const s=38450/62;const ti=setInterval(()=>{v=Math.min(v+s,38450);f.textContent=Math.round(v).toLocaleString('fr-FR')+' €';if(v>=38450)clearInterval(ti);},16);}
+      if(f){let v=0;const s=factuTotal/62;const ti=setInterval(()=>{v=Math.min(v+s,factuTotal);f.textContent=Math.round(v).toLocaleString('fr-FR')+' €';if(v>=factuTotal)clearInterval(ti);},16);}
     },250);
   }
   if(name==='onboarding')resetAll();
   if(name==='oal'){initOAL();showOALSection(1);}
-  if(name==='audit')setTimeout(renderAuditFeed,100);
-  if(name==='screening'){const z=document.getElementById('sc-result-zone');if(z)z.innerHTML='';const si=document.getElementById('sc-search-input');if(si)si.value='';}
+  if(name==='audit'){
+    setTimeout(()=>{
+      renderAuditFeed();
+      updateAuditKPIs();
+    },100);
+  }
+  if(name==='screening'){
+    const z=document.getElementById('sc-result-zone');if(z)z.innerHTML='';
+    const si=document.getElementById('sc-search-input');if(si)si.value='';
+    renderScreeningHistory();
+  }
 };
 
 
@@ -3937,8 +4923,26 @@ function toggleSecteur(el, id){
 // ══ INIT ══
 window.addEventListener('load',()=>{
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById('view-login').classList.add('active');
+
+  const session = DB.getSession();
+  if(session) {
+    // Session exists — restore
+    updateUIForUser(session);
+    initDashboardFromDB();
+    document.getElementById('view-dashboard').classList.add('active');
+    animateDashboard();
+  } else if(DB.getUsers().length === 0) {
+    // No users — show register
+    document.getElementById('view-login').classList.add('active');
+    toggleAuthCard('register');
+  } else {
+    // Users exist — show login
+    document.getElementById('view-login').classList.add('active');
+    toggleAuthCard('login');
+  }
+
   document.getElementById('login-pwd')?.addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
+  document.getElementById('reg-pwd2')?.addEventListener('keypress',e=>{if(e.key==='Enter')doRegister();});
 });
 
 </script>
@@ -3948,13 +4952,13 @@ window.addEventListener('load',()=>{
     <nav class="sidebar-nav">
       <div class="nav-sec">Principal</div>
       <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
-      <div class="nav-item" onclick="showView('onboarding')"><span class="nav-icon">📁</span> Dossiers clients</div>
+      <div class="nav-item" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients</div>
       <div class="nav-item active"><span class="nav-icon">🔍</span> Screening KYC</div>
       <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
       <div class="nav-sec" style="margin-top:10px">Compliance</div>
       <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
     </nav>
-    <div class="sidebar-user"><div class="user-av">MD</div><div class="user-info"><div class="user-name">Maître Dupont</div><div class="user-role">NC Advocat Sàrl</div></div></div>
+    <div class="sidebar-user"><div class="user-av">MD</div><div class="user-info"><div class="user-name">Maître Dupont</div><div class="user-role">NC Advocat Sàrl</div></div><span style="cursor:pointer;font-size:.85rem;opacity:.4;margin-left:auto" onclick="doLogout()" title="Déconnexion">⏻</span></div>
   </aside>
   <div class="ob-main">
     <header class="ob-topbar">
@@ -4001,13 +5005,13 @@ window.addEventListener('load',()=>{
     <nav class="sidebar-nav">
       <div class="nav-sec">Principal</div>
       <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
-      <div class="nav-item" onclick="showView('onboarding')"><span class="nav-icon">📁</span> Dossiers clients</div>
+      <div class="nav-item" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients</div>
       <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
       <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
       <div class="nav-sec" style="margin-top:10px">Compliance</div>
       <div class="nav-item active"><span class="nav-icon">📊</span> Journal d'audit</div>
     </nav>
-    <div class="sidebar-user"><div class="user-av">MD</div><div class="user-info"><div class="user-name">Maître Dupont</div><div class="user-role">NC Advocat Sàrl</div></div></div>
+    <div class="sidebar-user"><div class="user-av">MD</div><div class="user-info"><div class="user-name">Maître Dupont</div><div class="user-role">NC Advocat Sàrl</div></div><span style="cursor:pointer;font-size:.85rem;opacity:.4;margin-left:auto" onclick="doLogout()" title="Déconnexion">⏻</span></div>
   </aside>
   <div class="ob-main">
     <header class="ob-topbar">
