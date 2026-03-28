@@ -1312,7 +1312,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
     <nav class="sidebar-nav">
       <div class="nav-sec">Principal</div>
       <div class="nav-item active" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
-      <div class="nav-item" onclick="showView('onboarding')"><span class="nav-icon">📁</span> Dossiers clients <span class="nav-badge-pill" style="background:var(--sage-pale);color:var(--sage)">47</span></div>
+      <div class="nav-item" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients <span class="nav-badge-pill" style="background:var(--sage-pale);color:var(--sage)">47</span></div>
       <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
       <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
       <div class="nav-sec" style="margin-top:10px">Compliance</div>
@@ -1635,6 +1635,101 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
         </div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     VUE DOSSIERS CLIENTS
+═══════════════════════════════════════════════════════ -->
+<div class="view" id="view-dossiers">
+  <aside class="sidebar" id="dos-sb">
+    <div class="sidebar-logo"><div class="logo-mark">N</div><div class="logo-text-wrap"><div class="logo-name">Norvy</div><div class="logo-tagline">LegalTech · Luxembourg</div></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-sec">Principal</div>
+      <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
+      <div class="nav-item active" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients</div>
+      <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
+      <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
+      <div class="nav-sec" style="margin-top:10px">Compliance</div>
+      <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
+      <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">⚠️</span> Alertes <span class="nav-badge-pill red">3</span></div>
+    </nav>
+    <div class="sidebar-user"><div class="user-av">MD</div><div class="user-info"><div class="user-name">Maître Dupont</div><div class="user-role">NC Advocat Sàrl · Associé</div></div><span style="cursor:pointer;font-size:.85rem;opacity:.4;margin-left:auto" onclick="doLogout()" title="Déconnexion">⏻</span></div>
+  </aside>
+  <div class="ob-main">
+    <header class="ob-topbar">
+      <div class="breadcrumb">
+        <span style="cursor:pointer;color:var(--sage)" onclick="showView('dashboard')">← Tableau de bord</span>
+        <span>›</span>
+        <span class="cur">Dossiers clients</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:.8rem;color:var(--mid)">Maître Dupont</span>
+        <div class="avatar">MD</div>
+      </div>
+    </header>
+    <div class="ob-content" style="max-width:1200px">
+      <!-- Title -->
+      <div style="margin-bottom:20px">
+        <div style="font-family:'DM Serif Display',serif;font-size:1.55rem;color:var(--charcoal);margin-bottom:4px">Dossiers clients</div>
+        <div style="font-size:.83rem;color:var(--mid)">Gestion complète de vos dossiers KYC/AML — Recherche, filtrage, export et suivi.</div>
+      </div>
+      <!-- Action bar -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="btn btn-sage" onclick="showView('onboarding')">+ Nouveau dossier</button>
+        <button class="btn btn-outline" onclick="exportDossiersCSV()">📥 Export CSV</button>
+        <button class="btn btn-outline" onclick="exportBackupJSON()">💾 Backup JSON</button>
+        <label class="btn btn-outline" style="cursor:pointer;margin:0">📂 Restaurer <input type="file" accept=".json" onchange="importBackupJSON(this.files[0])" style="display:none"/></label>
+      </div>
+      <!-- Stats bar -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px" id="dossiers-stats">
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--charcoal)" id="ds-total">0</div><div style="font-size:.68rem;color:var(--mid)">Total dossiers</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--ok-fg)" id="ds-actifs">0</div><div style="font-size:.68rem;color:var(--mid)">Actifs</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--warn-fg)" id="ds-suspendus">0</div><div style="font-size:.68rem;color:var(--mid)">Suspendus</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--sage)" id="ds-inscope">0</div><div style="font-size:.68rem;color:var(--mid)">In Scope</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--light)" id="ds-outscope">0</div><div style="font-size:.68rem;color:var(--mid)">Out Scope</div></div>
+      </div>
+      <!-- Filter bar -->
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+        <input type="text" placeholder="🔍 Rechercher un client, une référence..." style="flex:1;min-width:200px;padding:9px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.84rem;outline:none;transition:all .2s" id="dossiers-search" oninput="filterDossiersList()"/>
+        <select style="padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.82rem;cursor:pointer;appearance:none;background:white url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238fa89e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\") no-repeat right 12px center" id="dossiers-status-filter" onchange="filterDossiersList()">
+          <option value="all">Tous les statuts</option>
+          <option value="actif">Actif</option>
+          <option value="suspendu">Suspendu</option>
+          <option value="refuse">Refusé</option>
+          <option value="archive">Archivé</option>
+        </select>
+        <select style="padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.82rem;cursor:pointer;appearance:none;background:white url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238fa89e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\") no-repeat right 12px center" id="dossiers-scope-filter" onchange="filterDossiersList()">
+          <option value="all">Tous les scopes</option>
+          <option value="in">In Scope</option>
+          <option value="out">Out Scope</option>
+        </select>
+        <select style="padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.82rem;cursor:pointer;appearance:none;background:white url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238fa89e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\") no-repeat right 12px center" id="dossiers-sort" onchange="filterDossiersList()">
+          <option value="date-desc">Date (récent)</option>
+          <option value="date-asc">Date (ancien)</option>
+          <option value="name-asc">Nom A-Z</option>
+        </select>
+      </div>
+      <!-- Results count -->
+      <div style="font-size:.75rem;color:var(--light);margin-bottom:10px" id="dossiers-results-count"></div>
+      <!-- Table -->
+      <div class="card">
+        <div class="dos-head" style="grid-template-columns:2fr 1.2fr 70px 90px 90px 80px 70px 90px">
+          <div class="dos-head-cell">Client</div>
+          <div class="dos-head-cell">Mission</div>
+          <div class="dos-head-cell">Scope</div>
+          <div class="dos-head-cell">Vigilance</div>
+          <div class="dos-head-cell">Screening</div>
+          <div class="dos-head-cell">Statut</div>
+          <div class="dos-head-cell">Date</div>
+          <div class="dos-head-cell">Actions</div>
+        </div>
+        <div id="dossiers-list-body"></div>
+        <div style="padding:14px 20px;border-top:1px solid var(--border);text-align:center">
+          <button class="btn btn-outline" style="font-size:.78rem" id="dossiers-load-more" onclick="dossiersLoadMore()" style="display:none">Afficher plus →</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -2046,7 +2141,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
     <nav class="sidebar-nav">
       <div class="nav-sec">Principal</div>
       <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
-      <div class="nav-item" onclick="showView('onboarding')"><span class="nav-icon">📁</span> Dossiers clients</div>
+      <div class="nav-item" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients</div>
       <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
       <div class="nav-item active"><span class="nav-icon">📋</span> Questionnaire OAL</div>
       <div class="nav-sec" style="margin-top:10px">Compliance</div>
@@ -4552,7 +4647,7 @@ window.addEventListener('load',()=>{
     <nav class="sidebar-nav">
       <div class="nav-sec">Principal</div>
       <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
-      <div class="nav-item" onclick="showView('onboarding')"><span class="nav-icon">📁</span> Dossiers clients</div>
+      <div class="nav-item" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients</div>
       <div class="nav-item active"><span class="nav-icon">🔍</span> Screening KYC</div>
       <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
       <div class="nav-sec" style="margin-top:10px">Compliance</div>
