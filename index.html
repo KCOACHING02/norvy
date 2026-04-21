@@ -1010,7 +1010,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
 .login-footer{text-align:center;margin-top:20px;font-size:.7rem;color:rgba(255,255,255,.18);line-height:1.7}
 
 /* ══ TOASTS ══ */
-.toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;max-width:360px}
+.toast-container{position:fixed;bottom:72px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;max-width:360px}
 .toast{background:white;border:1px solid var(--border);border-radius:12px;padding:13px 15px;box-shadow:0 8px 32px rgba(0,0,0,.15);display:flex;align-items:flex-start;gap:11px;pointer-events:all;cursor:pointer;animation:slideInRight .35s cubic-bezier(.34,1.56,.64,1);transition:all .25s}
 .toast:hover{transform:translateX(-3px)}
 .toast.hiding{animation:slideOutRight .25s ease forwards}
@@ -1107,6 +1107,28 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
 .aud-info{flex:1}
 .aud-title{font-size:.8rem;font-weight:600;color:var(--charcoal)}
 .aud-sub{font-size:.68rem;color:var(--mid)}
+
+/* ══ GLOBAL NAV BAR (bottom, always visible) ══ */
+.global-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:9990;
+  background:var(--dark);border-top:1px solid rgba(255,255,255,.08);
+  display:flex;align-items:center;justify-content:center;gap:2px;
+  padding:6px 10px;
+}
+.global-nav.hidden{display:none}
+.gn-item{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:6px 10px;border-radius:8px;cursor:pointer;
+  color:rgba(255,255,255,.45);font-size:.6rem;font-weight:600;
+  font-family:'Figtree',sans-serif;transition:all .2s;min-width:60px;
+  background:none;border:none;
+}
+.gn-item:hover,.gn-item.active{color:rgba(255,255,255,.9);background:rgba(255,255,255,.08)}
+.gn-icon{font-size:1.1rem;line-height:1}
+.gn-label{white-space:nowrap;letter-spacing:.02em}
+
+/* Adjust body padding when global nav is shown */
+body{padding-bottom:62px}
 .ctrl-card{background:white;border-radius:16px;padding:28px;max-width:620px;width:92%;box-shadow:0 24px 64px rgba(0,0,0,.25);animation:fadeUp .3s ease;max-height:88vh;overflow-y:auto}
 .ctrl-header{display:flex;align-items:center;gap:13px;margin-bottom:20px}
 .ctrl-icon{font-size:1.9rem}
@@ -1217,6 +1239,16 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
 </div>
 <!-- TOASTS -->
 <div class="toast-container" id="toast-container"></div>
+
+<!-- GLOBAL NAVIGATION BAR -->
+<div class="global-nav hidden" id="global-nav">
+  <button class="gn-item" onclick="showView('dashboard')" data-view="dashboard"><span class="gn-icon">⬛</span><span class="gn-label">Accueil</span></button>
+  <button class="gn-item" onclick="showView('dossiers')" data-view="dossiers"><span class="gn-icon">📁</span><span class="gn-label">Dossiers</span></button>
+  <button class="gn-item" onclick="showView('facturation')" data-view="facturation"><span class="gn-icon">🧾</span><span class="gn-label">Factures</span></button>
+  <button class="gn-item" onclick="showView('audiences')" data-view="audiences"><span class="gn-icon">📅</span><span class="gn-label">Audiences</span></button>
+  <button class="gn-item" onclick="showView('screening')" data-view="screening"><span class="gn-icon">🔍</span><span class="gn-label">Screening</span></button>
+  <button class="gn-item" onclick="showView('audit')" data-view="audit"><span class="gn-icon">📊</span><span class="gn-label">Audit</span></button>
+</div>
 
 <!-- MODAL HEURES -->
 <div class="ctrl-modal hidden" id="hours-modal" onclick="if(event.target===this)closeHoursModal()">
@@ -5179,6 +5211,17 @@ window.showView=function(name){
     const oc=n.getAttribute('onclick')||'';
     n.classList.toggle('active',oc.includes(`'${name}'`));
   });
+  // Global nav bar — show when logged in, highlight active
+  const gnav = document.getElementById('global-nav');
+  if(gnav) {
+    const isLoggedIn = name !== 'login';
+    gnav.classList.toggle('hidden', !isLoggedIn);
+    gnav.querySelectorAll('.gn-item').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.view === name);
+    });
+  }
+  // Close any open sidebars
+  document.querySelectorAll('.sidebar.open,.ob-sidebar.open').forEach(s=>s.classList.remove('open'));
   if(name==='dossiers'){
     renderDossiersList();
   }
@@ -5674,20 +5717,21 @@ window.addEventListener('load',()=>{
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
 
   const session = DB.getSession();
+  const gnav = document.getElementById('global-nav');
   if(session) {
-    // Session exists — restore
     updateUIForUser(session);
     initDashboardFromDB();
     document.getElementById('view-dashboard').classList.add('active');
     animateDashboard();
+    if(gnav) { gnav.classList.remove('hidden'); gnav.querySelector('[data-view="dashboard"]')?.classList.add('active'); }
   } else if(DB.getUsers().length === 0) {
-    // No users — show register
     document.getElementById('view-login').classList.add('active');
     toggleAuthCard('register');
+    if(gnav) gnav.classList.add('hidden');
   } else {
-    // Users exist — show login
     document.getElementById('view-login').classList.add('active');
     toggleAuthCard('login');
+    if(gnav) gnav.classList.add('hidden');
   }
 
   document.getElementById('login-pwd')?.addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
