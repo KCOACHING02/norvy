@@ -1293,6 +1293,7 @@ body{padding-bottom:62px}
     </div>
     <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--border);padding-bottom:0" id="dm-tabs">
       <button class="dm-tab active" onclick="switchDossierTab('info',this)">Infos</button>
+      <button class="dm-tab" onclick="switchDossierTab('score',this)">Score AMLR6</button>
       <button class="dm-tab" onclick="switchDossierTab('docs',this)">Documents</button>
       <button class="dm-tab" onclick="switchDossierTab('factures',this)">Factures</button>
       <button class="dm-tab" onclick="switchDossierTab('audiences',this)">Audiences</button>
@@ -1600,6 +1601,7 @@ body{padding-bottom:62px}
             <div class="dos-head-cell">Scope</div>
             <div class="dos-head-cell">Vigilance</div>
             <div class="dos-head-cell">Screening</div>
+            <div class="dos-head-cell">AMLR6</div>
             <div class="dos-head-cell">Date</div>
           </div>
           <!-- Dynamic rows -->
@@ -1752,18 +1754,21 @@ body{padding-bottom:62px}
           <option value="date-desc">Date (récent)</option>
           <option value="date-asc">Date (ancien)</option>
           <option value="name-asc">Nom A-Z</option>
+          <option value="score-desc">Score AMLR6 (risque haut)</option>
+          <option value="score-asc">Score AMLR6 (risque bas)</option>
         </select>
       </div>
       <!-- Results count -->
       <div style="font-size:.75rem;color:var(--light);margin-bottom:10px" id="dossiers-results-count"></div>
       <!-- Table -->
       <div class="card">
-        <div class="dos-head" style="grid-template-columns:2fr 1.2fr 70px 90px 90px 80px 70px 90px">
+        <div class="dos-head" style="grid-template-columns:2fr 1fr 70px 80px 80px 70px 70px 60px 80px">
           <div class="dos-head-cell">Client</div>
           <div class="dos-head-cell">Mission</div>
           <div class="dos-head-cell">Scope</div>
           <div class="dos-head-cell">Vigilance</div>
           <div class="dos-head-cell">Screening</div>
+          <div class="dos-head-cell">AMLR6</div>
           <div class="dos-head-cell">Statut</div>
           <div class="dos-head-cell">Date</div>
           <div class="dos-head-cell">Actions</div>
@@ -3944,6 +3949,7 @@ function renderDossiersTable() {
       <div><span class="pill ${d.inScope?'in':'out'}">${d.inScope?'IN':'OUT'}</span></div>
       <div>${vigPill}</div>
       <div>${scPill}</div>
+      <div>${renderScoreBadge(d,'sm')}</div>
       <div class="dos-date">${dateStr}</div>
     </div>`;
   }).join('');
@@ -4166,6 +4172,17 @@ function renderDossierTabContent(ref, tab) {
         <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Statut</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${statusLabel}</div></div>
         <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Date</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${dateStr}</div></div>
       </div>
+      ${(()=>{
+        const sc = computeAMLR6Score(d);
+        const gbg = sc.level==='critique'?'var(--danger-bg)':sc.level==='eleve'?'#fdecd0':sc.level==='modere'?'var(--warn-bg)':'var(--ok-bg)';
+        return `<div style="background:${gbg};border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:pointer" onclick="switchDossierTab('score',document.querySelectorAll('#dm-tabs .dm-tab')[1])">
+          <div><div style="font-size:.68rem;font-weight:700;color:${sc.color};text-transform:uppercase;letter-spacing:.06em">Score AMLR6</div><div style="font-size:.72rem;color:var(--mid);margin-top:2px">${sc.label} · Cliquer pour détail</div></div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:60px;background:rgba(255,255,255,.5);border-radius:4px;height:8px;overflow:hidden"><div style="height:100%;width:${sc.scorePct}%;background:${sc.color};border-radius:4px"></div></div>
+            <span style="font-family:'DM Serif Display',serif;font-size:1.5rem;color:${sc.color}">${sc.scorePct}</span>
+          </div>
+        </div>`;
+      })()}
       <div style="background:var(--info-bg);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
         <div><div style="font-size:.68rem;font-weight:700;color:var(--info-fg);text-transform:uppercase;letter-spacing:.06em">Heures encodées</div><div style="font-size:.72rem;color:var(--mid);margin-top:2px">${dossierHours.length} entrée(s)</div></div>
         <div style="display:flex;gap:16px;align-items:center">
@@ -4181,6 +4198,10 @@ function renderDossierTabContent(ref, tab) {
           <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="changeDossierStatus('${ref}','archive');viewDossier('${ref}')">📦 Archiver</button>
         </div>
       </div>`;
+  }
+
+  else if(tab === 'score') {
+    content.innerHTML = renderScoreDetail(d);
   }
 
   else if(tab === 'docs') {
@@ -4625,6 +4646,108 @@ function getInvoiceReminders() {
   }).sort((a,b) => b.daysSinceDue - a.daysSinceDue);
 }
 
+// ══ SCORING RISQUE AMLR6 (Règlement UE 2024/1624) ══
+const AMLR6_FACTORS = {
+  clientType:      { label:'Type de client',                   art:'Art. 22 AMLR',  weight:10,  score: d => d.clientType==='pm' ? 7 : 3 },
+  geography:       { label:'Risque géographique (pays GAFI)',  art:'Art. 23(1)(c)',  weight:15,  score: d => d.gafi==='oui' ? 15 : 0 },
+  ppe:             { label:'Personne Politiquement Exposée',   art:'Art. 35-39 AMLR', weight:15, score: d => d.ppe==='oui' ? 15 : 0 },
+  distance:        { label:'Relation à distance (non-face)',   art:'Art. 28(4)',     weight:8,   score: d => d.dist==='oui' ? 8 : 0 },
+  missionRisk:     { label:'Nature de la mission',            art:'Art. 22(2)(b)',  weight:12,  score: d => {
+    const high = ['immobilier','fonds','fiducie','trust'];
+    const med  = ['societe','fiscal','fusion'];
+    const m = d.missions || [];
+    if(m.some(mi => high.includes(mi))) return 12;
+    if(m.some(mi => med.includes(mi))) return 6;
+    return 2;
+  }},
+  scope:           { label:'Assujettissement LBC/FT',         art:'Art. 2(1)(10)',  weight:5,   score: d => d.inScope ? 5 : 0 },
+  screening:       { label:'Résultat du screening',           art:'Art. 20(1)',     weight:15,  score: d => d.screeningResult==='alerte' ? 15 : d.screeningResult==='negatif' ? 0 : 5 },
+  vigilance:       { label:'Niveau de vigilance appliqué',    art:'Art. 28-33',     weight:10,  score: d => d.vigilance==='renforcee' ? 10 : d.vigilance==='normal-plus' ? 6 : d.vigilance==='normal' ? 2 : 0 },
+  docCompleteness: { label:'Complétude documentaire KYC',     art:'Art. 20(1)(a)',  weight:5,   score: d => {
+    const docs = DB.getDocuments().filter(dc => dc.ref === d.ref);
+    const verified = docs.filter(dc => dc.verified).length;
+    if(docs.length === 0) return 5;
+    if(verified < docs.length) return 3;
+    return 0;
+  }},
+  structureComplexity: { label:'Complexité de la structure',  art:'Art. 22(2)(a)',  weight:5,   score: d => {
+    if(d.clientType==='pm' && (d.missions||[]).some(m=>['fonds','fiducie','trust'].includes(m))) return 5;
+    if(d.clientType==='pm') return 3;
+    return 0;
+  }},
+};
+
+function computeAMLR6Score(dossier) {
+  const breakdown = [];
+  let totalScore = 0;
+  let maxPossible = 0;
+  for(const [key, factor] of Object.entries(AMLR6_FACTORS)) {
+    const pts = factor.score(dossier);
+    totalScore += pts;
+    maxPossible += factor.weight;
+    breakdown.push({ key, label: factor.label, art: factor.art, weight: factor.weight, pts, pct: Math.round(pts / factor.weight * 100) });
+  }
+  const scorePct = Math.round(totalScore / maxPossible * 100);
+  let level, color, label;
+  if(scorePct >= 70)      { level='critique'; color='var(--danger-fg)'; label='Risque critique'; }
+  else if(scorePct >= 45) { level='eleve';    color='#e67e22';         label='Risque élevé'; }
+  else if(scorePct >= 25) { level='modere';   color='var(--warn-fg)';  label='Risque modéré'; }
+  else                    { level='faible';   color='var(--ok-fg)';    label='Risque faible'; }
+  return { totalScore, maxPossible, scorePct, level, color, label, breakdown };
+}
+
+function renderScoreBadge(dossier, size) {
+  const s = computeAMLR6Score(dossier);
+  const sz = size === 'sm' ? 'font-size:.65rem;padding:3px 8px' : 'font-size:.72rem;padding:4px 10px';
+  const bg = s.level==='critique' ? 'var(--danger-bg)' : s.level==='eleve' ? '#fdecd0' : s.level==='modere' ? 'var(--warn-bg)' : 'var(--ok-bg)';
+  return `<span class="doc-badge" style="background:${bg};color:${s.color};${sz}" title="Score AMLR6 : ${s.scorePct}/100">${s.scorePct}/100</span>`;
+}
+
+function renderScoreDetail(dossier) {
+  const s = computeAMLR6Score(dossier);
+  const gaugeColor = s.level==='critique' ? '#c0392b' : s.level==='eleve' ? '#e67e22' : s.level==='modere' ? '#f39c12' : '#27ae60';
+  const gaugeBg = s.level==='critique' ? 'var(--danger-bg)' : s.level==='eleve' ? '#fdecd0' : s.level==='modere' ? 'var(--warn-bg)' : 'var(--ok-bg)';
+
+  return `
+    <div style="background:${gaugeBg};border:1px solid ${gaugeColor}22;border-radius:12px;padding:16px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div>
+          <div style="font-size:.68rem;font-weight:700;color:${gaugeColor};text-transform:uppercase;letter-spacing:.06em">Score de risque AMLR6</div>
+          <div style="font-size:.65rem;color:var(--mid);margin-top:2px">Règlement UE 2024/1624 · Évaluation automatique</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'DM Serif Display',serif;font-size:2rem;color:${gaugeColor};line-height:1">${s.scorePct}</div>
+          <div style="font-size:.6rem;color:var(--mid)">/100</div>
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,.6);border-radius:6px;height:10px;overflow:hidden;margin-bottom:6px">
+        <div style="height:100%;width:${s.scorePct}%;background:${gaugeColor};border-radius:6px;transition:width .5s ease"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.6rem;color:var(--mid)">
+        <span>0 — Faible</span><span>25 — Modéré</span><span>45 — Élevé</span><span>70 — Critique</span>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);margin-bottom:8px">Détail des facteurs de risque</div>
+      ${s.breakdown.map(f => {
+        const barColor = f.pts === 0 ? 'var(--ok-fg)' : f.pts >= f.weight * 0.7 ? 'var(--danger-fg)' : f.pts >= f.weight * 0.4 ? 'var(--warn-fg)' : 'var(--ok-fg)';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.04)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.74rem;font-weight:600;color:var(--charcoal)">${f.label}</div>
+            <div style="font-size:.6rem;color:var(--light)">${f.art}</div>
+          </div>
+          <div style="width:80px;background:var(--cream2);border-radius:4px;height:6px;overflow:hidden;flex-shrink:0">
+            <div style="height:100%;width:${f.pct}%;background:${barColor};border-radius:4px"></div>
+          </div>
+          <div style="font-size:.7rem;font-weight:700;color:${barColor};min-width:32px;text-align:right">${f.pts}/${f.weight}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="font-size:.62rem;color:var(--light);line-height:1.5;padding:8px 10px;background:var(--cream);border-radius:6px">
+      <strong>Base légale :</strong> Règlement (UE) 2024/1624 du Parlement européen et du Conseil (AMLR) · Loi luxembourgeoise du 12 novembre 2004 modifiée · Circulaires OAL applicables aux avocats (Art. 2(1)(10) AMLR). Le score est calculé sur ${s.maxPossible} points répartis en ${s.breakdown.length} facteurs de risque pondérés. Un score ≥ 70 déclenche l'obligation de vigilance renforcée (Art. 28-33 AMLR).
+    </div>`;
+}
+
 function addDossierNote(ref) {
   const input = document.getElementById('dm-note-input');
   const text = input?.value?.trim();
@@ -4669,6 +4792,8 @@ function renderDossiersList() {
   if(dossiersSort === 'date-desc') dossiers.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
   else if(dossiersSort === 'date-asc') dossiers.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
   else if(dossiersSort === 'name-asc') dossiers.sort((a,b) => a.clientName.localeCompare(b.clientName));
+  else if(dossiersSort === 'score-desc') dossiers.sort((a,b) => computeAMLR6Score(b).scorePct - computeAMLR6Score(a).scorePct);
+  else if(dossiersSort === 'score-asc') dossiers.sort((a,b) => computeAMLR6Score(a).scorePct - computeAMLR6Score(b).scorePct);
 
   // Stats
   const el = id => document.getElementById(id);
@@ -4711,12 +4836,14 @@ function renderDossiersList() {
                        d.status === 'archive' ? '<span class="pill out">Archivé</span>' :
                        '<span class="pill out">' + (d.status||'—') + '</span>';
     const dateStr = new Date(d.createdAt).toLocaleDateString('fr-LU', {day:'numeric', month:'short'});
-    return `<div class="dos-row${isAlert?' alert-row':''}" style="grid-template-columns:2fr 1.2fr 70px 90px 90px 80px 70px 90px;cursor:pointer" onclick="viewDossier('${d.ref}')">
+    const scoreBadge = renderScoreBadge(d, 'sm');
+    return `<div class="dos-row${isAlert?' alert-row':''}" style="grid-template-columns:2fr 1fr 70px 80px 80px 70px 70px 60px 80px;cursor:pointer" onclick="viewDossier('${d.ref}')">
       <div class="dos-client"><div class="dos-av ${d.clientType}">${initials}</div><div><div class="dos-name">${d.clientName}</div><div class="dos-ref">${d.ref}</div></div></div>
       <div class="dos-mission">${d.missionLabel || d.missionLabels?.[0] || '—'}</div>
       <div><span class="pill ${d.inScope?'in':'out'}">${d.inScope?'IN':'OUT'}</span></div>
       <div>${vigPill}</div>
       <div>${scPill}</div>
+      <div>${scoreBadge}</div>
       <div>${statusPill}</div>
       <div class="dos-date">${dateStr}</div>
       <div style="display:flex;gap:4px;align-items:center">
@@ -4744,8 +4871,10 @@ function filterDossiersList() {
 function exportDossiersCSV() {
   const dossiers = DB.getDossiers();
   if(dossiers.length === 0) { showToast('Export impossible','Aucun dossier à exporter','warn','⚠️'); return; }
-  const headers = ['Ref','Client','Type','Mission','Scope','Vigilance','Screening','Decision','Status','Date'];
-  const rows = dossiers.map(d => [
+  const headers = ['Ref','Client','Type','Mission','Scope','Vigilance','Screening','Score_AMLR6','Niveau_Risque','Decision','Status','Date'];
+  const rows = dossiers.map(d => {
+    const sc = computeAMLR6Score(d);
+    return [
     d.ref,
     '"' + (d.clientName||'').replace(/"/g,'""') + '"',
     d.clientType === 'pp' ? 'Personne physique' : 'Personne morale',
@@ -4753,10 +4882,12 @@ function exportDossiersCSV() {
     d.inScope ? 'IN SCOPE' : 'OUT OF SCOPE',
     d.vigilance || '',
     d.screeningResult || '',
+    sc.scorePct,
+    sc.label,
     d.decision || '',
     d.status || '',
     d.createdAt ? new Date(d.createdAt).toISOString().split('T')[0] : ''
-  ].join(','));
+  ].join(','); });
   const csv = [headers.join(','), ...rows].join('\n');
   const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
   const url = URL.createObjectURL(blob);
