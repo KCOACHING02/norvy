@@ -1090,6 +1090,23 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
 /* ══ CONTRÔLE OAL ══ */
 .ctrl-modal{position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);animation:fadeIn .2s ease}
 .ctrl-modal.hidden{display:none}
+.dm-tab{padding:8px 16px;font-size:.78rem;font-weight:600;font-family:'Figtree',sans-serif;border:none;background:none;color:var(--light);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.dm-tab:hover{color:var(--charcoal)}
+.dm-tab.active{color:var(--sage);border-bottom-color:var(--sage)}
+.doc-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;transition:background .15s;cursor:default}
+.doc-row:hover{background:var(--cream)}
+.doc-icon{font-size:1.2rem;flex-shrink:0}
+.doc-info{flex:1;min-width:0}
+.doc-name{font-size:.82rem;font-weight:600;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-meta{font-size:.68rem;color:var(--light)}
+.doc-badge{font-size:.65rem;padding:3px 8px;border-radius:6px;font-weight:600}
+.inv-row{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px;cursor:pointer;transition:all .15s}
+.inv-row:hover{background:var(--cream);border-color:var(--sage-muted)}
+.aud-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px}
+.aud-date{font-size:.75rem;font-weight:700;color:var(--charcoal);min-width:80px}
+.aud-info{flex:1}
+.aud-title{font-size:.8rem;font-weight:600;color:var(--charcoal)}
+.aud-sub{font-size:.68rem;color:var(--mid)}
 .ctrl-card{background:white;border-radius:16px;padding:28px;max-width:620px;width:92%;box-shadow:0 24px 64px rgba(0,0,0,.25);animation:fadeUp .3s ease;max-height:88vh;overflow-y:auto}
 .ctrl-header{display:flex;align-items:center;gap:13px;margin-bottom:20px}
 .ctrl-icon{font-size:1.9rem}
@@ -1237,10 +1254,17 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
 
 <!-- MODAL DÉTAIL DOSSIER -->
 <div class="ctrl-modal hidden" id="dossier-modal" onclick="if(event.target===this)closeDossierModal()">
-  <div style="background:white;border-radius:16px;padding:28px 24px;width:100%;max-width:560px;position:relative;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+  <div style="background:white;border-radius:16px;padding:28px 24px;width:100%;max-width:720px;position:relative;animation:fadeUp .3s ease;max-height:92vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)" id="dm-title">Détail du dossier</div>
       <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="closeDossierModal()">✕</span>
+    </div>
+    <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--border);padding-bottom:0" id="dm-tabs">
+      <button class="dm-tab active" onclick="switchDossierTab('info',this)">Infos</button>
+      <button class="dm-tab" onclick="switchDossierTab('docs',this)">Documents</button>
+      <button class="dm-tab" onclick="switchDossierTab('factures',this)">Factures</button>
+      <button class="dm-tab" onclick="switchDossierTab('audiences',this)">Audiences</button>
+      <button class="dm-tab" onclick="switchDossierTab('notes',this)">Notes</button>
     </div>
     <div id="dm-content"></div>
     <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">
@@ -1318,8 +1342,11 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
       <div class="nav-sec" style="margin-top:10px">Compliance</div>
       <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
       <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">⚠️</span> Alertes <span class="nav-badge-pill red">3</span></div>
-      <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📈</span> Rapports</div>
-      <div class="nav-item" onclick="openHoursModal()"><span class="nav-icon">💶</span> Heures / Facturation</div>
+      <div class="nav-sec" style="margin-top:10px">Gestion</div>
+      <div class="nav-item" onclick="showView('facturation')"><span class="nav-icon">🧾</span> Facturation</div>
+      <div class="nav-item" onclick="showView('audiences')"><span class="nav-icon">📅</span> Agenda audiences</div>
+      <div class="nav-item" onclick="openHoursModal()"><span class="nav-icon">⏱</span> Heures / Encodage</div>
+      <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📈</span> Rapports OAL</div>
       <div class="nav-sec" style="margin-top:10px">Cabinet</div>
       <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening global</div>
       <div class="nav-item" onclick="doLogout()"><span class="nav-icon">⏻</span> Déconnexion</div>
@@ -1633,7 +1660,9 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
       <div class="nav-item active" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients</div>
       <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
       <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
-      <div class="nav-sec" style="margin-top:10px">Compliance</div>
+      <div class="nav-sec" style="margin-top:10px">Gestion</div>
+      <div class="nav-item" onclick="showView('facturation')"><span class="nav-icon">🧾</span> Facturation</div>
+      <div class="nav-item" onclick="showView('audiences')"><span class="nav-icon">📅</span> Agenda audiences</div>
       <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
       <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">⚠️</span> Alertes <span class="nav-badge-pill red">3</span></div>
     </nav>
@@ -2683,8 +2712,6 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
   </div><!-- /oal-main -->
 </div><!-- /view-oal -->
 
-</div><!-- /view-onboarding -->
-
 
 <!-- ═══════════════════════════════════════════════════════
      VUE QUESTIONNAIRE OAL
@@ -2711,6 +2738,15 @@ const DB = {
 
   getScreenings() { return this.load('screenings', []); },
   saveScreenings(arr) { this.save('screenings', arr); },
+
+  getDocuments() { return this.load('documents', []); },
+  saveDocuments(arr) { this.save('documents', arr); },
+
+  getInvoices() { return this.load('invoices', []); },
+  saveInvoices(arr) { this.save('invoices', arr); },
+
+  getAudiences() { return this.load('audiences', []); },
+  saveAudiences(arr) { this.save('audiences', arr); },
 
   getSession() { return this.load('session', null); },
   saveSession(obj) { this.save('session', obj); },
@@ -2772,13 +2808,16 @@ function showView(name){
 }
 
 function toggleSidebar(){
-  // Détecter la vue active et toggle la bonne sidebar
-  if(document.getElementById('view-dashboard')?.classList.contains('active')){
-    document.getElementById('main-sb')?.classList.toggle('open');
-  } else if(document.getElementById('view-onboarding')?.classList.contains('active')){
-    document.getElementById('sb2')?.classList.toggle('open');
-  } else if(document.getElementById('view-oal')?.classList.contains('active')){
-    document.getElementById('oal-sb')?.classList.toggle('open');
+  const views = [
+    ['view-dashboard','main-sb'],['view-onboarding','sb2'],['view-oal','oal-sb'],
+    ['view-dossiers','dos-sb'],['view-screening','sc-sb'],['view-audit','audit-sb'],
+    ['view-facturation','fac-sb'],['view-audiences','aud-sb']
+  ];
+  for(const [vid,sid] of views){
+    if(document.getElementById(vid)?.classList.contains('active')){
+      document.getElementById(sid)?.classList.toggle('open');
+      break;
+    }
   }
 }
 
@@ -3790,20 +3829,58 @@ document.addEventListener('click',e=>{const m=document.getElementById('ctrl-moda
 function computeAlerts() {
   const dossiers = DB.getDossiers();
   const alerts = [];
+
   dossiers.forEach(d => {
     if(d.status === 'suspendu') {
-      alerts.push({ severity:'warn', icon:'🟡', title:'Dossier suspendu — ' + d.clientName, sub:'En attente de documents. Action requise.', ref: d.ref, time:'En attente' });
+      alerts.push({ severity:'warn', icon:'🟡', title:'Dossier suspendu — ' + d.clientName, sub:'En attente de documents. Action requise.', ref: d.ref, time:'En attente', category:'compliance' });
     }
     if(d.status === 'refuse') {
-      alerts.push({ severity:'crit', icon:'🔴', title:'Mission refusée — ' + d.clientName, sub:'Évaluer la nécessité d\'une déclaration de soupçon.', ref: d.ref, time:'Action' });
+      alerts.push({ severity:'crit', icon:'🔴', title:'Mission refusée — ' + d.clientName, sub:'Évaluer la nécessité d\'une déclaration de soupçon au Bâtonnier (art. 5 Loi 12/11/2004).', ref: d.ref, time:'Action', category:'compliance' });
     }
     if(d.screeningResult === 'alerte') {
-      alerts.push({ severity:'crit', icon:'🔴', title:'Alerte screening — ' + d.clientName, sub:'Correspondance détectée. Qualification requise.', ref: d.ref, time:'Urgent' });
+      alerts.push({ severity:'crit', icon:'🔴', title:'Alerte screening — ' + d.clientName, sub:'Correspondance détectée sur liste de sanctions. Qualification requise sous 48h.', ref: d.ref, time:'Urgent', category:'compliance' });
     }
     if(d.vigilance === 'renforcee' && d.status === 'actif') {
-      alerts.push({ severity:'info', icon:'🔵', title:'Vigilance renforcée — ' + d.clientName, sub:'Screening semestriel à planifier.', ref: d.ref, time:'Planifié' });
+      alerts.push({ severity:'info', icon:'🔵', title:'Vigilance renforcée — ' + d.clientName, sub:'Screening semestriel à planifier. Prochaine revue KYC selon Art. 3-2 Loi LBC/FT.', ref: d.ref, time:'Planifié', category:'compliance' });
+    }
+    // Missing documents compliance
+    const docs = DB.getDocuments().filter(dc => dc.ref === d.ref);
+    if(d.status === 'actif' && d.inScope && docs.length === 0) {
+      alerts.push({ severity:'warn', icon:'🟡', title:'Documents manquants — ' + d.clientName, sub:'Dossier IN SCOPE sans documents KYC enregistrés. Risque de non-conformité.', ref: d.ref, time:'Action', category:'compliance' });
+    }
+    // KYC review reminder (dossiers older than 180 days with enhanced vigilance)
+    if(d.vigilance === 'renforcee' && d.status === 'actif') {
+      const age = (Date.now() - new Date(d.createdAt).getTime()) / 86400000;
+      if(age > 180) {
+        alerts.push({ severity:'warn', icon:'🟠', title:'Revue KYC requise — ' + d.clientName, sub:'Dossier en vigilance renforcée ouvert il y a plus de 6 mois. Revue périodique obligatoire.', ref: d.ref, time:'Planifier', category:'compliance' });
+      }
     }
   });
+
+  // Invoice alerts — unpaid and overdue
+  const unpaidInvoices = getUnpaidInvoices();
+  unpaidInvoices.forEach(inv => {
+    const daysSinceDue = inv.dueDate ? Math.floor((new Date() - new Date(inv.dueDate)) / 86400000) : 0;
+    if(daysSinceDue > 30) {
+      alerts.push({ severity:'crit', icon:'🔴', title:'Facture impayée > 30j — ' + inv.number, sub: inv.client + ' · ' + inv.total.toLocaleString('fr-FR') + ' € · ' + daysSinceDue + ' jours de retard', ref: inv.ref, time:'Relance urgente', category:'facturation' });
+    } else if(daysSinceDue > 0) {
+      alerts.push({ severity:'warn', icon:'🟡', title:'Facture en retard — ' + inv.number, sub: inv.client + ' · ' + inv.total.toLocaleString('fr-FR') + ' € · Échue depuis ' + daysSinceDue + ' jour(s)', ref: inv.ref, time:'Relance', category:'facturation' });
+    }
+  });
+
+  // Upcoming audiences (within 7 days)
+  const audiences = DB.getAudiences();
+  const now = new Date();
+  const in7days = new Date(Date.now() + 7*86400000);
+  audiences.forEach(a => {
+    const dt = new Date(a.date);
+    if(dt >= now && dt <= in7days) {
+      const dossier = DB.getDossiers().find(d => d.ref === a.ref);
+      const daysLeft = Math.ceil((dt - now) / 86400000);
+      alerts.push({ severity: daysLeft <= 2 ? 'crit' : 'warn', icon: daysLeft <= 2 ? '🔴' : '🟡', title:'Audience dans ' + daysLeft + 'j — ' + (dossier?.clientName||a.ref), sub: a.tribunal + ' · ' + dt.toLocaleDateString('fr-LU',{weekday:'long',day:'numeric',month:'long'}) + ' ' + (a.time||''), ref: a.ref, time: daysLeft + 'j', category:'audience' });
+    }
+  });
+
   return alerts;
 }
 
@@ -4008,70 +4085,512 @@ function getTotalBilling() {
 }
 
 // ══ DÉTAIL DOSSIER ══
+let currentDossierRef = null;
+let currentDossierTab = 'info';
+
+function switchDossierTab(tab, btn) {
+  currentDossierTab = tab;
+  document.querySelectorAll('#dm-tabs .dm-tab').forEach(t => t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderDossierTabContent(currentDossierRef, tab);
+}
+
 function viewDossier(ref) {
   const d = DB.getDossiers().find(d => d.ref === ref);
   if(!d) return;
+  currentDossierRef = ref;
+  currentDossierTab = 'info';
   const modal = document.getElementById('dossier-modal');
   const title = document.getElementById('dm-title');
-  const content = document.getElementById('dm-content');
   title.textContent = d.ref + ' — ' + d.clientName;
   title.dataset.ref = ref;
+  document.querySelectorAll('#dm-tabs .dm-tab').forEach((t,i) => t.classList.toggle('active', i===0));
+  renderDossierTabContent(ref, 'info');
+  modal.classList.remove('hidden');
+}
 
-  const vigLabel = d.vigilance === 'renforcee' ? '🔴 Renforcée' : d.vigilance === 'normal-plus' ? '🟡 Normale+' : d.vigilance === 'normal' ? '🟢 Normale' : '—';
-  const statusLabel = d.status === 'actif' ? '✅ Actif' : d.status === 'suspendu' ? '⏸ Suspendu' : d.status === 'refuse' ? '🚫 Refusé' : d.status;
-  const scLabel = d.screeningResult === 'negatif' ? '✅ Négatif' : d.screeningResult === 'alerte' ? '⚠️ Alerte' : '⏳ Non effectué';
-  const dateStr = new Date(d.createdAt).toLocaleDateString('fr-LU', {day:'numeric', month:'long', year:'numeric'});
+function renderDossierTabContent(ref, tab) {
+  const d = DB.getDossiers().find(d => d.ref === ref);
+  if(!d) return;
+  const content = document.getElementById('dm-content');
 
-  // Hours for this dossier
-  const dossierHours = DB.load('hours', []).filter(h => h.ref === ref);
-  const totalH = dossierHours.reduce((s,e) => s + e.hours, 0);
-  const totalA = dossierHours.reduce((s,e) => s + e.amount, 0);
+  if(tab === 'info') {
+    const vigLabel = d.vigilance === 'renforcee' ? '🔴 Renforcée' : d.vigilance === 'normal-plus' ? '🟡 Normale+' : d.vigilance === 'normal' ? '🟢 Normale' : '—';
+    const statusLabel = d.status === 'actif' ? '✅ Actif' : d.status === 'suspendu' ? '⏸ Suspendu' : d.status === 'refuse' ? '🚫 Refusé' : d.status;
+    const scLabel = d.screeningResult === 'negatif' ? '✅ Négatif' : d.screeningResult === 'alerte' ? '⚠️ Alerte' : '⏳ Non effectué';
+    const dateStr = new Date(d.createdAt).toLocaleDateString('fr-LU', {day:'numeric', month:'long', year:'numeric'});
+    const dossierHours = DB.load('hours', []).filter(h => h.ref === ref);
+    const totalH = dossierHours.reduce((s,e) => s + e.hours, 0);
+    const totalA = dossierHours.reduce((s,e) => s + e.amount, 0);
 
-  // Notes for this dossier
-  const dossierNotes = DB.load('dossier-notes-' + ref, []);
-  const notesHtml = dossierNotes.length > 0
-    ? dossierNotes.map(n => `<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px dashed var(--border);font-size:.78rem">
-        <span style="font-weight:600;color:var(--charcoal);white-space:nowrap">${n.date}</span>
-        <span style="color:var(--mid);flex:1">${n.text}</span>
-      </div>`).join('')
-    : '<div style="font-size:.78rem;color:var(--light);padding:8px 0">Aucune note pour ce dossier.</div>';
-
-  content.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Client</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.clientName}</div></div>
-      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Type</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.clientType === 'pp' ? '👤 Personne physique' : '🏢 Personne morale'}</div></div>
-      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Mission</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.missionLabel || d.missionLabels?.[0] || '—'}</div></div>
-      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Scope</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.inScope ? '✅ IN SCOPE' : '⚡ OUT OF SCOPE'}</div></div>
-      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Vigilance</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${vigLabel}</div></div>
-      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Screening</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${scLabel}</div></div>
-      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Statut</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${statusLabel}</div></div>
-      <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Date</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${dateStr}</div></div>
-    </div>
-    <div style="background:var(--info-bg);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div><div style="font-size:.68rem;font-weight:700;color:var(--info-fg);text-transform:uppercase;letter-spacing:.06em">Heures encodées</div><div style="font-size:.72rem;color:var(--mid);margin-top:2px">${dossierHours.length} entrée(s)</div></div>
-      <div style="display:flex;gap:16px;align-items:center">
-        <span style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)">${totalH}h</span>
-        <span style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--ok-fg)">${Math.round(totalA).toLocaleString('fr-FR')} €</span>
+    content.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Client</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.clientName}</div></div>
+        <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Type</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.clientType === 'pp' ? '👤 Personne physique' : '🏢 Personne morale'}</div></div>
+        <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Mission</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.missionLabel || d.missionLabels?.[0] || '—'}</div></div>
+        <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Scope</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${d.inScope ? '✅ IN SCOPE' : '⚡ OUT OF SCOPE'}</div></div>
+        <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Vigilance</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${vigLabel}</div></div>
+        <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Screening</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${scLabel}</div></div>
+        <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Statut</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${statusLabel}</div></div>
+        <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Date</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${dateStr}</div></div>
       </div>
-    </div>
-    <div style="margin-bottom:16px">
-      <div style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);margin-bottom:8px">Changer le statut</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="changeDossierStatus('${ref}','actif');viewDossier('${ref}')">✅ Activer</button>
-        <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="changeDossierStatus('${ref}','suspendu');viewDossier('${ref}')">⏸ Suspendre</button>
-        <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="changeDossierStatus('${ref}','archive');viewDossier('${ref}')">📦 Archiver</button>
+      <div style="background:var(--info-bg);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div><div style="font-size:.68rem;font-weight:700;color:var(--info-fg);text-transform:uppercase;letter-spacing:.06em">Heures encodées</div><div style="font-size:.72rem;color:var(--mid);margin-top:2px">${dossierHours.length} entrée(s)</div></div>
+        <div style="display:flex;gap:16px;align-items:center">
+          <span style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)">${totalH}h</span>
+          <span style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--ok-fg)">${Math.round(totalA).toLocaleString('fr-FR')} €</span>
+        </div>
       </div>
-    </div>
-    <div style="margin-bottom:12px">
-      <div style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);margin-bottom:8px">Notes</div>
-      ${notesHtml}
-      <div style="display:flex;gap:8px;margin-top:10px">
+      <div>
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);margin-bottom:8px">Changer le statut</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="changeDossierStatus('${ref}','actif');viewDossier('${ref}')">✅ Activer</button>
+          <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="changeDossierStatus('${ref}','suspendu');viewDossier('${ref}')">⏸ Suspendre</button>
+          <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="changeDossierStatus('${ref}','archive');viewDossier('${ref}')">📦 Archiver</button>
+        </div>
+      </div>`;
+  }
+
+  else if(tab === 'docs') {
+    const docs = DB.getDocuments().filter(dc => dc.ref === ref);
+    const typeIcons = {'id':'🪪','passport':'🛂','rcs':'🏛️','statuts':'📜','kbis':'📑','contrat':'📝','facture':'🧾','rapport':'📊','courrier':'✉️','autre':'📎'};
+    const docsHtml = docs.length > 0 ? docs.map(dc => `<div class="doc-row">
+        <div class="doc-icon">${typeIcons[dc.docType] || '📎'}</div>
+        <div class="doc-info">
+          <div class="doc-name">${dc.name}</div>
+          <div class="doc-meta">${dc.docType?.toUpperCase() || 'DOCUMENT'} · ${dc.size || '—'} · ${new Date(dc.uploadedAt).toLocaleDateString('fr-LU',{day:'numeric',month:'short',year:'numeric'})}</div>
+        </div>
+        <span class="doc-badge" style="background:${dc.verified?'var(--ok-bg);color:var(--ok-fg)':'var(--warn-bg);color:var(--warn-fg)'}">${dc.verified?'✓ Vérifié':'⏳ En attente'}</span>
+      </div>`).join('') : '<div style="text-align:center;padding:24px;color:var(--light);font-size:.83rem">📂 Aucun document enregistré</div>';
+
+    content.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:.78rem;color:var(--mid)">${docs.length} document(s) enregistré(s)</div>
+        <button class="btn btn-sage" style="font-size:.74rem;padding:6px 14px" onclick="showAddDocForm('${ref}')">+ Ajouter un document</button>
+      </div>
+      <div id="doc-add-form-zone"></div>
+      <div>${docsHtml}</div>`;
+  }
+
+  else if(tab === 'factures') {
+    renderDossierInvoicesTab(ref);
+  }
+
+  else if(tab === 'audiences') {
+    const audiences = DB.getAudiences().filter(a => a.ref === ref);
+    const audHtml = audiences.length > 0 ? audiences.sort((a,b)=>new Date(a.date)-new Date(b.date)).map(a => {
+      const dt = new Date(a.date);
+      const isPast = dt < new Date();
+      return `<div class="aud-row" style="border-left:3px solid ${isPast?'var(--light)':'var(--sage)'}">
+        <div class="aud-date">${dt.toLocaleDateString('fr-LU',{day:'numeric',month:'short',year:'numeric'})}<br/><span style="font-size:.65rem;color:var(--mid)">${a.time || ''}</span></div>
+        <div class="aud-info">
+          <div class="aud-title">${a.tribunal || 'Audience'}</div>
+          <div class="aud-sub">${a.description || ''}</div>
+        </div>
+        <span class="doc-badge" style="background:${isPast?'var(--cream2);color:var(--light)':'var(--info-bg);color:var(--info-fg)'}">${isPast?'Passée':'À venir'}</span>
+      </div>`;
+    }).join('') : '<div style="text-align:center;padding:24px;color:var(--light);font-size:.83rem">📅 Aucune audience planifiée</div>';
+
+    content.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:.78rem;color:var(--mid)">${audiences.length} audience(s)</div>
+        <button class="btn btn-sage" style="font-size:.74rem;padding:6px 14px" onclick="showAddAudienceForm('${ref}')">+ Planifier une audience</button>
+      </div>
+      <div id="audience-add-form-zone"></div>
+      <div>${audHtml}</div>`;
+  }
+
+  else if(tab === 'notes') {
+    const dossierNotes = DB.load('dossier-notes-' + ref, []);
+    const notesHtml = dossierNotes.length > 0
+      ? dossierNotes.map(n => `<div style="display:flex;gap:8px;padding:10px 0;border-bottom:1px dashed var(--border);font-size:.78rem">
+          <span style="font-weight:600;color:var(--charcoal);white-space:nowrap">${n.date}</span>
+          <span style="color:var(--mid);flex:1">${n.text}</span>
+        </div>`).join('')
+      : '<div style="font-size:.78rem;color:var(--light);padding:8px 0">Aucune note pour ce dossier.</div>';
+
+    content.innerHTML = `
+      <div>${notesHtml}</div>
+      <div style="display:flex;gap:8px;margin-top:12px">
         <input type="text" id="dm-note-input" placeholder="Ajouter une note..." style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Figtree',sans-serif;font-size:.82rem;outline:none"/>
         <button class="btn btn-sage" style="font-size:.78rem;padding:7px 14px" onclick="addDossierNote('${ref}')">Ajouter</button>
-      </div>
-    </div>`;
+      </div>`;
+  }
+}
 
-  modal.classList.remove('hidden');
+function showAddDocForm(ref) {
+  const zone = document.getElementById('doc-add-form-zone');
+  if(!zone) return;
+  zone.innerHTML = `<div style="background:var(--cream);border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid var(--border)">
+    <div style="font-size:.78rem;font-weight:600;color:var(--charcoal);margin-bottom:10px">Enregistrer un document</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <input type="text" id="doc-add-name" placeholder="Nom du document" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/>
+      <select id="doc-add-type" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none;background:white">
+        <option value="id">Pièce d'identité</option><option value="passport">Passeport</option><option value="rcs">Extrait RCS</option><option value="statuts">Statuts</option><option value="contrat">Contrat</option><option value="facture">Facture</option><option value="rapport">Rapport</option><option value="courrier">Courrier</option><option value="autre">Autre</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sage" style="font-size:.75rem;padding:6px 14px" onclick="addDocument('${ref}')">Enregistrer</button>
+      <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="document.getElementById('doc-add-form-zone').innerHTML=''">Annuler</button>
+    </div>
+  </div>`;
+}
+
+function addDocument(ref) {
+  const name = document.getElementById('doc-add-name')?.value.trim();
+  const docType = document.getElementById('doc-add-type')?.value || 'autre';
+  if(!name) { showToast('Erreur','Indiquez un nom de document','warn','⚠️'); return; }
+  const docs = DB.getDocuments();
+  docs.push({ id: Date.now(), ref, name, docType, size: Math.floor(Math.random()*900+100) + ' Ko', verified: false, uploadedAt: new Date().toISOString() });
+  DB.saveDocuments(docs);
+  DB.addAudit({ type:'dossier', dot:'var(--info-fg)', title:'📎 Document ajouté — ' + ref, detail: name + ' (' + docType + ')', tags:[{t:'Document',c:'b'}] });
+  showToast('Document enregistré', name + ' ajouté au dossier ' + ref, 'ok', '📎');
+  renderDossierTabContent(ref, 'docs');
+}
+
+function showAddAudienceForm(ref) {
+  const zone = document.getElementById('audience-add-form-zone');
+  if(!zone) return;
+  zone.innerHTML = `<div style="background:var(--cream);border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid var(--border)">
+    <div style="font-size:.78rem;font-weight:600;color:var(--charcoal);margin-bottom:10px">Planifier une audience</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <input type="date" id="aud-add-date" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/>
+      <input type="time" id="aud-add-time" value="09:00" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/>
+    </div>
+    <input type="text" id="aud-add-tribunal" placeholder="Tribunal (ex: Tribunal d'arrondissement Luxembourg)" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none;margin-bottom:8px"/>
+    <input type="text" id="aud-add-desc" placeholder="Description / objet de l'audience" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none;margin-bottom:8px"/>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sage" style="font-size:.75rem;padding:6px 14px" onclick="addAudience('${ref}')">Planifier</button>
+      <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="document.getElementById('audience-add-form-zone').innerHTML=''">Annuler</button>
+    </div>
+  </div>`;
+  document.getElementById('aud-add-date').value = new Date(Date.now()+7*86400000).toISOString().split('T')[0];
+}
+
+function addAudience(ref) {
+  const date = document.getElementById('aud-add-date')?.value;
+  const time = document.getElementById('aud-add-time')?.value || '09:00';
+  const tribunal = document.getElementById('aud-add-tribunal')?.value.trim();
+  const description = document.getElementById('aud-add-desc')?.value.trim();
+  if(!date) { showToast('Erreur','Indiquez une date','warn','⚠️'); return; }
+  if(!tribunal) { showToast('Erreur','Indiquez le tribunal','warn','⚠️'); return; }
+  const audiences = DB.getAudiences();
+  audiences.push({ id: Date.now(), ref, date, time, tribunal, description, createdAt: new Date().toISOString() });
+  DB.saveAudiences(audiences);
+  const dossier = DB.getDossiers().find(d => d.ref === ref);
+  DB.addAudit({ type:'dossier', dot:'var(--info-fg)', title:'📅 Audience planifiée — ' + (dossier?.clientName||ref), detail: tribunal + ' · ' + date + ' ' + time, tags:[{t:'Audience',c:'b'}] });
+  showToast('Audience planifiée', tribunal + ' le ' + new Date(date).toLocaleDateString('fr-LU'), 'ok', '📅');
+  renderDossierTabContent(ref, 'audiences');
+}
+
+// ══ MODULE FACTURATION ══
+function renderDossierInvoicesTab(ref) {
+  const content = document.getElementById('dm-content');
+  const invoices = DB.getInvoices().filter(i => i.ref === ref);
+  const dossier = DB.getDossiers().find(d => d.ref === ref);
+  const statusColors = {brouillon:'var(--cream2);color:var(--light)',envoyee:'var(--info-bg);color:var(--info-fg)',payee:'var(--ok-bg);color:var(--ok-fg)',impayee:'var(--danger-bg);color:var(--danger-fg)',annulee:'var(--cream2);color:var(--light)'};
+  const statusLabels = {brouillon:'Brouillon',envoyee:'Envoyée',payee:'Payée',impayee:'Impayée',annulee:'Annulée'};
+
+  const invHtml = invoices.length > 0 ? invoices.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map(inv => {
+    const sc = statusColors[inv.status] || statusColors.brouillon;
+    const isLate = inv.status === 'envoyee' && inv.dueDate && new Date(inv.dueDate) < new Date();
+    return `<div class="inv-row" onclick="viewInvoiceDetail('${inv.id}')">
+      <div style="flex-shrink:0;width:36px;height:36px;border-radius:8px;background:var(--sage-pale);display:flex;align-items:center;justify-content:center;font-size:1rem">🧾</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.82rem;font-weight:600;color:var(--charcoal)">${inv.number}</div>
+        <div style="font-size:.68rem;color:var(--mid)">${new Date(inv.createdAt).toLocaleDateString('fr-LU',{day:'numeric',month:'short',year:'numeric'})}${inv.dueDate?' · Éch. '+new Date(inv.dueDate).toLocaleDateString('fr-LU',{day:'numeric',month:'short'}):''}</div>
+      </div>
+      <div style="font-family:'DM Serif Display',serif;font-size:1.05rem;color:var(--charcoal);margin-right:8px">${inv.total.toLocaleString('fr-FR')} €</div>
+      <span class="doc-badge" style="background:${isLate?statusColors.impayee:sc}">${isLate?'⚠ En retard':statusLabels[inv.status]||inv.status}</span>
+    </div>`;
+  }).join('') : '<div style="text-align:center;padding:24px;color:var(--light);font-size:.83rem">🧾 Aucune facture pour ce dossier</div>';
+
+  const totalFacture = invoices.reduce((s,i) => s + i.total, 0);
+  const totalPaye = invoices.filter(i => i.status === 'payee').reduce((s,i) => s + i.total, 0);
+  const totalImpaye = totalFacture - totalPaye - invoices.filter(i=>i.status==='annulee').reduce((s,i)=>s+i.total,0);
+
+  content.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="background:var(--cream);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--charcoal)">${totalFacture.toLocaleString('fr-FR')} €</div><div style="font-size:.65rem;color:var(--mid)">Total facturé</div></div>
+      <div style="background:var(--ok-bg);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--ok-fg)">${totalPaye.toLocaleString('fr-FR')} €</div><div style="font-size:.65rem;color:var(--ok-fg)">Payé</div></div>
+      <div style="background:${totalImpaye>0?'var(--danger-bg)':'var(--cream)'};border-radius:8px;padding:10px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:${totalImpaye>0?'var(--danger-fg)':'var(--light)'}">${totalImpaye.toLocaleString('fr-FR')} €</div><div style="font-size:.65rem;color:${totalImpaye>0?'var(--danger-fg)':'var(--light)'}">Impayé</div></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:.78rem;color:var(--mid)">${invoices.length} facture(s)</div>
+      <button class="btn btn-sage" style="font-size:.74rem;padding:6px 14px" onclick="showCreateInvoiceForm('${ref}')">+ Créer une facture</button>
+    </div>
+    <div id="invoice-create-form-zone"></div>
+    <div>${invHtml}</div>`;
+}
+
+function showCreateInvoiceForm(ref) {
+  const zone = document.getElementById('invoice-create-form-zone');
+  if(!zone) return;
+  const dossier = DB.getDossiers().find(d => d.ref === ref);
+  const hours = DB.load('hours', []).filter(h => h.ref === ref);
+  const totalFromHours = hours.reduce((s,e) => s + e.amount, 0);
+  const nextNum = 'FAC-' + new Date().getFullYear() + '-' + String(DB.getInvoices().length + 1).padStart(3,'0');
+
+  zone.innerHTML = `<div style="background:var(--cream);border-radius:10px;padding:16px;margin-bottom:14px;border:1px solid var(--border)">
+    <div style="font-size:.82rem;font-weight:600;color:var(--charcoal);margin-bottom:12px">Créer une facture</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">N° Facture</div><input type="text" id="inv-number" value="${nextNum}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/></div>
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Client</div><input type="text" id="inv-client" value="${dossier?.clientName||''}" readonly style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none;background:var(--cream2)"/></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Montant HT (€)</div><input type="number" id="inv-amount" value="${Math.round(totalFromHours)}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/></div>
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">TVA (%)</div><input type="number" id="inv-tva" value="17" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/></div>
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Échéance</div><input type="date" id="inv-due" value="${new Date(Date.now()+30*86400000).toISOString().split('T')[0]}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/></div>
+    </div>
+    <div style="margin-bottom:10px"><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Description</div><textarea id="inv-desc" rows="2" placeholder="Honoraires pour..." style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none;resize:vertical">${hours.length>0?'Honoraires — '+hours.map(h=>h.desc).filter(Boolean).join(', '):''}</textarea></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sage" style="font-size:.75rem;padding:6px 14px" onclick="createInvoice('${ref}')">Créer la facture</button>
+      <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="document.getElementById('invoice-create-form-zone').innerHTML=''">Annuler</button>
+    </div>
+  </div>`;
+}
+
+function createInvoice(ref) {
+  const number = document.getElementById('inv-number')?.value.trim();
+  const client = document.getElementById('inv-client')?.value.trim();
+  const amountHT = parseFloat(document.getElementById('inv-amount')?.value) || 0;
+  const tva = parseFloat(document.getElementById('inv-tva')?.value) || 17;
+  const dueDate = document.getElementById('inv-due')?.value;
+  const description = document.getElementById('inv-desc')?.value.trim();
+
+  if(!number) { showToast('Erreur','Indiquez un numéro de facture','warn','⚠️'); return; }
+  if(amountHT <= 0) { showToast('Erreur','Le montant doit être supérieur à 0','warn','⚠️'); return; }
+
+  const tvaAmount = Math.round(amountHT * tva / 100);
+  const total = amountHT + tvaAmount;
+  const session = DB.getSession();
+
+  const invoice = {
+    id: String(Date.now()),
+    ref,
+    number,
+    client,
+    amountHT,
+    tva,
+    tvaAmount,
+    total,
+    dueDate,
+    description,
+    status: 'brouillon',
+    createdAt: new Date().toISOString(),
+    createdBy: session?.name || 'Utilisateur',
+    payments: [],
+    reminders: []
+  };
+
+  const invoices = DB.getInvoices();
+  invoices.push(invoice);
+  DB.saveInvoices(invoices);
+
+  DB.addAudit({ type:'facture', dot:'var(--info-fg)', title:'🧾 Facture créée — ' + number, detail: client + ' · ' + total.toLocaleString('fr-FR') + ' € TTC', tags:[{t:'Facture',c:'b'},{t:ref,c:'b'}] });
+  showToast('Facture créée', number + ' — ' + total.toLocaleString('fr-FR') + ' € TTC', 'ok', '🧾');
+  renderDossierTabContent(ref, 'factures');
+}
+
+function viewInvoiceDetail(invoiceId) {
+  const inv = DB.getInvoices().find(i => i.id === invoiceId);
+  if(!inv) return;
+  const content = document.getElementById('dm-content');
+  const statusColors = {brouillon:'var(--cream2);color:var(--light)',envoyee:'var(--info-bg);color:var(--info-fg)',payee:'var(--ok-bg);color:var(--ok-fg)',impayee:'var(--danger-bg);color:var(--danger-fg)',annulee:'var(--cream2);color:var(--light)'};
+  const statusLabels = {brouillon:'Brouillon',envoyee:'Envoyée',payee:'Payée',impayee:'Impayée',annulee:'Annulée'};
+  const isLate = inv.status === 'envoyee' && inv.dueDate && new Date(inv.dueDate) < new Date();
+
+  const session = DB.getSession();
+  const emailSubject = encodeURIComponent('Facture ' + inv.number + ' — ' + (session?.cabinet || 'Cabinet'));
+  const emailBody = encodeURIComponent(
+    'Madame, Monsieur,\n\n' +
+    'Veuillez trouver ci-joint notre facture n° ' + inv.number + ' d\'un montant de ' + inv.total.toLocaleString('fr-FR') + ' € TTC.\n\n' +
+    'Détail :\n' +
+    '- Montant HT : ' + inv.amountHT.toLocaleString('fr-FR') + ' €\n' +
+    '- TVA (' + inv.tva + '%) : ' + inv.tvaAmount.toLocaleString('fr-FR') + ' €\n' +
+    '- Total TTC : ' + inv.total.toLocaleString('fr-FR') + ' €\n' +
+    (inv.dueDate ? '- Échéance : ' + new Date(inv.dueDate).toLocaleDateString('fr-LU') + '\n' : '') +
+    (inv.description ? '\nObjet : ' + inv.description + '\n' : '') +
+    '\nConditions de paiement : virement bancaire sous 30 jours.\n\n' +
+    'Cordialement,\n' + (session?.name || '') + '\n' + (session?.cabinet || '')
+  );
+  const mailtoLink = 'mailto:?subject=' + emailSubject + '&body=' + emailBody;
+
+  const remindersHtml = inv.reminders && inv.reminders.length > 0
+    ? inv.reminders.map(r => `<div style="font-size:.72rem;color:var(--mid);padding:4px 0;border-bottom:1px dashed var(--border)">📧 ${r.date} — ${r.note||'Relance envoyée'}</div>`).join('')
+    : '<div style="font-size:.72rem;color:var(--light);padding:4px 0">Aucune relance envoyée</div>';
+
+  content.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <span style="cursor:pointer;font-size:.78rem;color:var(--sage)" onclick="renderDossierTabContent('${inv.ref}','factures')">← Retour aux factures</span>
+    </div>
+    <div style="background:var(--cream);border-radius:12px;padding:18px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div><div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--charcoal)">${inv.number}</div><div style="font-size:.72rem;color:var(--mid)">Créée le ${new Date(inv.createdAt).toLocaleDateString('fr-LU',{day:'numeric',month:'long',year:'numeric'})}</div></div>
+        <span class="doc-badge" style="background:${isLate?statusColors.impayee:statusColors[inv.status]||statusColors.brouillon};font-size:.72rem;padding:4px 10px">${isLate?'⚠ En retard':statusLabels[inv.status]||inv.status}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><div style="font-size:.65rem;font-weight:700;color:var(--light);text-transform:uppercase">Client</div><div style="font-size:.85rem;font-weight:600;color:var(--charcoal)">${inv.client}</div></div>
+        <div><div style="font-size:.65rem;font-weight:700;color:var(--light);text-transform:uppercase">Dossier</div><div style="font-size:.85rem;font-weight:600;color:var(--charcoal)">${inv.ref}</div></div>
+        <div><div style="font-size:.65rem;font-weight:700;color:var(--light);text-transform:uppercase">Montant HT</div><div style="font-size:.85rem;font-weight:600;color:var(--charcoal)">${inv.amountHT.toLocaleString('fr-FR')} €</div></div>
+        <div><div style="font-size:.65rem;font-weight:700;color:var(--light);text-transform:uppercase">TVA (${inv.tva}%)</div><div style="font-size:.85rem;font-weight:600;color:var(--charcoal)">${inv.tvaAmount.toLocaleString('fr-FR')} €</div></div>
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:.65rem;font-weight:700;color:var(--light);text-transform:uppercase">Total TTC</div></div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--charcoal)">${inv.total.toLocaleString('fr-FR')} €</div>
+      </div>
+      ${inv.dueDate?'<div style="margin-top:6px;font-size:.72rem;color:var(--mid)">Échéance : '+new Date(inv.dueDate).toLocaleDateString('fr-LU',{day:'numeric',month:'long',year:'numeric'})+'</div>':''}
+      ${inv.description?'<div style="margin-top:6px;font-size:.76rem;color:var(--charcoal);background:white;padding:8px 10px;border-radius:6px">'+inv.description+'</div>':''}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <a href="${mailtoLink}" class="btn btn-sage" style="font-size:.75rem;padding:7px 14px;text-decoration:none" onclick="markInvoiceSent('${inv.id}')">📧 Envoyer par email</a>
+      <button class="btn btn-outline" style="font-size:.75rem;padding:7px 14px" onclick="changeInvoiceStatus('${inv.id}','payee')">✅ Marquer payée</button>
+      <button class="btn btn-outline" style="font-size:.75rem;padding:7px 14px" onclick="changeInvoiceStatus('${inv.id}','impayee')">🚫 Marquer impayée</button>
+      <button class="btn btn-outline" style="font-size:.75rem;padding:7px 14px" onclick="sendInvoiceReminder('${inv.id}')">📬 Relance</button>
+      <button class="btn btn-outline" style="font-size:.75rem;padding:7px 14px" onclick="generateInvoicePDF('${inv.id}')">📥 PDF</button>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);margin-bottom:6px">Historique des relances</div>
+      ${remindersHtml}
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <select id="inv-status-sel" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.76rem;outline:none">
+        <option value="brouillon"${inv.status==='brouillon'?' selected':''}>Brouillon</option>
+        <option value="envoyee"${inv.status==='envoyee'?' selected':''}>Envoyée</option>
+        <option value="payee"${inv.status==='payee'?' selected':''}>Payée</option>
+        <option value="impayee"${inv.status==='impayee'?' selected':''}>Impayée</option>
+        <option value="annulee"${inv.status==='annulee'?' selected':''}>Annulée</option>
+      </select>
+      <button class="btn btn-outline" style="font-size:.74rem;padding:6px 12px" onclick="changeInvoiceStatus('${inv.id}',document.getElementById('inv-status-sel').value)">Changer statut</button>
+    </div>`;
+}
+
+function markInvoiceSent(invoiceId) {
+  changeInvoiceStatus(invoiceId, 'envoyee');
+}
+
+function changeInvoiceStatus(invoiceId, newStatus) {
+  const invoices = DB.getInvoices();
+  const idx = invoices.findIndex(i => i.id === invoiceId);
+  if(idx === -1) return;
+  const old = invoices[idx].status;
+  invoices[idx].status = newStatus;
+  DB.saveInvoices(invoices);
+  const statusLabels = {brouillon:'Brouillon',envoyee:'Envoyée',payee:'Payée',impayee:'Impayée',annulee:'Annulée'};
+  DB.addAudit({ type:'facture', dot: newStatus==='payee'?'var(--ok-fg)':newStatus==='impayee'?'var(--danger-fg)':'var(--info-fg)', title:'🧾 Facture '+statusLabels[newStatus]+' — '+invoices[idx].number, detail: invoices[idx].client+' · '+invoices[idx].total.toLocaleString('fr-FR')+' € TTC', tags:[{t:statusLabels[newStatus],c:newStatus==='payee'?'g':newStatus==='impayee'?'r':'b'}] });
+  showToast('Statut mis à jour', invoices[idx].number + ' → ' + statusLabels[newStatus], 'ok', '🧾');
+  viewInvoiceDetail(invoiceId);
+}
+
+function sendInvoiceReminder(invoiceId) {
+  const invoices = DB.getInvoices();
+  const idx = invoices.findIndex(i => i.id === invoiceId);
+  if(idx === -1) return;
+  const inv = invoices[idx];
+  const now = new Date();
+  if(!inv.reminders) inv.reminders = [];
+  inv.reminders.push({ date: now.toLocaleDateString('fr-LU',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}), note:'Relance envoyée' });
+  DB.saveInvoices(invoices);
+
+  const session = DB.getSession();
+  const subject = encodeURIComponent('Relance facture ' + inv.number + ' — ' + (session?.cabinet||''));
+  const body = encodeURIComponent(
+    'Madame, Monsieur,\n\n' +
+    'Sauf erreur de notre part, nous n\'avons pas reçu le règlement de notre facture n° ' + inv.number +
+    ' d\'un montant de ' + inv.total.toLocaleString('fr-FR') + ' € TTC' +
+    (inv.dueDate ? ', échue le ' + new Date(inv.dueDate).toLocaleDateString('fr-LU') : '') + '.\n\n' +
+    'Nous vous serions reconnaissants de bien vouloir procéder au règlement dans les meilleurs délais.\n\n' +
+    'Cordialement,\n' + (session?.name||'') + '\n' + (session?.cabinet||'')
+  );
+  window.open('mailto:?subject=' + subject + '&body=' + body);
+
+  DB.addAudit({ type:'facture', dot:'var(--warn-fg)', title:'📬 Relance facture — ' + inv.number, detail: inv.client + ' · ' + inv.total.toLocaleString('fr-FR') + ' € · Relance n°' + inv.reminders.length, tags:[{t:'Relance',c:'o'}] });
+  showToast('Relance envoyée', 'Relance n°' + inv.reminders.length + ' pour ' + inv.number, 'ok', '📬');
+  viewInvoiceDetail(invoiceId);
+}
+
+function generateInvoicePDF(invoiceId) {
+  const inv = DB.getInvoices().find(i => i.id === invoiceId);
+  if(!inv) return;
+  if(typeof window.jspdf === 'undefined') { showToast('PDF non disponible','jsPDF non chargé','warn','⚠️'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const session = DB.getSession();
+  const W = 210, M = 20;
+
+  doc.setFillColor(61, 92, 74);
+  doc.rect(0, 0, W, 40, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(22);
+  doc.setFont('helvetica','bold');
+  doc.text('FACTURE', M, 18);
+  doc.setFontSize(11);
+  doc.setFont('helvetica','normal');
+  doc.text(inv.number, M, 26);
+  doc.setFontSize(9);
+  doc.text((session?.cabinet || 'Cabinet') + ' · Luxembourg', M, 33);
+  doc.text('Date : ' + new Date(inv.createdAt).toLocaleDateString('fr-LU'), W-M, 18, {align:'right'});
+  if(inv.dueDate) doc.text('Échéance : ' + new Date(inv.dueDate).toLocaleDateString('fr-LU'), W-M, 25, {align:'right'});
+
+  let y = 52;
+  doc.setTextColor(26,29,27);
+  doc.setFontSize(10);
+  doc.setFont('helvetica','bold');
+  doc.text('Facturé à :', M, y);
+  doc.setFont('helvetica','normal');
+  doc.text(inv.client, M, y+7);
+  doc.text('Dossier : ' + inv.ref, M, y+14);
+
+  y += 28;
+  doc.autoTable({
+    startY: y, margin: {left:M, right:M},
+    head: [['Description','Montant']],
+    body: [
+      [inv.description || 'Honoraires juridiques', inv.amountHT.toLocaleString('fr-FR') + ' €'],
+      ['TVA (' + inv.tva + '%)', inv.tvaAmount.toLocaleString('fr-FR') + ' €'],
+    ],
+    foot: [['TOTAL TTC', inv.total.toLocaleString('fr-FR') + ' €']],
+    headStyles: {fillColor:[61,92,74],textColor:[255,255,255],fontStyle:'bold',fontSize:9},
+    bodyStyles: {fontSize:9,cellPadding:5},
+    footStyles: {fillColor:[26,29,27],textColor:[255,255,255],fontStyle:'bold',fontSize:10},
+    columnStyles: {0:{cellWidth:120},1:{halign:'right'}},
+    theme: 'grid',
+  });
+
+  y = doc.lastAutoTable.finalY + 16;
+  doc.setFontSize(8);
+  doc.setTextColor(154,173,166);
+  doc.text('Conditions de paiement : virement bancaire sous 30 jours.', M, y);
+  doc.text('Document généré par Norvy · norvy.io', M, y+5);
+
+  doc.save('Facture_' + inv.number + '.pdf');
+  showToast('PDF généré', 'Facture ' + inv.number + ' téléchargée', 'ok', '📥');
+}
+
+function getUnpaidInvoices() {
+  const invoices = DB.getInvoices();
+  const now = new Date();
+  return invoices.filter(inv => {
+    if(inv.status === 'payee' || inv.status === 'annulee') return false;
+    if(inv.status === 'impayee') return true;
+    if(inv.status === 'envoyee' && inv.dueDate && new Date(inv.dueDate) < now) return true;
+    return false;
+  });
+}
+
+function getInvoiceReminders() {
+  const unpaid = getUnpaidInvoices();
+  return unpaid.map(inv => {
+    const daysSinceDue = inv.dueDate ? Math.floor((new Date() - new Date(inv.dueDate)) / 86400000) : 0;
+    const lastReminder = inv.reminders?.length > 0 ? inv.reminders[inv.reminders.length-1].date : null;
+    return {
+      ...inv,
+      daysSinceDue,
+      lastReminder,
+      urgency: daysSinceDue > 60 ? 'critique' : daysSinceDue > 30 ? 'elevee' : 'normale'
+    };
+  }).sort((a,b) => b.daysSinceDue - a.daysSinceDue);
 }
 
 function addDossierNote(ref) {
@@ -4083,7 +4602,7 @@ function addDossierNote(ref) {
   DB.save('dossier-notes-' + ref, notes);
   DB.addAudit({ type:'note', dot:'var(--info-fg)', title:'📝 Note ajoutée — ' + ref, detail: text, tags:[{t:'Note',c:'b'}] });
   showToast('Note ajoutée','Note enregistrée pour ' + ref, 'ok', '📝');
-  viewDossier(ref);
+  renderDossierTabContent(ref, 'notes');
 }
 
 function closeDossierModal() {
@@ -4220,7 +4739,7 @@ function exportDossiersCSV() {
 
 function exportBackupJSON() {
   const backup = {};
-  const keys = ['dossiers','users','auditLog','screenings','hours','settings','refCounter'];
+  const keys = ['dossiers','users','auditLog','screenings','hours','settings','refCounter','documents','invoices','audiences'];
   keys.forEach(k => { const v = localStorage.getItem('norvy_' + k); if(v) backup[k] = JSON.parse(v); });
   // Also grab any dossier notes
   for(let i = 0; i < localStorage.length; i++) {
@@ -4417,6 +4936,43 @@ function seedDemoData() {
     {type:'dossier',dot:'var(--warn-fg)',title:'⏸ Dossier suspendu — WEBER Klaus',detail:'NRV-2026-1006 · Transaction immobilière · Documents manquants',tags:[{t:'Suspendu',c:'o'},{t:'Normale+',c:'o'}],time:'18/03 09:30',user:'Norvy'},
   ];
   DB.saveAuditLog(demoAudit);
+
+  // Demo Documents
+  const demoDocuments = [
+    { id:1, ref:'NRV-2026-1001', name:'Carte d\'identité — DURAND Jean-Pierre', docType:'id', size:'342 Ko', verified:true, uploadedAt:new Date(now-2*86400000).toISOString() },
+    { id:2, ref:'NRV-2026-1001', name:'Justificatif de domicile', docType:'courrier', size:'128 Ko', verified:true, uploadedAt:new Date(now-2*86400000).toISOString() },
+    { id:3, ref:'NRV-2026-1001', name:'Contrat de vente immobilière (projet)', docType:'contrat', size:'1.2 Mo', verified:false, uploadedAt:new Date(now-1*86400000).toISOString() },
+    { id:4, ref:'NRV-2026-1002', name:'Extrait RCS — ATLAS Holdings S.à r.l.', docType:'rcs', size:'89 Ko', verified:true, uploadedAt:new Date(now-5*86400000).toISOString() },
+    { id:5, ref:'NRV-2026-1002', name:'Statuts coordonnés', docType:'statuts', size:'456 Ko', verified:true, uploadedAt:new Date(now-5*86400000).toISOString() },
+    { id:6, ref:'NRV-2026-1002', name:'Passeport — Administrateur UBO 1', docType:'passport', size:'1.8 Mo', verified:true, uploadedAt:new Date(now-4*86400000).toISOString() },
+    { id:7, ref:'NRV-2026-1002', name:'Organigramme actionnariat', docType:'rapport', size:'234 Ko', verified:true, uploadedAt:new Date(now-4*86400000).toISOString() },
+    { id:8, ref:'NRV-2026-1003', name:'Extrait RCS — FIBEX Management S.A.', docType:'rcs', size:'92 Ko', verified:true, uploadedAt:new Date(now-3*86400000).toISOString() },
+    { id:9, ref:'NRV-2026-1003', name:'Statuts constitutifs', docType:'statuts', size:'678 Ko', verified:true, uploadedAt:new Date(now-3*86400000).toISOString() },
+    { id:10, ref:'NRV-2026-1004', name:'Carte d\'identité — LAMBERT Sophie', docType:'id', size:'298 Ko', verified:true, uploadedAt:new Date(now-4*86400000).toISOString() },
+    { id:11, ref:'NRV-2026-1005', name:'Carte d\'identité — MARTIN Paul-Henri', docType:'id', size:'315 Ko', verified:true, uploadedAt:new Date(now-6*86400000).toISOString() },
+    { id:12, ref:'NRV-2026-1005', name:'Avis d\'imposition 2025', docType:'rapport', size:'167 Ko', verified:false, uploadedAt:new Date(now-5*86400000).toISOString() },
+    { id:13, ref:'NRV-2026-1006', name:'Passeport — WEBER Klaus', docType:'passport', size:'1.5 Mo', verified:true, uploadedAt:new Date(now-8*86400000).toISOString() },
+  ];
+  DB.saveDocuments(demoDocuments);
+
+  // Demo Invoices
+  const demoInvoices = [
+    { id:'inv1', ref:'NRV-2026-1001', number:'FAC-2026-001', client:'DURAND Jean-Pierre', amountHT:1750, tva:17, tvaAmount:298, total:2048, dueDate:new Date(now-15*86400000).toISOString().split('T')[0], description:'Honoraires — Analyse KYC + revue contrat immobilier', status:'envoyee', createdAt:new Date(now-20*86400000).toISOString(), createdBy:'Maître Dupont', payments:[], reminders:[{date:'10/04/2026 09:15',note:'Première relance envoyée'}] },
+    { id:'inv2', ref:'NRV-2026-1002', number:'FAC-2026-002', client:'ATLAS Holdings S.à r.l.', amountHT:3900, tva:17, tvaAmount:663, total:4563, dueDate:new Date(now+15*86400000).toISOString().split('T')[0], description:'Honoraires — Due diligence UBO, compliance, rapport', status:'envoyee', createdAt:new Date(now-10*86400000).toISOString(), createdBy:'Maître Dupont', payments:[], reminders:[] },
+    { id:'inv3', ref:'NRV-2026-1003', number:'FAC-2026-003', client:'FIBEX Management S.A.', amountHT:750, tva:17, tvaAmount:128, total:878, dueDate:new Date(now-5*86400000).toISOString().split('T')[0], description:'Honoraires — Constitution de société + screening', status:'payee', createdAt:new Date(now-25*86400000).toISOString(), createdBy:'Maître Dupont', payments:[], reminders:[] },
+    { id:'inv4', ref:'NRV-2026-1005', number:'FAC-2026-004', client:'MARTIN Paul-Henri', amountHT:500, tva:17, tvaAmount:85, total:585, dueDate:new Date(now-45*86400000).toISOString().split('T')[0], description:'Honoraires — Conseil fiscal initial', status:'impayee', createdAt:new Date(now-60*86400000).toISOString(), createdBy:'Maître Dupont', payments:[], reminders:[{date:'20/03/2026 10:00',note:'Première relance'},{date:'05/04/2026 14:30',note:'Deuxième relance'}] },
+  ];
+  DB.saveInvoices(demoInvoices);
+
+  // Demo Audiences
+  const demoAudiences = [
+    { id:1, ref:'NRV-2026-1004', date:new Date(now+3*86400000).toISOString().split('T')[0], time:'09:30', tribunal:'Tribunal d\'arrondissement de Luxembourg', description:'Audience de plaidoiries — Litige commercial', createdAt:new Date(now-5*86400000).toISOString() },
+    { id:2, ref:'NRV-2026-1004', date:new Date(now+14*86400000).toISOString().split('T')[0], time:'14:00', tribunal:'Cour d\'appel de Luxembourg', description:'Audience en appel — Droit des sociétés', createdAt:new Date(now-3*86400000).toISOString() },
+    { id:3, ref:'NRV-2026-1001', date:new Date(now+7*86400000).toISOString().split('T')[0], time:'10:00', tribunal:'Justice de paix Luxembourg', description:'Audience immobilière — Vérification titre de propriété', createdAt:new Date(now-2*86400000).toISOString() },
+    { id:4, ref:'NRV-2026-1006', date:new Date(now-10*86400000).toISOString().split('T')[0], time:'11:00', tribunal:'Tribunal d\'arrondissement de Luxembourg', description:'Audience de mise en état — Documents complémentaires requis', createdAt:new Date(now-20*86400000).toISOString() },
+    { id:5, ref:'NRV-2026-1002', date:new Date(now+30*86400000).toISOString().split('T')[0], time:'09:00', tribunal:'Tribunal d\'arrondissement de Luxembourg — Chambre commerciale', description:'Audience compliance — Vérification structure UBO', createdAt:new Date(now-1*86400000).toISOString() },
+  ];
+  DB.saveAudiences(demoAudiences);
 }
 
 // ══ COMPTEURS ANIMÉS ══
@@ -4424,6 +4980,193 @@ function animateCounter(el,target,dur=1000){
   if(!el)return;
   const step=target/(dur/16);let cur=0;
   const t=setInterval(()=>{cur=Math.min(cur+step,target);el.textContent=Math.round(cur);if(cur>=target)clearInterval(t);},16);
+}
+
+// ══ FACTURATION VIEW ══
+function renderFacturationView() {
+  let invoices = DB.getInvoices();
+  const allInv = invoices.slice();
+
+  const statusFilter = document.getElementById('fac-filter-status')?.value || 'all';
+  const search = (document.getElementById('fac-search')?.value || '').trim().toLowerCase();
+
+  if(statusFilter !== 'all') {
+    if(statusFilter === 'impayee') {
+      invoices = invoices.filter(i => i.status === 'impayee' || (i.status === 'envoyee' && i.dueDate && new Date(i.dueDate) < new Date()));
+    } else {
+      invoices = invoices.filter(i => i.status === statusFilter);
+    }
+  }
+  if(search) {
+    invoices = invoices.filter(i => i.number.toLowerCase().includes(search) || i.client.toLowerCase().includes(search) || i.ref.toLowerCase().includes(search));
+  }
+
+  invoices.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  // KPIs
+  const totalFacture = allInv.reduce((s,i)=>s+i.total,0);
+  const totalPaye = allInv.filter(i=>i.status==='payee').reduce((s,i)=>s+i.total,0);
+  const totalImpaye = getUnpaidInvoices().reduce((s,i)=>s+i.total,0);
+  const kpis = document.getElementById('fac-kpis');
+  if(kpis) kpis.innerHTML = `
+    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--charcoal)">${allInv.length}</div><div style="font-size:.68rem;color:var(--mid)">Total factures</div></div>
+    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--charcoal)">${totalFacture.toLocaleString('fr-FR')} €</div><div style="font-size:.68rem;color:var(--mid)">Montant total</div></div>
+    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--ok-fg)">${totalPaye.toLocaleString('fr-FR')} €</div><div style="font-size:.68rem;color:var(--mid)">Encaissé</div></div>
+    <div style="background:${totalImpaye>0?'var(--danger-bg)':'white'};border:1px solid ${totalImpaye>0?'rgba(154,16,16,.2)':'var(--border)'};border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:${totalImpaye>0?'var(--danger-fg)':'var(--charcoal)'}">${totalImpaye.toLocaleString('fr-FR')} €</div><div style="font-size:.68rem;color:var(--mid)">Impayé</div></div>`;
+
+  // Unpaid reminders banner
+  const reminders = getInvoiceReminders();
+  const banner = document.getElementById('fac-reminders-banner');
+  if(banner) {
+    if(reminders.length > 0) {
+      banner.innerHTML = `<div style="background:var(--warn-bg);border:1px solid rgba(154,96,16,.2);border-radius:10px;padding:14px;margin-bottom:16px">
+        <div style="font-size:.82rem;font-weight:700;color:var(--warn-fg);margin-bottom:8px">📬 ${reminders.length} facture(s) impayée(s) nécessitant une relance</div>
+        ${reminders.slice(0,5).map(r => `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(154,96,16,.15)">
+          <div><span style="font-size:.78rem;font-weight:600;color:var(--charcoal)">${r.number}</span> <span style="font-size:.72rem;color:var(--mid)">— ${r.client} · ${r.total.toLocaleString('fr-FR')} €</span></div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:.68rem;color:var(--danger-fg);font-weight:600">${r.daysSinceDue}j de retard</span>
+            <button class="btn btn-outline" style="font-size:.65rem;padding:3px 8px" onclick="sendInvoiceReminder('${r.id}')">📬 Relancer</button>
+          </div>
+        </div>`).join('')}
+      </div>`;
+    } else {
+      banner.innerHTML = '';
+    }
+  }
+
+  // Count
+  const countEl = document.getElementById('fac-count');
+  if(countEl) countEl.textContent = invoices.length + ' facture(s)';
+
+  // List
+  const container = document.getElementById('fac-list-body');
+  if(!container) return;
+  const statusColors = {brouillon:'var(--cream2);color:var(--light)',envoyee:'var(--info-bg);color:var(--info-fg)',payee:'var(--ok-bg);color:var(--ok-fg)',impayee:'var(--danger-bg);color:var(--danger-fg)',annulee:'var(--cream2);color:var(--light)'};
+  const statusLabels = {brouillon:'Brouillon',envoyee:'Envoyée',payee:'Payée',impayee:'Impayée',annulee:'Annulée'};
+
+  if(invoices.length === 0) {
+    container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--light)"><div style="font-size:2rem;margin-bottom:8px">🧾</div><div style="font-size:.85rem;font-weight:600">Aucune facture</div><div style="font-size:.76rem">Créez une facture depuis un dossier client.</div></div>';
+    return;
+  }
+
+  container.innerHTML = invoices.map(inv => {
+    const isLate = inv.status === 'envoyee' && inv.dueDate && new Date(inv.dueDate) < new Date();
+    const sc = isLate ? statusColors.impayee : (statusColors[inv.status]||statusColors.brouillon);
+    return `<div style="display:grid;grid-template-columns:2fr 1.5fr 90px 100px 90px 80px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background=''" onclick="openInvoiceFromList('${inv.id}','${inv.ref}')">
+      <div><div style="font-size:.82rem;font-weight:600;color:var(--charcoal)">${inv.number}</div><div style="font-size:.68rem;color:var(--mid)">${inv.description?.substring(0,50)||'—'}</div></div>
+      <div style="font-size:.8rem;color:var(--charcoal)">${inv.client}</div>
+      <div style="font-size:.75rem;color:var(--mid)">${inv.ref}</div>
+      <div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:var(--charcoal);text-align:right">${inv.total.toLocaleString('fr-FR')} €</div>
+      <div style="text-align:center"><span class="doc-badge" style="background:${sc}">${isLate?'⚠ Retard':statusLabels[inv.status]||inv.status}</span></div>
+      <div style="font-size:.72rem;color:var(--mid);text-align:right">${new Date(inv.createdAt).toLocaleDateString('fr-LU',{day:'numeric',month:'short'})}</div>
+    </div>`;
+  }).join('');
+}
+
+function openInvoiceFromList(invoiceId, ref) {
+  currentDossierRef = ref;
+  const modal = document.getElementById('dossier-modal');
+  const title = document.getElementById('dm-title');
+  const inv = DB.getInvoices().find(i => i.id === invoiceId);
+  const d = DB.getDossiers().find(d => d.ref === ref);
+  title.textContent = (d?.ref||ref) + ' — ' + (d?.clientName||inv?.client||'');
+  title.dataset.ref = ref;
+  document.querySelectorAll('#dm-tabs .dm-tab').forEach((t,i) => t.classList.toggle('active', i===2));
+  currentDossierTab = 'factures';
+  viewInvoiceDetail(invoiceId);
+  modal.classList.remove('hidden');
+}
+
+// ══ AUDIENCES VIEW ══
+function renderAudiencesView() {
+  const audiences = DB.getAudiences();
+  const now = new Date();
+  const upcoming = audiences.filter(a => new Date(a.date) >= now).sort((a,b) => new Date(a.date) - new Date(b.date));
+  const past = audiences.filter(a => new Date(a.date) < now).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  // KPIs
+  const kpis = document.getElementById('aud-kpis');
+  if(kpis) kpis.innerHTML = `
+    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--charcoal)">${audiences.length}</div><div style="font-size:.68rem;color:var(--mid)">Total audiences</div></div>
+    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--sage)">${upcoming.length}</div><div style="font-size:.68rem;color:var(--mid)">À venir</div></div>
+    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--light)">${past.length}</div><div style="font-size:.68rem;color:var(--mid)">Passées</div></div>`;
+
+  const countEl = document.getElementById('aud-count');
+  if(countEl) countEl.textContent = audiences.length + ' audience(s)';
+
+  const container = document.getElementById('aud-list-body');
+  if(!container) return;
+
+  if(audiences.length === 0) {
+    container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--light)"><div style="font-size:2rem;margin-bottom:8px">📅</div><div style="font-size:.85rem;font-weight:600">Aucune audience planifiée</div><div style="font-size:.76rem">Planifiez une audience depuis un dossier client ou le bouton ci-dessus.</div></div>';
+    return;
+  }
+
+  let html = '';
+  if(upcoming.length > 0) {
+    html += '<div style="padding:10px 16px;font-size:.72rem;font-weight:700;color:var(--sage);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);background:var(--sage-pale)">À venir</div>';
+    html += upcoming.map(a => renderAudienceRow(a, false)).join('');
+  }
+  if(past.length > 0) {
+    html += '<div style="padding:10px 16px;font-size:.72rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);background:var(--cream)">Passées</div>';
+    html += past.map(a => renderAudienceRow(a, true)).join('');
+  }
+  container.innerHTML = html;
+}
+
+function renderAudienceRow(a, isPast) {
+  const dt = new Date(a.date);
+  const dossier = DB.getDossiers().find(d => d.ref === a.ref);
+  const daysLeft = Math.ceil((dt - new Date()) / 86400000);
+  return `<div style="display:grid;grid-template-columns:80px 2fr 1.5fr 90px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);opacity:${isPast?'.6':'1'}">
+    <div><div style="font-size:.85rem;font-weight:700;color:var(--charcoal)">${dt.toLocaleDateString('fr-LU',{day:'numeric',month:'short'})}</div><div style="font-size:.68rem;color:var(--mid)">${a.time||''}</div></div>
+    <div><div style="font-size:.82rem;font-weight:600;color:var(--charcoal)">${a.tribunal||'—'}</div><div style="font-size:.72rem;color:var(--mid)">${a.description||''}</div></div>
+    <div><div style="font-size:.78rem;color:var(--charcoal)">${dossier?.clientName||a.ref}</div><div style="font-size:.68rem;color:var(--light)">${a.ref}</div></div>
+    <div style="text-align:right"><span class="doc-badge" style="background:${isPast?'var(--cream2);color:var(--light)':daysLeft<=2?'var(--danger-bg);color:var(--danger-fg)':daysLeft<=7?'var(--warn-bg);color:var(--warn-fg)':'var(--info-bg);color:var(--info-fg)'}">${isPast?'Passée':daysLeft+'j'}</span></div>
+  </div>`;
+}
+
+function showGlobalAddAudienceForm() {
+  const zone = document.getElementById('aud-global-form-zone');
+  if(!zone) return;
+  const dossiers = DB.getDossiers();
+  zone.innerHTML = `<div style="background:white;border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px">
+    <div style="font-size:.85rem;font-weight:600;color:var(--charcoal);margin-bottom:12px">Planifier une audience</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Dossier</div><select id="aud-g-ref" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none">
+        <option value="">— Sélectionner —</option>${dossiers.map(d=>'<option value="'+d.ref+'">'+d.ref+' — '+d.clientName+'</option>').join('')}
+      </select></div>
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Date</div><input type="date" id="aud-g-date" value="${new Date(Date.now()+7*86400000).toISOString().split('T')[0]}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/></div>
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Heure</div><input type="time" id="aud-g-time" value="09:00" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <input type="text" id="aud-g-tribunal" placeholder="Tribunal" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/>
+      <input type="text" id="aud-g-desc" placeholder="Description / objet" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sage" style="font-size:.78rem;padding:7px 16px" onclick="addGlobalAudience()">Planifier</button>
+      <button class="btn btn-outline" style="font-size:.78rem;padding:7px 16px" onclick="document.getElementById('aud-global-form-zone').innerHTML=''">Annuler</button>
+    </div>
+  </div>`;
+}
+
+function addGlobalAudience() {
+  const ref = document.getElementById('aud-g-ref')?.value;
+  const date = document.getElementById('aud-g-date')?.value;
+  const time = document.getElementById('aud-g-time')?.value || '09:00';
+  const tribunal = document.getElementById('aud-g-tribunal')?.value.trim();
+  const description = document.getElementById('aud-g-desc')?.value.trim();
+  if(!ref) { showToast('Erreur','Sélectionnez un dossier','warn','⚠️'); return; }
+  if(!date) { showToast('Erreur','Indiquez une date','warn','⚠️'); return; }
+  if(!tribunal) { showToast('Erreur','Indiquez le tribunal','warn','⚠️'); return; }
+  const audiences = DB.getAudiences();
+  audiences.push({ id: Date.now(), ref, date, time, tribunal, description, createdAt: new Date().toISOString() });
+  DB.saveAudiences(audiences);
+  const dossier = DB.getDossiers().find(d => d.ref === ref);
+  DB.addAudit({ type:'dossier', dot:'var(--info-fg)', title:'📅 Audience planifiée — ' + (dossier?.clientName||ref), detail: tribunal + ' · ' + date + ' ' + time, tags:[{t:'Audience',c:'b'}] });
+  showToast('Audience planifiée', tribunal + ' le ' + new Date(date).toLocaleDateString('fr-LU'), 'ok', '📅');
+  document.getElementById('aud-global-form-zone').innerHTML = '';
+  renderAudiencesView();
 }
 
 // ══ OVERRIDE showView GLOBAL ══
@@ -4470,6 +5213,12 @@ window.showView=function(name){
     const z=document.getElementById('sc-result-zone');if(z)z.innerHTML='';
     const si=document.getElementById('sc-search-input');if(si)si.value='';
     renderScreeningHistory();
+  }
+  if(name==='facturation'){
+    renderFacturationView();
+  }
+  if(name==='audiences'){
+    renderAudiencesView();
   }
 };
 
@@ -4946,6 +5695,106 @@ window.addEventListener('load',()=>{
 });
 
 </script>
+<!-- ═══════════════════════════════════════════════════════
+     VUE FACTURATION
+═══════════════════════════════════════════════════════ -->
+<div class="view" id="view-facturation">
+  <aside class="sidebar" id="fac-sb">
+    <div class="sidebar-logo"><div class="logo-mark">N</div><div class="logo-text-wrap"><div class="logo-name">Norvy</div><div class="logo-tagline">LegalTech · Luxembourg</div></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-sec">Principal</div>
+      <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
+      <div class="nav-item" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients</div>
+      <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
+      <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
+      <div class="nav-sec" style="margin-top:10px">Gestion</div>
+      <div class="nav-item active"><span class="nav-icon">🧾</span> Facturation</div>
+      <div class="nav-item" onclick="showView('audiences')"><span class="nav-icon">📅</span> Agenda audiences</div>
+      <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
+    </nav>
+    <div class="sidebar-user"><div class="user-av">MD</div><div class="user-info"><div class="user-name">Maître Dupont</div><div class="user-role">NC Advocat Sàrl</div></div><span style="cursor:pointer;font-size:.85rem;opacity:.4;margin-left:auto" onclick="doLogout()" title="Déconnexion">⏻</span></div>
+  </aside>
+  <div class="ob-main">
+    <header class="ob-topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="cursor:pointer;font-size:.77rem;color:var(--sage)" onclick="showView('dashboard')">← Tableau de bord</span>
+        <span style="font-size:.77rem;color:var(--light)">›</span>
+        <span style="font-size:.77rem;font-weight:600;color:var(--charcoal)">Facturation</span>
+      </div>
+      <div class="tb-avatar">MD</div>
+    </header>
+    <div class="ob-content" style="max-width:1100px">
+      <div style="margin-bottom:20px">
+        <div style="font-family:'DM Serif Display',serif;font-size:1.45rem;color:var(--charcoal);margin-bottom:3px">Facturation</div>
+        <div style="font-size:.83rem;color:var(--mid)">Gestion des factures, suivi des paiements et relances automatiques.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:18px" id="fac-kpis"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <select id="fac-filter-status" onchange="renderFacturationView()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Figtree',sans-serif;font-size:.82rem;outline:none">
+          <option value="all">Tous les statuts</option>
+          <option value="brouillon">Brouillon</option>
+          <option value="envoyee">Envoyée</option>
+          <option value="payee">Payée</option>
+          <option value="impayee">Impayée</option>
+        </select>
+        <input type="text" id="fac-search" placeholder="🔍 Rechercher..." oninput="renderFacturationView()" style="flex:1;min-width:180px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Figtree',sans-serif;font-size:.82rem;outline:none"/>
+      </div>
+      <!-- Unpaid reminders banner -->
+      <div id="fac-reminders-banner"></div>
+      <div class="card">
+        <div class="card-head"><div class="card-head-left"><span class="card-head-icon">🧾</span><span class="card-title">Toutes les factures</span><span class="card-count" id="fac-count">0</span></div></div>
+        <div id="fac-list-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     VUE AGENDA AUDIENCES
+═══════════════════════════════════════════════════════ -->
+<div class="view" id="view-audiences">
+  <aside class="sidebar" id="aud-sb">
+    <div class="sidebar-logo"><div class="logo-mark">N</div><div class="logo-text-wrap"><div class="logo-name">Norvy</div><div class="logo-tagline">LegalTech · Luxembourg</div></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-sec">Principal</div>
+      <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
+      <div class="nav-item" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients</div>
+      <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
+      <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
+      <div class="nav-sec" style="margin-top:10px">Gestion</div>
+      <div class="nav-item" onclick="showView('facturation')"><span class="nav-icon">🧾</span> Facturation</div>
+      <div class="nav-item active"><span class="nav-icon">📅</span> Agenda audiences</div>
+      <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
+    </nav>
+    <div class="sidebar-user"><div class="user-av">MD</div><div class="user-info"><div class="user-name">Maître Dupont</div><div class="user-role">NC Advocat Sàrl</div></div><span style="cursor:pointer;font-size:.85rem;opacity:.4;margin-left:auto" onclick="doLogout()" title="Déconnexion">⏻</span></div>
+  </aside>
+  <div class="ob-main">
+    <header class="ob-topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="cursor:pointer;font-size:.77rem;color:var(--sage)" onclick="showView('dashboard')">← Tableau de bord</span>
+        <span style="font-size:.77rem;color:var(--light)">›</span>
+        <span style="font-size:.77rem;font-weight:600;color:var(--charcoal)">Agenda des audiences</span>
+      </div>
+      <div class="tb-avatar">MD</div>
+    </header>
+    <div class="ob-content" style="max-width:1000px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-family:'DM Serif Display',serif;font-size:1.45rem;color:var(--charcoal);margin-bottom:3px">Agenda des audiences</div>
+          <div style="font-size:.83rem;color:var(--mid)">Planification et suivi des audiences pour tous vos dossiers.</div>
+        </div>
+        <button class="btn btn-sage" onclick="showGlobalAddAudienceForm()">+ Planifier une audience</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;margin-bottom:18px" id="aud-kpis"></div>
+      <div id="aud-global-form-zone"></div>
+      <div class="card">
+        <div class="card-head"><div class="card-head-left"><span class="card-head-icon">📅</span><span class="card-title">Toutes les audiences</span><span class="card-count" id="aud-count">0</span></div></div>
+        <div id="aud-list-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="view" id="view-screening">
   <aside class="sidebar" id="sc-sb">
     <div class="sidebar-logo"><div class="logo-mark">N</div><div class="logo-text-wrap"><div class="logo-name">Norvy</div><div class="logo-tagline">LegalTech · Luxembourg</div></div></div>
@@ -4955,7 +5804,9 @@ window.addEventListener('load',()=>{
       <div class="nav-item" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients</div>
       <div class="nav-item active"><span class="nav-icon">🔍</span> Screening KYC</div>
       <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
-      <div class="nav-sec" style="margin-top:10px">Compliance</div>
+      <div class="nav-sec" style="margin-top:10px">Gestion</div>
+      <div class="nav-item" onclick="showView('facturation')"><span class="nav-icon">🧾</span> Facturation</div>
+      <div class="nav-item" onclick="showView('audiences')"><span class="nav-icon">📅</span> Agenda audiences</div>
       <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
     </nav>
     <div class="sidebar-user"><div class="user-av">MD</div><div class="user-info"><div class="user-name">Maître Dupont</div><div class="user-role">NC Advocat Sàrl</div></div><span style="cursor:pointer;font-size:.85rem;opacity:.4;margin-left:auto" onclick="doLogout()" title="Déconnexion">⏻</span></div>
@@ -5008,6 +5859,9 @@ window.addEventListener('load',()=>{
       <div class="nav-item" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients</div>
       <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
       <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
+      <div class="nav-sec" style="margin-top:10px">Gestion</div>
+      <div class="nav-item" onclick="showView('facturation')"><span class="nav-icon">🧾</span> Facturation</div>
+      <div class="nav-item" onclick="showView('audiences')"><span class="nav-icon">📅</span> Agenda audiences</div>
       <div class="nav-sec" style="margin-top:10px">Compliance</div>
       <div class="nav-item active"><span class="nav-icon">📊</span> Journal d'audit</div>
     </nav>
