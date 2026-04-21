@@ -6486,32 +6486,39 @@ function toggleSecteur(el, id){
 
 // ══ INIT ══
 window.addEventListener('load',()=>{
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  try {
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
 
-  const session = DB.getSession();
-  initTheme();
-  const gnav = document.getElementById('global-nav');
-  const qa = document.getElementById('quick-actions');
-  if(session) {
-    updateUIForUser(session);
-    initDashboardFromDB();
-    document.getElementById('view-dashboard').classList.add('active');
-    animateDashboard();
-    if(gnav) { gnav.classList.remove('hidden'); gnav.querySelector('[data-view="dashboard"]')?.classList.add('active'); }
-    if(qa) qa.classList.remove('hidden');
-    renderNotifications();
-  } else if(DB.getUsers().length === 0) {
-    document.getElementById('view-login').classList.add('active');
-    toggleAuthCard('register');
-    if(gnav) gnav.classList.add('hidden');
-  } else {
-    document.getElementById('view-login').classList.add('active');
-    toggleAuthCard('login');
-    if(gnav) gnav.classList.add('hidden');
+    const session = DB.getSession();
+    initTheme();
+    const gnav = document.getElementById('global-nav');
+    const qa = document.getElementById('quick-actions');
+    if(session) {
+      try {
+        updateUIForUser(session);
+        initDashboardFromDB();
+      } catch(dashErr) { console.error('Dashboard init error:', dashErr); }
+      document.getElementById('view-dashboard').classList.add('active');
+      try { animateDashboard(); } catch(e) { console.error('animateDashboard:', e); }
+      if(gnav) { gnav.classList.remove('hidden'); gnav.querySelector('[data-view="dashboard"]')?.classList.add('active'); }
+      if(qa) qa.classList.remove('hidden');
+      try { renderNotifications(); } catch(e) { console.error('renderNotifications:', e); }
+    } else if(DB.getUsers().length === 0) {
+      document.getElementById('view-login').classList.add('active');
+      toggleAuthCard('register');
+      if(gnav) gnav.classList.add('hidden');
+    } else {
+      document.getElementById('view-login').classList.add('active');
+      toggleAuthCard('login');
+      if(gnav) gnav.classList.add('hidden');
+    }
+
+    document.getElementById('login-pwd')?.addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
+    document.getElementById('reg-pwd2')?.addEventListener('keypress',e=>{if(e.key==='Enter')doRegister();});
+  } catch(err) {
+    console.error('Norvy init error:', err);
+    document.getElementById('view-login')?.classList.add('active');
   }
-
-  document.getElementById('login-pwd')?.addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
-  document.getElementById('reg-pwd2')?.addEventListener('keypress',e=>{if(e.key==='Enter')doRegister();});
 });
 
 </script>
@@ -6730,5 +6737,14 @@ window.addEventListener('load',()=>{
     </div>
   </div>
 </div>
+<script>
+setTimeout(function(){
+  var hasActive = document.querySelector('.view.active');
+  if(!hasActive){
+    console.warn('Norvy: no active view detected, forcing login view');
+    document.getElementById('view-login').classList.add('active');
+  }
+},1500);
+</script>
 </body>
 </html>
