@@ -25,7 +25,32 @@
   --shadow:0 2px 12px rgba(30,50,38,.08);
   --shadow-md:0 6px 24px rgba(30,50,38,.12);
   --shadow-lg:0 16px 48px rgba(30,50,38,.16);
+  --card-bg:#ffffff;
 }
+
+/* ══ DARK MODE ══ */
+[data-theme="dark"]{
+  --cream:#1a1d1b;--cream2:#222623;--cream3:#2a2e2b;
+  --charcoal:#e8e4da;--dark:#0d0f0e;--mid:#9aada6;--light:#6b7d76;
+  --border:#2f3532;--border2:#3a403d;--white:#1e2220;
+  --card-bg:#1e2220;
+  --sage-pale:#1e3028;--sage-muted:#2d4438;
+  --ok-bg:#1a2e22;--ok-fg:#5cb87a;
+  --warn-bg:#2e2510;--warn-fg:#d4a033;
+  --danger-bg:#2e1515;--danger-fg:#e06060;
+  --info-bg:#152535;--info-fg:#5aafe0;
+  --gold-pale:#2e2a15;
+  --shadow:0 2px 12px rgba(0,0,0,.3);
+  --shadow-md:0 6px 24px rgba(0,0,0,.4);
+  --shadow-lg:0 16px 48px rgba(0,0,0,.5);
+}
+[data-theme="dark"] .card,[data-theme="dark"] .ctrl-card{background:var(--card-bg);border-color:var(--border)}
+[data-theme="dark"] input,[data-theme="dark"] select,[data-theme="dark"] textarea{background:var(--cream2);color:var(--charcoal);border-color:var(--border)}
+[data-theme="dark"] .login-input{background:rgba(255,255,255,.08);color:#fff}
+[data-theme="dark"] .btn-outline{border-color:var(--border);color:var(--charcoal)}
+[data-theme="dark"] .dos-row:hover{background:var(--cream2)}
+[data-theme="dark"] .pill{border:none}
+[data-theme="dark"] .ob-topbar{background:rgba(26,29,27,.93);border-color:var(--border)}
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charcoal);min-height:100vh}
 
@@ -1129,6 +1154,34 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
 
 /* Adjust body padding when global nav is shown */
 body{padding-bottom:62px}
+
+/* ══ GLOBAL SEARCH OVERLAY ══ */
+.gsearch-overlay{position:fixed;inset:0;z-index:9995;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:flex;justify-content:center;padding-top:12vh;animation:fadeIn .15s ease}
+.gsearch-overlay.hidden{display:none}
+.gsearch-box{background:var(--card-bg,#fff);border-radius:16px;width:92%;max-width:600px;max-height:70vh;overflow:hidden;box-shadow:var(--shadow-lg);animation:fadeUp .2s ease;display:flex;flex-direction:column}
+.gsearch-input-wrap{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.gsearch-input{flex:1;border:none;outline:none;font-family:'Figtree',sans-serif;font-size:1rem;color:var(--charcoal);background:transparent}
+.gsearch-input::placeholder{color:var(--light)}
+.gsearch-results{overflow-y:auto;flex:1;padding:8px}
+.gsearch-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;transition:background .12s}
+.gsearch-item:hover{background:var(--cream2)}
+.gsearch-cat{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--light);padding:8px 14px 4px}
+
+/* ══ NOTIFICATIONS PANEL ══ */
+.notif-panel{position:fixed;top:0;right:0;width:380px;max-width:92vw;height:100vh;z-index:9996;background:var(--card-bg,#fff);box-shadow:var(--shadow-lg);transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+.notif-panel.open{transform:translateX(0)}
+.notif-header{padding:20px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.notif-list{flex:1;overflow-y:auto;padding:8px}
+.notif-item{display:flex;gap:10px;padding:12px 14px;border-radius:8px;margin-bottom:4px;cursor:pointer;transition:background .12s}
+.notif-item:hover{background:var(--cream2)}
+.notif-item.unread{background:var(--sage-pale)}
+.notif-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+
+/* ══ THEME TOGGLE / QUICK ACTIONS ══ */
+.quick-actions{position:fixed;top:12px;right:12px;z-index:9991;display:flex;gap:6px;align-items:center}
+.quick-actions.hidden{display:none}
+.qa-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--card-bg,#fff);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;transition:all .2s;box-shadow:var(--shadow)}
+.qa-btn:hover{transform:scale(1.08);box-shadow:var(--shadow-md)}
 .ctrl-card{background:white;border-radius:16px;padding:28px;max-width:620px;width:92%;box-shadow:0 24px 64px rgba(0,0,0,.25);animation:fadeUp .3s ease;max-height:88vh;overflow-y:auto}
 .ctrl-header{display:flex;align-items:center;gap:13px;margin-bottom:20px}
 .ctrl-icon{font-size:1.9rem}
@@ -1250,9 +1303,43 @@ body{padding-bottom:62px}
   <button class="gn-item" onclick="showView('audit')" data-view="audit"><span class="gn-icon">📊</span><span class="gn-label">Audit</span></button>
 </div>
 
+<!-- QUICK ACTIONS (top-right) -->
+<div class="quick-actions hidden" id="quick-actions">
+  <button class="qa-btn" onclick="openGlobalSearch()" title="Recherche globale (Ctrl+K)">🔍</button>
+  <button class="qa-btn" onclick="toggleNotifPanel()" title="Notifications" id="qa-notif-btn">🔔<span id="qa-notif-count" style="position:absolute;top:-2px;right:-2px;background:var(--danger-fg);color:#fff;font-size:.55rem;font-weight:700;min-width:14px;height:14px;border-radius:7px;display:none;align-items:center;justify-content:center;line-height:1">0</span></button>
+  <button class="qa-btn" onclick="toggleDarkMode()" title="Mode sombre" id="qa-dark-btn">🌙</button>
+  <button class="qa-btn" onclick="openSettingsModal()" title="Paramètres cabinet">⚙️</button>
+</div>
+
+<!-- GLOBAL SEARCH OVERLAY -->
+<div class="gsearch-overlay hidden" id="gsearch-overlay" onclick="if(event.target===this)closeGlobalSearch()">
+  <div class="gsearch-box">
+    <div class="gsearch-input-wrap">
+      <span style="font-size:1.1rem;color:var(--light)">🔍</span>
+      <input class="gsearch-input" id="gsearch-input" placeholder="Rechercher un dossier, une facture, un client..." autofocus oninput="performGlobalSearch(this.value)"/>
+      <span style="font-size:.65rem;color:var(--light);background:var(--cream2);padding:2px 6px;border-radius:4px;cursor:pointer" onclick="closeGlobalSearch()">ESC</span>
+    </div>
+    <div class="gsearch-results" id="gsearch-results">
+      <div style="padding:32px;text-align:center;color:var(--light);font-size:.83rem">Tapez pour rechercher dans tous vos dossiers, factures, audiences...</div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS PANEL -->
+<div class="notif-panel" id="notif-panel">
+  <div class="notif-header">
+    <div style="font-family:'DM Serif Display',serif;font-size:1.15rem;color:var(--charcoal)">Notifications</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-outline" style="font-size:.68rem;padding:4px 10px" onclick="markAllNotifsRead()">Tout marquer lu</button>
+      <span style="cursor:pointer;font-size:1.1rem;color:var(--light)" onclick="toggleNotifPanel()">✕</span>
+    </div>
+  </div>
+  <div class="notif-list" id="notif-list"></div>
+</div>
+
 <!-- MODAL HEURES -->
 <div class="ctrl-modal hidden" id="hours-modal" onclick="if(event.target===this)closeHoursModal()">
-  <div style="background:white;border-radius:16px;padding:28px 24px;width:100%;max-width:480px;position:relative;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto">
+  <div style="background:var(--card-bg,white);border-radius:16px;padding:28px 24px;width:100%;max-width:480px;position:relative;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)">Encoder des heures</div>
       <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="closeHoursModal()">✕</span>
@@ -1285,6 +1372,45 @@ body{padding-bottom:62px}
 </div>
 
 <!-- MODAL DÉTAIL DOSSIER -->
+<div class="ctrl-modal hidden" id="settings-modal" onclick="if(event.target===this)closeSettingsModal()">
+  <div style="background:var(--card-bg,#fff);border-radius:16px;padding:28px 24px;width:100%;max-width:520px;position:relative;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)">Paramètres du cabinet</div>
+      <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="closeSettingsModal()">✕</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <label style="font-size:.8rem;font-weight:600;color:var(--mid)">Nom du cabinet
+        <input id="set-cabinet-name" class="step-input" style="margin-top:4px" placeholder="Cabinet d'Avocats XYZ">
+      </label>
+      <label style="font-size:.8rem;font-weight:600;color:var(--mid)">Adresse
+        <textarea id="set-cabinet-address" class="step-input" style="margin-top:4px;min-height:50px" placeholder="1, Boulevard Royal&#10;L-2449 Luxembourg"></textarea>
+      </label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <label style="font-size:.8rem;font-weight:600;color:var(--mid)">N° TVA
+          <input id="set-cabinet-tva" class="step-input" style="margin-top:4px" placeholder="LU 00000000">
+        </label>
+        <label style="font-size:.8rem;font-weight:600;color:var(--mid)">RCS Luxembourg
+          <input id="set-cabinet-rcs" class="step-input" style="margin-top:4px" placeholder="B000000">
+        </label>
+      </div>
+      <div style="margin-top:8px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:.9rem;font-weight:700;color:var(--charcoal);margin-bottom:10px">Coordonnées bancaires (factures)</div>
+        <label style="font-size:.8rem;font-weight:600;color:var(--mid)">IBAN
+          <input id="set-cabinet-iban" class="step-input" style="margin-top:4px;font-family:monospace;letter-spacing:1px" placeholder="LU00 0000 0000 0000 0000">
+        </label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+          <label style="font-size:.8rem;font-weight:600;color:var(--mid)">BIC / SWIFT
+            <input id="set-cabinet-bic" class="step-input" style="margin-top:4px" placeholder="BCEELULL">
+          </label>
+          <label style="font-size:.8rem;font-weight:600;color:var(--mid)">Banque
+            <input id="set-cabinet-bank" class="step-input" style="margin-top:4px" placeholder="BCEE Luxembourg">
+          </label>
+        </div>
+      </div>
+      <button onclick="saveSettingsForm()" style="margin-top:14px;width:100%;padding:12px;border-radius:10px;border:none;background:var(--sage);color:var(--white);font-weight:700;font-size:.95rem;cursor:pointer;transition:all .2s">Enregistrer les paramètres</button>
+    </div>
+  </div>
+</div>
 <div class="ctrl-modal hidden" id="dossier-modal" onclick="if(event.target===this)closeDossierModal()">
   <div style="background:white;border-radius:16px;padding:28px 24px;width:100%;max-width:720px;position:relative;animation:fadeUp .3s ease;max-height:92vh;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -1574,6 +1700,27 @@ body{padding-bottom:62px}
             <div class="mstat"><div class="mstat-val">241h</div><div class="mstat-label">Facturables</div></div>
             <div class="mstat"><div class="mstat-val">43h</div><div class="mstat-label">Non facturables</div></div>
             <div class="mstat"><div class="mstat-val">9,5h</div><div class="mstat-label">Moy. / jour</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FINANCIAL OVERVIEW -->
+      <div class="card" style="animation-delay:.12s;margin-bottom:18px" id="financial-overview">
+        <div class="card-head">
+          <div class="card-head-left"><span class="card-head-icon">💰</span><span class="card-title">Aperçu financier</span></div>
+          <span class="card-action" onclick="showView('facturation')">Détail →</span>
+        </div>
+        <div style="padding:16px 18px">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px" id="fin-kpis"></div>
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
+            <div>
+              <div style="font-size:.7rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Répartition par statut</div>
+              <canvas id="fin-chart-bar" height="120" style="width:100%"></canvas>
+            </div>
+            <div>
+              <div style="font-size:.7rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Risque AMLR6</div>
+              <canvas id="fin-chart-risk" height="120" style="width:100%"></canvas>
+            </div>
           </div>
         </div>
       </div>
@@ -4029,6 +4176,112 @@ function initDashboardFromDB() {
   renderAlerts();
   updateHeroBand();
   renderCalendar();
+  renderFinancialOverview();
+}
+
+function renderFinancialOverview() {
+  const invoices = DB.getInvoices();
+  const dossiers = DB.getDossiers();
+  const totalFacture = invoices.reduce((s,i)=>s+i.total,0);
+  const totalPaye = invoices.filter(i=>i.status==='payee').reduce((s,i)=>s+i.total,0);
+  const totalImpaye = getUnpaidInvoices().reduce((s,i)=>s+i.total,0);
+  const totalEnCours = invoices.filter(i=>i.status==='envoyee'&&(!i.dueDate||new Date(i.dueDate)>=new Date())).reduce((s,i)=>s+i.total,0);
+
+  // KPIs
+  const kpis = document.getElementById('fin-kpis');
+  if(kpis) kpis.innerHTML = `
+    <div style="background:var(--cream2);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--charcoal)">${totalFacture.toLocaleString('fr-FR')} €</div><div style="font-size:.6rem;color:var(--mid)">Total facturé</div></div>
+    <div style="background:var(--ok-bg);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--ok-fg)">${totalPaye.toLocaleString('fr-FR')} €</div><div style="font-size:.6rem;color:var(--ok-fg)">Encaissé</div></div>
+    <div style="background:var(--info-bg);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--info-fg)">${totalEnCours.toLocaleString('fr-FR')} €</div><div style="font-size:.6rem;color:var(--info-fg)">En cours</div></div>
+    <div style="background:${totalImpaye>0?'var(--danger-bg)':'var(--cream2)'};border-radius:8px;padding:10px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:${totalImpaye>0?'var(--danger-fg)':'var(--light)'}">${totalImpaye.toLocaleString('fr-FR')} €</div><div style="font-size:.6rem;color:${totalImpaye>0?'var(--danger-fg)':'var(--mid)'}">Impayé</div></div>`;
+
+  // Bar chart — invoice status
+  const barCanvas = document.getElementById('fin-chart-bar');
+  if(barCanvas) {
+    const ctx = barCanvas.getContext('2d');
+    const w = barCanvas.width = barCanvas.offsetWidth * 2;
+    const h = barCanvas.height = 240;
+    ctx.scale(1,1);
+    ctx.clearRect(0,0,w,h);
+
+    const statuses = [
+      {label:'Payées',count:invoices.filter(i=>i.status==='payee').length,amount:totalPaye,color:'#2d6644'},
+      {label:'Envoyées',count:invoices.filter(i=>i.status==='envoyee').length,amount:totalEnCours,color:'#1a6691'},
+      {label:'Impayées',count:getUnpaidInvoices().length,amount:totalImpaye,color:'#9a1010'},
+      {label:'Brouillon',count:invoices.filter(i=>i.status==='brouillon').length,amount:invoices.filter(i=>i.status==='brouillon').reduce((s,i)=>s+i.total,0),color:'#9aada6'},
+    ];
+    const maxAmt = Math.max(...statuses.map(s=>s.amount),1);
+    const barW = Math.floor((w-80)/statuses.length) - 16;
+    const startX = 40;
+
+    statuses.forEach((s,i) => {
+      const x = startX + i * (barW + 16);
+      const barH = (s.amount / maxAmt) * (h - 60);
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.roundRect(x, h - 30 - barH, barW, barH, 4);
+      ctx.fill();
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--mid').trim() || '#556059';
+      ctx.font = '600 18px Figtree,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(s.label, x + barW/2, h - 8);
+      ctx.font = '700 20px "DM Serif Display",serif';
+      ctx.fillStyle = s.color;
+      ctx.fillText(s.amount.toLocaleString('fr-FR') + '€', x + barW/2, h - 36 - barH);
+    });
+  }
+
+  // Risk distribution chart
+  const riskCanvas = document.getElementById('fin-chart-risk');
+  if(riskCanvas && dossiers.length > 0) {
+    const ctx = riskCanvas.getContext('2d');
+    const w = riskCanvas.width = riskCanvas.offsetWidth * 2;
+    const h = riskCanvas.height = 240;
+    ctx.clearRect(0,0,w,h);
+
+    const levels = {faible:0,modere:0,eleve:0,critique:0};
+    dossiers.forEach(d => { const sc = computeAMLR6Score(d); levels[sc.level]++; });
+    const colors = {faible:'#27ae60',modere:'#f39c12',eleve:'#e67e22',critique:'#c0392b'};
+    const labels = {faible:'Faible',modere:'Modéré',eleve:'Élevé',critique:'Critique'};
+    const total = dossiers.length;
+    const cx = w/2, cy = h/2 - 5, r = Math.min(w,h)/2 - 30;
+    let angle = -Math.PI/2;
+
+    for(const [level, count] of Object.entries(levels)) {
+      if(count === 0) continue;
+      const slice = (count/total) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, angle, angle + slice);
+      ctx.closePath();
+      ctx.fillStyle = colors[level];
+      ctx.fill();
+      const mid = angle + slice/2;
+      const lx = cx + (r * 0.65) * Math.cos(mid);
+      const ly = cy + (r * 0.65) * Math.sin(mid);
+      if(slice > 0.3) {
+        ctx.fillStyle = '#fff';
+        ctx.font = '700 22px Figtree,sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(count, lx, ly);
+      }
+      angle += slice;
+    }
+    // Legend
+    let ly = h - 18;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    let lx = 8;
+    for(const [level, count] of Object.entries(levels)) {
+      ctx.fillStyle = colors[level];
+      ctx.fillRect(lx, ly-8, 12, 12);
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--mid').trim() || '#556059';
+      ctx.font = '600 17px Figtree,sans-serif';
+      ctx.fillText(labels[level]+' ('+count+')', lx+16, ly+2);
+      lx += ctx.measureText(labels[level]+' ('+count+')').width + 30;
+    }
+  }
 }
 
 // ══ HEURES & FACTURATION ══
@@ -4190,6 +4443,20 @@ function renderDossierTabContent(ref, tab) {
           <span style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--ok-fg)">${Math.round(totalA).toLocaleString('fr-FR')} €</span>
         </div>
       </div>
+      ${(()=>{
+        const v = DB.load('validations', {})[ref];
+        const session = DB.getSession();
+        const validationHtml = v
+          ? `<div style="background:var(--ok-bg);border-radius:8px;padding:10px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+              <span style="font-size:1rem">✅</span>
+              <div><div style="font-size:.75rem;font-weight:600;color:var(--ok-fg)">Validé par ${v.validatedBy}</div><div style="font-size:.65rem;color:var(--mid)">${v.date} · Principe des 4 yeux respecté</div></div>
+            </div>`
+          : `<div style="background:var(--warn-bg);border-radius:8px;padding:10px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;align-items:center;gap:8px"><span style="font-size:1rem">⏳</span><div><div style="font-size:.75rem;font-weight:600;color:var(--warn-fg)">En attente de validation</div><div style="font-size:.65rem;color:var(--mid)">Principe des 4 yeux (Art. 8 AMLR) — Un second regard est requis</div></div></div>
+              <button class="btn btn-sage" style="font-size:.72rem;padding:5px 12px" onclick="validateDossier('${ref}')">Valider</button>
+            </div>`;
+        return validationHtml;
+      })()}
       <div>
         <div style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);margin-bottom:8px">Changer le statut</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -4570,52 +4837,180 @@ function generateInvoicePDF(invoiceId) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const session = DB.getSession();
-  const W = 210, M = 20;
+  const settings = DB.getSettings();
+  const W = 210, M = 20, RightCol = W - M;
+  const cabinetName = settings.cabinetName || session?.cabinet || 'Cabinet d\'Avocats';
+  const cabinetAddr = settings.cabinetAddress || '1, Boulevard Royal\nL-2449 Luxembourg';
+  const cabinetTVA = settings.cabinetTVA || 'LU 00000000';
+  const cabinetRCS = settings.cabinetRCS || 'B000000';
+  const cabinetIBAN = settings.cabinetIBAN || 'LU00 0000 0000 0000 0000';
+  const cabinetBIC = settings.cabinetBIC || 'BCEELULL';
+  const cabinetBank = settings.cabinetBank || 'Banque et Caisse d\'Épargne de l\'État';
 
+  // Header band
   doc.setFillColor(61, 92, 74);
-  doc.rect(0, 0, W, 40, 'F');
+  doc.rect(0, 0, W, 45, 'F');
   doc.setTextColor(255,255,255);
-  doc.setFontSize(22);
+  doc.setFontSize(24);
   doc.setFont('helvetica','bold');
   doc.text('FACTURE', M, 18);
-  doc.setFontSize(11);
+  doc.setFontSize(12);
   doc.setFont('helvetica','normal');
-  doc.text(inv.number, M, 26);
+  doc.text(inv.number, M, 27);
   doc.setFontSize(9);
-  doc.text((session?.cabinet || 'Cabinet') + ' · Luxembourg', M, 33);
-  doc.text('Date : ' + new Date(inv.createdAt).toLocaleDateString('fr-LU'), W-M, 18, {align:'right'});
-  if(inv.dueDate) doc.text('Échéance : ' + new Date(inv.dueDate).toLocaleDateString('fr-LU'), W-M, 25, {align:'right'});
+  doc.text(cabinetName, M, 35);
+  doc.text('Luxembourg', M, 40);
 
-  let y = 52;
-  doc.setTextColor(26,29,27);
-  doc.setFontSize(10);
+  // Status badge
+  const statusLabels = {brouillon:'BROUILLON',envoyee:'ENVOYÉE',payee:'PAYÉE',impayee:'IMPAYÉE',annulee:'ANNULÉE'};
+  const statusColors = {brouillon:[180,180,180],envoyee:[59,130,246],payee:[34,197,94],impayee:[239,68,68],annulee:[156,163,175]};
+  const sColor = statusColors[inv.status] || [180,180,180];
+  doc.setFillColor(sColor[0],sColor[1],sColor[2]);
+  doc.roundedRect(RightCol - 40, 6, 40, 10, 2, 2, 'F');
+  doc.setFontSize(8);
   doc.setFont('helvetica','bold');
-  doc.text('Facturé à :', M, y);
-  doc.setFont('helvetica','normal');
-  doc.text(inv.client, M, y+7);
-  doc.text('Dossier : ' + inv.ref, M, y+14);
+  doc.setTextColor(255,255,255);
+  doc.text(statusLabels[inv.status] || inv.status.toUpperCase(), RightCol - 20, 13, {align:'center'});
 
-  y += 28;
+  // Dates right-aligned
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.setTextColor(220,230,225);
+  doc.text('Date : ' + new Date(inv.createdAt).toLocaleDateString('fr-LU'), RightCol, 25, {align:'right'});
+  if(inv.dueDate) doc.text('Échéance : ' + new Date(inv.dueDate).toLocaleDateString('fr-LU'), RightCol, 32, {align:'right'});
+
+  // Emitter / Client columns
+  let y = 56;
+  doc.setTextColor(26,29,27);
+
+  // Left: Cabinet (emitter)
+  doc.setFontSize(8);
+  doc.setTextColor(130,140,135);
+  doc.text('ÉMETTEUR', M, y);
+  doc.setFontSize(10);
+  doc.setTextColor(26,29,27);
+  doc.setFont('helvetica','bold');
+  doc.text(cabinetName, M, y + 7);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  const addrLines = cabinetAddr.split('\n');
+  addrLines.forEach((line, i) => doc.text(line, M, y + 13 + i*5));
+  const addrEnd = y + 13 + addrLines.length * 5;
+  doc.text('TVA : ' + cabinetTVA, M, addrEnd + 2);
+  doc.text('RCS Luxembourg : ' + cabinetRCS, M, addrEnd + 7);
+
+  // Right: Client
+  doc.setFontSize(8);
+  doc.setTextColor(130,140,135);
+  doc.text('FACTURÉ À', W/2 + 10, y);
+  doc.setFontSize(10);
+  doc.setTextColor(26,29,27);
+  doc.setFont('helvetica','bold');
+  doc.text(inv.client, W/2 + 10, y + 7);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.text('Dossier : ' + inv.ref, W/2 + 10, y + 14);
+  if(inv.clientAddress) {
+    const cLines = inv.clientAddress.split('\n');
+    cLines.forEach((line, i) => doc.text(line, W/2 + 10, y + 21 + i*5));
+  }
+
+  // Separator
+  y = addrEnd + 16;
+  doc.setDrawColor(200,210,205);
+  doc.setLineWidth(0.3);
+  doc.line(M, y, RightCol, y);
+  y += 8;
+
+  // Detail table
+  const rows = [];
+  if(inv.hours && inv.hours.length) {
+    inv.hours.forEach(h => {
+      rows.push([h.date ? new Date(h.date).toLocaleDateString('fr-LU') : '', h.description || 'Prestation juridique', (h.hours||0).toFixed(1) + 'h', (h.rate||0).toLocaleString('fr-FR') + ' €/h', ((h.hours||0)*(h.rate||0)).toLocaleString('fr-FR') + ' €']);
+    });
+  } else {
+    rows.push(['', inv.description || 'Honoraires juridiques', '', '', inv.amountHT.toLocaleString('fr-FR') + ' €']);
+  }
+
   doc.autoTable({
     startY: y, margin: {left:M, right:M},
-    head: [['Description','Montant']],
-    body: [
-      [inv.description || 'Honoraires juridiques', inv.amountHT.toLocaleString('fr-FR') + ' €'],
-      ['TVA (' + inv.tva + '%)', inv.tvaAmount.toLocaleString('fr-FR') + ' €'],
-    ],
-    foot: [['TOTAL TTC', inv.total.toLocaleString('fr-FR') + ' €']],
-    headStyles: {fillColor:[61,92,74],textColor:[255,255,255],fontStyle:'bold',fontSize:9},
-    bodyStyles: {fontSize:9,cellPadding:5},
-    footStyles: {fillColor:[26,29,27],textColor:[255,255,255],fontStyle:'bold',fontSize:10},
-    columnStyles: {0:{cellWidth:120},1:{halign:'right'}},
-    theme: 'grid',
+    head: [['Date','Description','Durée','Taux','Montant HT']],
+    body: rows,
+    headStyles: {fillColor:[61,92,74],textColor:[255,255,255],fontStyle:'bold',fontSize:8,cellPadding:4},
+    bodyStyles: {fontSize:8,cellPadding:4,textColor:[50,50,50]},
+    columnStyles: {0:{cellWidth:25},1:{cellWidth:70},2:{cellWidth:20,halign:'center'},3:{cellWidth:25,halign:'right'},4:{cellWidth:30,halign:'right'}},
+    theme: 'striped',
+    alternateRowStyles: {fillColor:[245,248,246]},
   });
 
-  y = doc.lastAutoTable.finalY + 16;
+  // Totals box
+  y = doc.lastAutoTable.finalY + 6;
+  const boxX = RightCol - 75, boxW = 75;
+  doc.setFillColor(248,250,249);
+  doc.setDrawColor(200,210,205);
+  doc.roundedRect(boxX, y, boxW, 38, 2, 2, 'FD');
+
+  doc.setFontSize(9);
+  doc.setTextColor(80,90,85);
+  doc.setFont('helvetica','normal');
+  doc.text('Sous-total HT', boxX + 4, y + 8);
+  doc.text(inv.amountHT.toLocaleString('fr-FR') + ' €', boxX + boxW - 4, y + 8, {align:'right'});
+  doc.text('TVA (' + inv.tva + '%)', boxX + 4, y + 16);
+  doc.text(inv.tvaAmount.toLocaleString('fr-FR') + ' €', boxX + boxW - 4, y + 16, {align:'right'});
+
+  doc.setDrawColor(61,92,74);
+  doc.setLineWidth(0.5);
+  doc.line(boxX + 4, y + 21, boxX + boxW - 4, y + 21);
+
+  doc.setFontSize(11);
+  doc.setFont('helvetica','bold');
+  doc.setTextColor(26,29,27);
+  doc.text('TOTAL TTC', boxX + 4, y + 30);
+  doc.text(inv.total.toLocaleString('fr-FR') + ' €', boxX + boxW - 4, y + 30, {align:'right'});
+
+  // Banking details section
+  y = doc.lastAutoTable.finalY + 52;
+  doc.setFillColor(248,250,249);
+  doc.setDrawColor(200,210,205);
+  doc.roundedRect(M, y, RightCol - M, 36, 2, 2, 'FD');
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica','bold');
+  doc.setTextColor(61,92,74);
+  doc.text('COORDONNÉES BANCAIRES', M + 6, y + 8);
+
+  doc.setFont('helvetica','normal');
   doc.setFontSize(8);
-  doc.setTextColor(154,173,166);
-  doc.text('Conditions de paiement : virement bancaire sous 30 jours.', M, y);
-  doc.text('Document généré par Norvy · norvy.io', M, y+5);
+  doc.setTextColor(60,70,65);
+  doc.text('Bénéficiaire : ' + cabinetName, M + 6, y + 15);
+  doc.text('IBAN : ' + cabinetIBAN, M + 6, y + 21);
+  doc.text('BIC/SWIFT : ' + cabinetBIC, M + 6, y + 27);
+  doc.text('Banque : ' + cabinetBank, RightCol/2, y + 15);
+  doc.text('Communication : ' + inv.number, RightCol/2, y + 21);
+  doc.text('Devise : EUR', RightCol/2, y + 27);
+
+  // Payment terms
+  y += 44;
+  doc.setFontSize(8);
+  doc.setTextColor(130,140,135);
+  const terms = [
+    'Conditions de paiement : virement bancaire sous 30 jours à compter de la date de facturation.',
+    'En cas de retard de paiement, des intérêts de retard au taux légal majoré de 8 points seront appliqués (Art. 15 Loi du 18/04/2004).',
+    'Tout montant non payé à l\'échéance donnera lieu à une indemnité forfaitaire de 40 € pour frais de recouvrement.'
+  ];
+  terms.forEach((t, i) => {
+    doc.text(t, M, y + i * 5, {maxWidth: RightCol - M});
+  });
+
+  // Footer
+  y = 280;
+  doc.setDrawColor(200,210,205);
+  doc.setLineWidth(0.2);
+  doc.line(M, y, RightCol, y);
+  doc.setFontSize(7);
+  doc.setTextColor(160,170,165);
+  doc.text(cabinetName + ' · TVA ' + cabinetTVA + ' · RCS Luxembourg ' + cabinetRCS, W/2, y+4, {align:'center'});
+  doc.text('Document généré par Norvy — Plateforme de conformité LCB-FT', W/2, y+8, {align:'center'});
 
   doc.save('Facture_' + inv.number + '.pdf');
   showToast('PDF généré', 'Facture ' + inv.number + ' téléchargée', 'ok', '📥');
@@ -4760,8 +5155,52 @@ function addDossierNote(ref) {
   renderDossierTabContent(ref, 'notes');
 }
 
+function validateDossier(ref) {
+  const session = DB.getSession();
+  const dossier = DB.getDossiers().find(d => d.ref === ref);
+  const validations = DB.load('validations', {});
+  validations[ref] = {
+    validatedBy: session?.name || 'Utilisateur',
+    date: new Date().toLocaleDateString('fr-LU', {day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'}),
+    timestamp: new Date().toISOString()
+  };
+  DB.save('validations', validations);
+  DB.addAudit({ type:'decision', dot:'var(--ok-fg)', title:'✅ Validation 4 yeux — ' + (dossier?.clientName||ref), detail: 'Dossier validé par ' + (session?.name||'') + ' · Principe des 4 yeux (Art. 8 AMLR)', tags:[{t:'Validé',c:'g'},{t:'4 yeux',c:'b'}] });
+  showToast('Dossier validé', 'Validation 4 yeux enregistrée pour ' + ref, 'ok', '✅');
+  renderDossierTabContent(ref, 'info');
+}
+
 function closeDossierModal() {
   document.getElementById('dossier-modal').classList.add('hidden');
+}
+
+function openSettingsModal() {
+  const s = DB.getSettings();
+  document.getElementById('set-cabinet-name').value = s.cabinetName || '';
+  document.getElementById('set-cabinet-address').value = s.cabinetAddress || '';
+  document.getElementById('set-cabinet-tva').value = s.cabinetTVA || '';
+  document.getElementById('set-cabinet-rcs').value = s.cabinetRCS || '';
+  document.getElementById('set-cabinet-iban').value = s.cabinetIBAN || '';
+  document.getElementById('set-cabinet-bic').value = s.cabinetBIC || '';
+  document.getElementById('set-cabinet-bank').value = s.cabinetBank || '';
+  document.getElementById('settings-modal').classList.remove('hidden');
+}
+function closeSettingsModal() {
+  document.getElementById('settings-modal').classList.add('hidden');
+}
+function saveSettingsForm() {
+  const s = DB.getSettings();
+  s.cabinetName = document.getElementById('set-cabinet-name').value.trim();
+  s.cabinetAddress = document.getElementById('set-cabinet-address').value.trim();
+  s.cabinetTVA = document.getElementById('set-cabinet-tva').value.trim();
+  s.cabinetRCS = document.getElementById('set-cabinet-rcs').value.trim();
+  s.cabinetIBAN = document.getElementById('set-cabinet-iban').value.trim();
+  s.cabinetBIC = document.getElementById('set-cabinet-bic').value.trim();
+  s.cabinetBank = document.getElementById('set-cabinet-bank').value.trim();
+  DB.saveSettings(s);
+  closeSettingsModal();
+  showToast('Paramètres enregistrés', 'Les informations du cabinet ont été mises à jour', 'ok', '✅');
+  DB.addAudit({type:'settings', action:'Paramètres cabinet mis à jour', user: DB.getSession()?.name || 'Système'});
 }
 
 // ══ DOSSIERS LIST VIEW ══
@@ -5145,6 +5584,203 @@ function animateCounter(el,target,dur=1000){
   const t=setInterval(()=>{cur=Math.min(cur+step,target);el.textContent=Math.round(cur);if(cur>=target)clearInterval(t);},16);
 }
 
+// ══ DARK MODE ══
+function toggleDarkMode() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  DB.save('theme', next);
+  const btn = document.getElementById('qa-dark-btn');
+  if(btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+}
+
+function initTheme() {
+  const saved = DB.load('theme', 'light');
+  document.documentElement.setAttribute('data-theme', saved);
+  const btn = document.getElementById('qa-dark-btn');
+  if(btn) btn.textContent = saved === 'dark' ? '☀️' : '🌙';
+}
+
+// ══ RECHERCHE GLOBALE ══
+function openGlobalSearch() {
+  const overlay = document.getElementById('gsearch-overlay');
+  overlay.classList.remove('hidden');
+  const input = document.getElementById('gsearch-input');
+  input.value = '';
+  input.focus();
+  document.getElementById('gsearch-results').innerHTML = '<div style="padding:32px;text-align:center;color:var(--light);font-size:.83rem">Tapez pour rechercher dans tous vos dossiers, factures, audiences...</div>';
+}
+
+function closeGlobalSearch() {
+  document.getElementById('gsearch-overlay').classList.add('hidden');
+}
+
+document.addEventListener('keydown', e => {
+  if((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openGlobalSearch(); }
+  if(e.key === 'Escape') {
+    closeGlobalSearch();
+    const np = document.getElementById('notif-panel');
+    if(np?.classList.contains('open')) np.classList.remove('open');
+  }
+});
+
+function performGlobalSearch(query) {
+  const q = query.trim().toLowerCase();
+  const results = document.getElementById('gsearch-results');
+  if(!q) { results.innerHTML = '<div style="padding:32px;text-align:center;color:var(--light);font-size:.83rem">Tapez pour rechercher...</div>'; return; }
+
+  const matches = [];
+
+  DB.getDossiers().forEach(d => {
+    if(d.clientName.toLowerCase().includes(q) || d.ref.toLowerCase().includes(q) || (d.missionLabel||'').toLowerCase().includes(q)) {
+      const sc = computeAMLR6Score(d);
+      matches.push({ cat:'Dossiers', icon:'📁', title: d.clientName, sub: d.ref + ' · ' + (d.missionLabel||'') + ' · AMLR6: ' + sc.scorePct + '/100', action: `viewDossier('${d.ref}')` });
+    }
+  });
+
+  DB.getInvoices().forEach(inv => {
+    if(inv.number.toLowerCase().includes(q) || inv.client.toLowerCase().includes(q) || inv.ref.toLowerCase().includes(q)) {
+      matches.push({ cat:'Factures', icon:'🧾', title: inv.number + ' — ' + inv.client, sub: inv.total.toLocaleString('fr-FR') + ' € · ' + (inv.status||''), action: `openInvoiceFromList('${inv.id}','${inv.ref}')` });
+    }
+  });
+
+  DB.getAudiences().forEach(a => {
+    const dossier = DB.getDossiers().find(d => d.ref === a.ref);
+    if((a.tribunal||'').toLowerCase().includes(q) || (a.description||'').toLowerCase().includes(q) || (dossier?.clientName||'').toLowerCase().includes(q)) {
+      matches.push({ cat:'Audiences', icon:'📅', title: a.tribunal || 'Audience', sub: new Date(a.date).toLocaleDateString('fr-LU') + ' · ' + (dossier?.clientName||a.ref), action: `showView('audiences')` });
+    }
+  });
+
+  DB.getDocuments().forEach(dc => {
+    if(dc.name.toLowerCase().includes(q)) {
+      matches.push({ cat:'Documents', icon:'📎', title: dc.name, sub: dc.ref + ' · ' + (dc.docType||''), action: `viewDossier('${dc.ref}');setTimeout(()=>switchDossierTab('docs',document.querySelectorAll('#dm-tabs .dm-tab')[2]),100)` });
+    }
+  });
+
+  if(matches.length === 0) {
+    results.innerHTML = '<div style="padding:32px;text-align:center;color:var(--light)"><div style="font-size:1.5rem;margin-bottom:8px">🔍</div><div style="font-size:.83rem">Aucun résultat pour "' + query + '"</div></div>';
+    return;
+  }
+
+  const grouped = {};
+  matches.forEach(m => { if(!grouped[m.cat]) grouped[m.cat] = []; grouped[m.cat].push(m); });
+
+  let html = '';
+  for(const [cat, items] of Object.entries(grouped)) {
+    html += `<div class="gsearch-cat">${cat} (${items.length})</div>`;
+    items.slice(0, 5).forEach(item => {
+      html += `<div class="gsearch-item" onclick="closeGlobalSearch();${item.action}">
+        <span style="font-size:1.1rem">${item.icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.82rem;font-weight:600;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.title}</div>
+          <div style="font-size:.68rem;color:var(--light)">${item.sub}</div>
+        </div>
+      </div>`;
+    });
+  }
+  results.innerHTML = html;
+}
+
+// ══ NOTIFICATIONS ══
+function toggleNotifPanel() {
+  document.getElementById('notif-panel').classList.toggle('open');
+  renderNotifications();
+}
+
+function renderNotifications() {
+  const list = document.getElementById('notif-list');
+  if(!list) return;
+
+  const notifs = generateNotifications();
+  const saved = DB.load('notifs-read', []);
+
+  if(notifs.length === 0) {
+    list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--light);font-size:.83rem">Aucune notification</div>';
+    return;
+  }
+
+  list.innerHTML = notifs.map(n => {
+    const isRead = saved.includes(n.id);
+    return `<div class="notif-item${isRead?'':' unread'}" onclick="handleNotifClick('${n.id}','${n.action||''}')">
+      <div class="notif-dot" style="background:${n.color}"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.8rem;font-weight:600;color:var(--charcoal)">${n.title}</div>
+        <div style="font-size:.7rem;color:var(--mid);margin-top:2px">${n.sub}</div>
+        <div style="font-size:.62rem;color:var(--light);margin-top:3px">${n.time}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Update badge
+  const unread = notifs.filter(n => !saved.includes(n.id)).length;
+  const badge = document.getElementById('qa-notif-count');
+  if(badge) {
+    badge.textContent = unread;
+    badge.style.display = unread > 0 ? 'flex' : 'none';
+  }
+  document.querySelectorAll('.notif-count').forEach(el => el.textContent = unread);
+  document.querySelectorAll('.nav-badge-pill.red').forEach(el => el.textContent = unread || computeAlerts().length);
+}
+
+function generateNotifications() {
+  const notifs = [];
+  const now = new Date();
+
+  // Audiences in next 3 days
+  DB.getAudiences().forEach(a => {
+    const dt = new Date(a.date);
+    const daysLeft = Math.ceil((dt - now) / 86400000);
+    if(daysLeft >= 0 && daysLeft <= 3) {
+      const dossier = DB.getDossiers().find(d => d.ref === a.ref);
+      notifs.push({ id:'aud-'+a.id, color:'var(--danger-fg)', title:'Audience dans ' + daysLeft + ' jour(s)', sub: a.tribunal + ' · ' + (dossier?.clientName||a.ref), time: dt.toLocaleDateString('fr-LU',{weekday:'long',day:'numeric',month:'long'}) + ' ' + (a.time||''), action:"showView('audiences')" });
+    }
+  });
+
+  // Unpaid invoices
+  getUnpaidInvoices().forEach(inv => {
+    const days = inv.dueDate ? Math.floor((now - new Date(inv.dueDate)) / 86400000) : 0;
+    if(days > 0) {
+      notifs.push({ id:'inv-'+inv.id, color:'var(--warn-fg)', title:'Facture impayée — ' + inv.number, sub: inv.client + ' · ' + inv.total.toLocaleString('fr-FR') + ' € · ' + days + 'j de retard', time:'Relance recommandée', action:"showView('facturation')" });
+    }
+  });
+
+  // Suspended dossiers
+  DB.getDossiers().forEach(d => {
+    if(d.status === 'suspendu') {
+      notifs.push({ id:'sus-'+d.ref, color:'var(--warn-fg)', title:'Dossier suspendu — ' + d.clientName, sub:'Documents manquants · Action requise', time:d.ref, action:`viewDossier('${d.ref}')` });
+    }
+    // High AMLR6 score
+    const sc = computeAMLR6Score(d);
+    if(sc.scorePct >= 70 && d.status === 'actif') {
+      notifs.push({ id:'risk-'+d.ref, color:'var(--danger-fg)', title:'Risque critique AMLR6 — ' + d.clientName, sub:'Score ' + sc.scorePct + '/100 · Vigilance renforcée obligatoire', time:d.ref, action:`viewDossier('${d.ref}')` });
+    }
+    // Missing docs on in-scope
+    const docs = DB.getDocuments().filter(dc => dc.ref === d.ref);
+    if(d.status === 'actif' && d.inScope && docs.length === 0) {
+      notifs.push({ id:'doc-'+d.ref, color:'var(--info-fg)', title:'Documents KYC manquants — ' + d.clientName, sub:'Dossier IN SCOPE sans pièce justificative', time:d.ref, action:`viewDossier('${d.ref}')` });
+    }
+  });
+
+  return notifs;
+}
+
+function handleNotifClick(id, action) {
+  const read = DB.load('notifs-read', []);
+  if(!read.includes(id)) { read.push(id); DB.save('notifs-read', read); }
+  renderNotifications();
+  if(action) {
+    document.getElementById('notif-panel').classList.remove('open');
+    eval(action);
+  }
+}
+
+function markAllNotifsRead() {
+  const notifs = generateNotifications();
+  DB.save('notifs-read', notifs.map(n => n.id));
+  renderNotifications();
+  showToast('Notifications','Toutes les notifications marquées comme lues','ok','✓');
+}
+
 // ══ FACTURATION VIEW ══
 function renderFacturationView() {
   let invoices = DB.getInvoices();
@@ -5342,17 +5978,22 @@ window.showView=function(name){
     const oc=n.getAttribute('onclick')||'';
     n.classList.toggle('active',oc.includes(`'${name}'`));
   });
-  // Global nav bar — show when logged in, highlight active
+  // Global nav bar + quick actions — show when logged in
+  const isLoggedIn = name !== 'login';
   const gnav = document.getElementById('global-nav');
   if(gnav) {
-    const isLoggedIn = name !== 'login';
     gnav.classList.toggle('hidden', !isLoggedIn);
     gnav.querySelectorAll('.gn-item').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.view === name);
     });
   }
-  // Close any open sidebars
+  const qa = document.getElementById('quick-actions');
+  if(qa) qa.classList.toggle('hidden', !isLoggedIn);
+  // Update notification badge
+  if(isLoggedIn) renderNotifications();
+  // Close any open sidebars and panels
   document.querySelectorAll('.sidebar.open,.ob-sidebar.open').forEach(s=>s.classList.remove('open'));
+  document.getElementById('notif-panel')?.classList.remove('open');
   if(name==='dossiers'){
     renderDossiersList();
   }
@@ -5848,13 +6489,17 @@ window.addEventListener('load',()=>{
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
 
   const session = DB.getSession();
+  initTheme();
   const gnav = document.getElementById('global-nav');
+  const qa = document.getElementById('quick-actions');
   if(session) {
     updateUIForUser(session);
     initDashboardFromDB();
     document.getElementById('view-dashboard').classList.add('active');
     animateDashboard();
     if(gnav) { gnav.classList.remove('hidden'); gnav.querySelector('[data-view="dashboard"]')?.classList.add('active'); }
+    if(qa) qa.classList.remove('hidden');
+    renderNotifications();
   } else if(DB.getUsers().length === 0) {
     document.getElementById('view-login').classList.add('active');
     toggleAuthCard('register');
