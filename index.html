@@ -1415,7 +1415,10 @@ body{padding-bottom:62px}
   <div style="background:white;border-radius:16px;padding:28px 24px;width:100%;max-width:720px;position:relative;animation:fadeUp .3s ease;max-height:92vh;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)" id="dm-title">Détail du dossier</div>
-      <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="closeDossierModal()">✕</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button onclick="generateDossierPDF(currentDossierRef)" style="border:1px solid var(--border);background:var(--card-bg,#fff);border-radius:8px;padding:5px 12px;font-size:.72rem;font-weight:600;color:var(--sage);cursor:pointer;display:flex;align-items:center;gap:4px" title="Exporter la fiche client en PDF">📥 Fiche PDF</button>
+        <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="closeDossierModal()">✕</span>
+      </div>
     </div>
     <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--border);padding-bottom:0" id="dm-tabs">
       <button class="dm-tab active" onclick="switchDossierTab('info',this)">Infos</button>
@@ -5016,6 +5019,266 @@ function generateInvoicePDF(invoiceId) {
   showToast('PDF généré', 'Facture ' + inv.number + ' téléchargée', 'ok', '📥');
 }
 
+function generateDossierPDF(ref) {
+  const d = DB.getDossiers().find(x => x.ref === ref);
+  if(!d) return;
+  if(typeof window.jspdf === 'undefined') { showToast('PDF non disponible','jsPDF non chargé','warn','⚠️'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const session = DB.getSession();
+  const settings = DB.getSettings();
+  const W = 210, M = 20, R = W - M;
+  const cabinetName = settings.cabinetName || session?.cabinet || 'Cabinet d\'Avocats';
+  const score = computeAMLR6Score(d);
+  const docs = DB.getDocuments().filter(dc => dc.ref === ref);
+  const screenings = DB.getScreenings().filter(s => s.ref === ref);
+  const hours = DB.load('hours', []).filter(h => h.ref === ref);
+  const invoices = DB.getInvoices().filter(i => i.ref === ref);
+  const audiences = DB.getAudiences().filter(a => a.ref === ref);
+  const validation = DB.load('validations', {})[ref];
+  const dateStr = new Date(d.createdAt).toLocaleDateString('fr-LU', {day:'numeric', month:'long', year:'numeric'});
+  const now = new Date().toLocaleDateString('fr-LU', {day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'});
+
+  // ── Header ──
+  doc.setFillColor(61, 92, 74);
+  doc.rect(0, 0, W, 42, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(18);
+  doc.setFont('helvetica','bold');
+  doc.text('FICHE CLIENT COMPLIANCE', M, 16);
+  doc.setFontSize(12);
+  doc.setFont('helvetica','normal');
+  doc.text(d.ref + ' — ' + d.clientName, M, 25);
+  doc.setFontSize(8);
+  doc.text(cabinetName + ' · Luxembourg', M, 32);
+  doc.text('Généré le ' + now, M, 37);
+
+  // Risk level badge
+  const levelColors = {critique:[192,57,43],eleve:[230,126,34],modere:[243,156,18],faible:[39,174,96]};
+  const levelLabels = {critique:'CRITIQUE',eleve:'ÉLEVÉ',modere:'MODÉRÉ',faible:'FAIBLE'};
+  const lc = levelColors[score.level] || [180,180,180];
+  doc.setFillColor(lc[0],lc[1],lc[2]);
+  doc.roundedRect(R - 52, 6, 52, 14, 3, 3, 'F');
+  doc.setFontSize(9);
+  doc.setFont('helvetica','bold');
+  doc.text('RISQUE ' + (levelLabels[score.level]||''), R - 26, 15, {align:'center'});
+
+  doc.setFontSize(22);
+  doc.text(score.scorePct + '/100', R, 35, {align:'right'});
+
+  // ── Section helper ──
+  let y = 52;
+  function sectionTitle(title, icon) {
+    if(y > 260) { doc.addPage(); y = 20; }
+    doc.setFillColor(247,245,240);
+    doc.rect(M, y, R - M, 9, 'F');
+    doc.setTextColor(61,92,74);
+    doc.setFontSize(10);
+    doc.setFont('helvetica','bold');
+    doc.text(icon + '  ' + title, M + 4, y + 6.5);
+    y += 14;
+    doc.setTextColor(40,40,40);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+  }
+
+  function fieldRow(label, value) {
+    if(y > 275) { doc.addPage(); y = 20; }
+    doc.setTextColor(130,140,135);
+    doc.setFontSize(8);
+    doc.text(label, M + 2, y);
+    doc.setTextColor(40,40,40);
+    doc.setFontSize(9);
+    doc.text(String(value || '—'), M + 55, y);
+    y += 6;
+  }
+
+  // ── 1. Identification ──
+  sectionTitle('IDENTIFICATION DU CLIENT', 'I.');
+  fieldRow('Type de client', d.clientType === 'pp' ? 'Personne physique' : 'Personne morale');
+  fieldRow('Nom / Dénomination', d.clientName);
+  if(d.clientType === 'pp') {
+    fieldRow('Nom', d.nom || '—');
+    fieldRow('Prénom', d.prenom || '—');
+  } else {
+    fieldRow('Dénomination', d.denomination || d.clientName);
+  }
+  fieldRow('Date d\'ouverture', dateStr);
+  fieldRow('Statut du dossier', d.status === 'actif' ? 'Actif' : d.status === 'suspendu' ? 'Suspendu' : d.status === 'refuse' ? 'Refusé' : d.status === 'archive' ? 'Archivé' : d.status);
+  y += 4;
+
+  // ── 2. Analyse LCB/FT ──
+  sectionTitle('ANALYSE LCB/FT', 'II.');
+  fieldRow('Mission', d.missionLabel || d.missionLabels?.[0] || '—');
+  fieldRow('Assujettissement', d.inScope ? 'IN SCOPE — Art. 2(1)(10) AMLR' : 'OUT OF SCOPE');
+  fieldRow('Vigilance appliquée', d.vigilance === 'renforcee' ? 'Renforcée (Art. 28-33 AMLR)' : d.vigilance === 'normal-plus' ? 'Normale+ (Art. 28 AMLR)' : d.vigilance === 'normal' ? 'Normale (Art. 28 AMLR)' : '—');
+  fieldRow('Pays GAFI', d.gafi === 'oui' ? 'OUI — Pays à risque élevé' : 'Non');
+  fieldRow('PPE', d.ppe === 'oui' ? 'OUI — Art. 35-39 AMLR' : 'Non');
+  fieldRow('Relation à distance', d.dist === 'oui' ? 'OUI — Art. 28(4) AMLR' : 'Non');
+  fieldRow('Screening', d.screeningResult === 'negatif' ? 'Négatif (aucun hit)' : d.screeningResult === 'alerte' ? 'ALERTE — Correspondance détectée' : 'Non effectué');
+  fieldRow('Décision', d.decision === 'accepter' ? 'Mission acceptée' : d.decision === 'refuser' ? 'Mission refusée' : d.decision === 'suspendre' ? 'Mission suspendue' : '—');
+  y += 4;
+
+  // ── 3. Score AMLR6 ──
+  sectionTitle('SCORE DE RISQUE AMLR6 — Règlement UE 2024/1624', 'III.');
+  fieldRow('Score global', score.scorePct + '/100 — ' + score.label);
+  fieldRow('Niveau de risque', (levelLabels[score.level]||'') + ' (' + score.totalScore + '/' + score.maxPossible + ' points)');
+  y += 2;
+
+  // Score breakdown table
+  doc.autoTable({
+    startY: y, margin: {left: M, right: M},
+    head: [['Facteur de risque', 'Réf. légale', 'Poids', 'Score', '%']],
+    body: score.breakdown.map(b => [b.label, b.art, b.weight, b.pts, b.pct + '%']),
+    foot: [['TOTAL', '', score.maxPossible, score.totalScore, score.scorePct + '%']],
+    headStyles: {fillColor:[61,92,74],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
+    bodyStyles: {fontSize:7,cellPadding:3,textColor:[50,50,50]},
+    footStyles: {fillColor:[40,40,40],textColor:[255,255,255],fontStyle:'bold',fontSize:7},
+    columnStyles: {0:{cellWidth:60},1:{cellWidth:30},2:{cellWidth:15,halign:'center'},3:{cellWidth:15,halign:'center'},4:{cellWidth:15,halign:'center'}},
+    theme: 'striped',
+    alternateRowStyles: {fillColor:[245,248,246]},
+  });
+  y = doc.lastAutoTable.finalY + 8;
+
+  // ── 4. Documents KYC ──
+  sectionTitle('DOCUMENTS KYC', 'IV.');
+  if(docs.length === 0) {
+    doc.setFontSize(8); doc.setTextColor(150,150,150);
+    doc.text('Aucun document enregistré', M + 2, y);
+    y += 8;
+  } else {
+    doc.autoTable({
+      startY: y, margin: {left: M, right: M},
+      head: [['Document', 'Type', 'Date', 'Statut']],
+      body: docs.map(dc => [
+        dc.name,
+        (dc.docType||'autre').toUpperCase(),
+        new Date(dc.uploadedAt).toLocaleDateString('fr-LU'),
+        dc.verified ? 'Vérifié' : 'En attente'
+      ]),
+      headStyles: {fillColor:[61,92,74],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
+      bodyStyles: {fontSize:7,cellPadding:3},
+      columnStyles: {0:{cellWidth:70},3:{cellWidth:22}},
+      theme: 'striped',
+    });
+    y = doc.lastAutoTable.finalY + 8;
+  }
+
+  // ── 5. Screening ──
+  sectionTitle('HISTORIQUE SCREENING', 'V.');
+  if(screenings.length === 0) {
+    doc.setFontSize(8); doc.setTextColor(150,150,150);
+    doc.text('Aucun screening enregistré', M + 2, y);
+    y += 8;
+  } else {
+    screenings.forEach(s => {
+      if(y > 275) { doc.addPage(); y = 20; }
+      fieldRow('Date', new Date(s.date).toLocaleDateString('fr-LU'));
+      fieldRow('Résultat', s.result === 'negatif' ? 'Négatif' : 'ALERTE');
+      fieldRow('Listes consultées', (s.lists||0) + ' listes (UE, OFAC, ONU, UK, PPE, Adverse Media)');
+      y += 2;
+    });
+  }
+
+  // ── 6. Audiences ──
+  if(audiences.length > 0) {
+    sectionTitle('AUDIENCES', 'VI.');
+    doc.autoTable({
+      startY: y, margin: {left: M, right: M},
+      head: [['Date', 'Heure', 'Tribunal', 'Salle', 'Objet']],
+      body: audiences.map(a => [
+        new Date(a.date).toLocaleDateString('fr-LU'),
+        a.time || '—',
+        a.tribunal || '—',
+        a.salle || '—',
+        a.objet || '—'
+      ]),
+      headStyles: {fillColor:[61,92,74],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
+      bodyStyles: {fontSize:7,cellPadding:3},
+      theme: 'striped',
+    });
+    y = doc.lastAutoTable.finalY + 8;
+  }
+
+  // ── 7. Heures & Facturation ──
+  if(hours.length > 0 || invoices.length > 0) {
+    sectionTitle('HEURES & FACTURATION', audiences.length > 0 ? 'VII.' : 'VI.');
+    if(hours.length > 0) {
+      const totalH = hours.reduce((s,e) => s + (e.hours||0), 0);
+      const totalA = hours.reduce((s,e) => s + (e.amount||0), 0);
+      fieldRow('Heures encodées', totalH.toFixed(1) + 'h · ' + Math.round(totalA).toLocaleString('fr-FR') + ' €');
+      doc.autoTable({
+        startY: y, margin: {left: M, right: M},
+        head: [['Date', 'Description', 'Heures', 'Taux', 'Montant']],
+        body: hours.map(h => [
+          h.date || '—',
+          h.desc || '—',
+          (h.hours||0).toFixed(1) + 'h',
+          (h.rate||0) + ' €/h',
+          (h.amount||0).toLocaleString('fr-FR') + ' €'
+        ]),
+        headStyles: {fillColor:[61,92,74],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
+        bodyStyles: {fontSize:7,cellPadding:3},
+        columnStyles: {2:{halign:'center'},3:{halign:'right'},4:{halign:'right'}},
+        theme: 'striped',
+      });
+      y = doc.lastAutoTable.finalY + 6;
+    }
+    if(invoices.length > 0) {
+      doc.setFontSize(8); doc.setFont('helvetica','bold');
+      doc.text('Factures liées', M + 2, y);
+      y += 5;
+      doc.setFont('helvetica','normal');
+      doc.autoTable({
+        startY: y, margin: {left: M, right: M},
+        head: [['N° Facture', 'Date', 'Montant TTC', 'Statut']],
+        body: invoices.map(inv => [
+          inv.number,
+          new Date(inv.createdAt).toLocaleDateString('fr-LU'),
+          inv.total.toLocaleString('fr-FR') + ' €',
+          inv.status === 'payee' ? 'Payée' : inv.status === 'envoyee' ? 'Envoyée' : inv.status === 'impayee' ? 'Impayée' : inv.status === 'brouillon' ? 'Brouillon' : inv.status
+        ]),
+        headStyles: {fillColor:[61,92,74],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
+        bodyStyles: {fontSize:7,cellPadding:3},
+        columnStyles: {2:{halign:'right'}},
+        theme: 'striped',
+      });
+      y = doc.lastAutoTable.finalY + 8;
+    }
+  }
+
+  // ── 8. Validation 4 yeux ──
+  if(y > 260) { doc.addPage(); y = 20; }
+  sectionTitle('VALIDATION — PRINCIPE DES 4 YEUX (Art. 8 AMLR)', audiences.length > 0 ? 'VIII.' : hours.length > 0 ? 'VII.' : 'VI.');
+  if(validation) {
+    fieldRow('Statut', 'VALIDÉ');
+    fieldRow('Validé par', validation.validatedBy);
+    fieldRow('Date de validation', validation.date);
+  } else {
+    fieldRow('Statut', 'EN ATTENTE — Non encore validé');
+  }
+  y += 6;
+
+  // ── Footer ──
+  const totalPages = doc.internal.getNumberOfPages();
+  for(let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    doc.setDrawColor(200,210,205);
+    doc.setLineWidth(0.2);
+    doc.line(M, 282, R, 282);
+    doc.setFontSize(7);
+    doc.setTextColor(160,170,165);
+    doc.setFont('helvetica','normal');
+    doc.text(cabinetName + ' · Document confidentiel · Fiche client compliance', W/2, 286, {align:'center'});
+    doc.text('Généré par Norvy — Plateforme LCB-FT · Page ' + p + '/' + totalPages, W/2, 290, {align:'center'});
+  }
+
+  doc.save('Fiche_' + d.ref + '_' + d.clientName.replace(/\s+/g,'_') + '.pdf');
+  showToast('Fiche PDF générée', d.ref + ' — ' + d.clientName, 'ok', '📥');
+  DB.addAudit({type:'export', action:'Fiche client PDF exportée — ' + d.ref + ' ' + d.clientName, user: session?.name || 'Système'});
+}
+
 function getUnpaidInvoices() {
   const invoices = DB.getInvoices();
   const now = new Date();
@@ -5287,6 +5550,7 @@ function renderDossiersList() {
       <div class="dos-date">${dateStr}</div>
       <div style="display:flex;gap:4px;align-items:center">
         <button class="btn btn-outline" style="font-size:.65rem;padding:4px 8px" onclick="event.stopPropagation();viewDossier('${d.ref}')" title="Détail">👁</button>
+        <button class="btn btn-outline" style="font-size:.65rem;padding:4px 8px" onclick="event.stopPropagation();generateDossierPDF('${d.ref}')" title="Fiche PDF">📥</button>
         <button class="btn btn-outline" style="font-size:.65rem;padding:4px 8px" onclick="event.stopPropagation();openHoursModal();setTimeout(()=>{document.getElementById('hours-dossier').value='${d.ref}'},100)" title="Heures">⏱</button>
       </div>
     </div>`;
