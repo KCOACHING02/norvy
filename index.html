@@ -1401,6 +1401,15 @@ body{padding-bottom:62px}
         </div>
       </div>
       <button onclick="saveSettingsForm()" style="margin-top:14px;width:100%;padding:12px;border-radius:10px;border:none;background:var(--sage);color:var(--white);font-weight:700;font-size:.95rem;cursor:pointer;transition:all .2s">Enregistrer les paramètres</button>
+      <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:.9rem;font-weight:700;color:var(--charcoal);margin-bottom:10px">Sauvegarde des données</div>
+        <div style="font-size:.73rem;color:var(--mid);margin-bottom:12px">Exportez toutes vos données (dossiers, factures, heures, screenings, audit) dans un fichier JSON, ou importez une sauvegarde précédente.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <button onclick="exportAllData()" style="padding:10px;border-radius:10px;border:1px solid var(--sage);background:transparent;color:var(--sage);font-weight:700;font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s">📥 Exporter JSON</button>
+          <button onclick="document.getElementById('import-file-input').click()" style="padding:10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--mid);font-weight:700;font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s">📤 Importer JSON</button>
+        </div>
+        <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importAllData(event)">
+      </div>
     </div>
   </div>
 </div>
@@ -1558,15 +1567,15 @@ body{padding-bottom:62px}
 
       <!-- KPIs -->
       <div class="kpi-grid">
-        <div class="kpi" style="animation-delay:.05s" onclick="showView('onboarding')">
+        <div class="kpi" style="animation-delay:.05s" onclick="showView('dossiers')">
           <div class="kpi-header">
             <span class="kpi-label">Dossiers actifs</span>
             <div class="kpi-icon-wrap green">📁</div>
           </div>
-          <div class="kpi-val animated" id="kpi-dossiers">47</div>
+          <div class="kpi-val animated" id="kpi-dossiers">0</div>
           <div class="kpi-footer">
-            <span class="kpi-trend up">↑ +4 ce mois</span>
-            <span class="kpi-sub">31 in scope</span>
+            <span class="kpi-trend neutral" id="kpi-dossiers-trend"></span>
+            <span class="kpi-sub" id="kpi-dossiers-sub">0 in scope</span>
           </div>
         </div>
         <div class="kpi" style="animation-delay:.1s" onclick="openHoursModal()">
@@ -1576,8 +1585,8 @@ body{padding-bottom:62px}
           </div>
           <div class="kpi-val animated" id="kpi-heures">0</div>
           <div class="kpi-footer">
-            <span class="kpi-trend neutral">Cliquez pour encoder</span>
-            <span class="kpi-sub">ce mois</span>
+            <span class="kpi-trend neutral" id="kpi-heures-trend">ce mois</span>
+            <span class="kpi-sub" id="kpi-heures-sub">ce mois</span>
           </div>
         </div>
         <div class="kpi" style="animation-delay:.15s" onclick="showView('facturation')">
@@ -1587,19 +1596,19 @@ body{padding-bottom:62px}
           </div>
           <div class="kpi-val animated" style="font-size:1.55rem" id="kpi-factu">0 €</div>
           <div class="kpi-footer">
-            <span class="kpi-trend neutral">Basé sur les heures</span>
-            <span class="kpi-sub">taux horaire</span>
+            <span class="kpi-trend neutral" id="kpi-factu-trend"></span>
+            <span class="kpi-sub" id="kpi-factu-sub"></span>
           </div>
         </div>
         <div class="kpi" style="animation-delay:.2s" onclick="showView('screening')">
           <div class="kpi-header">
-            <span class="kpi-label">Screenings ce mois</span>
+            <span class="kpi-label">Screenings</span>
             <div class="kpi-icon-wrap green">🔍</div>
           </div>
-          <div class="kpi-val animated" id="kpi-screening">128</div>
+          <div class="kpi-val animated" id="kpi-screening">0</div>
           <div class="kpi-footer">
-            <span class="kpi-trend neutral">100% négatifs</span>
-            <span class="kpi-sub">0 alerte</span>
+            <span class="kpi-trend neutral" id="kpi-screening-trend">0% négatifs</span>
+            <span class="kpi-sub" id="kpi-screening-sub">0 alerte</span>
           </div>
         </div>
         <div class="kpi" style="animation-delay:.25s" onclick="showView('audit')">
@@ -1607,10 +1616,10 @@ body{padding-bottom:62px}
             <span class="kpi-label">Alertes ouvertes</span>
             <div class="kpi-icon-wrap red">⚠️</div>
           </div>
-          <div class="kpi-val animated" style="color:var(--warn-fg)" id="kpi-alertes">3</div>
+          <div class="kpi-val animated" style="color:var(--warn-fg)" id="kpi-alertes">0</div>
           <div class="kpi-footer">
-            <span class="kpi-trend warn">⚠ À traiter</span>
-            <span class="kpi-sub">1 critique</span>
+            <span class="kpi-trend neutral" id="kpi-alertes-trend"></span>
+            <span class="kpi-sub" id="kpi-alertes-sub">0 critique</span>
           </div>
         </div>
       </div>
@@ -1649,57 +1658,44 @@ body{padding-bottom:62px}
       <div class="metrics-band">
 
         <!-- OAL Progress -->
-        <div class="metric-card" style="animation-delay:.1s" onclick="showView('oal')">
+        <div class="metric-card" style="animation-delay:.1s" onclick="showView('oal')" id="mc-oal">
           <div class="metric-header">
             <div class="metric-title">📋 Questionnaire OAL 2026</div>
             <span class="metric-more" onclick="showView('oal')">Générer →</span>
           </div>
-          <div class="progress-label"><span>Progression automatique</span><span class="progress-pct">67%</span></div>
+          <div class="progress-label"><span>Progression automatique</span><span class="progress-pct" id="mc-oal-pct">0%</span></div>
           <div class="progress-bar"><div class="progress-fill sage" id="oal-bar" style="width:0%"></div></div>
           <div style="font-size:.73rem;color:var(--mid);margin-bottom:14px">Mise à jour en temps réel à chaque dossier créé</div>
-          <div class="metric-stats">
-            <div class="mstat"><div class="mstat-val">31</div><div class="mstat-label">Dossiers in scope</div></div>
-            <div class="mstat"><div class="mstat-val">128</div><div class="mstat-label">Screenings</div></div>
-            <div class="mstat"><div class="mstat-val">0</div><div class="mstat-label">Décl. soupçon</div></div>
-            <div class="mstat"><div class="mstat-val">0</div><div class="mstat-label">Procédures OAL</div></div>
-          </div>
+          <div class="metric-stats" id="mc-oal-stats"></div>
           <div style="margin-top:14px">
-            <button class="btn btn-sage" style="width:100%;justify-content:center" onclick="alert('→ Génération PDF questionnaire OAL')">Générer le questionnaire OAL</button>
+            <button class="btn btn-sage" style="width:100%;justify-content:center" onclick="showView('oal')">Générer le questionnaire OAL</button>
           </div>
         </div>
 
         <!-- Facturation -->
-        <div class="metric-card" style="animation-delay:.15s" onclick="showView('facturation')">
+        <div class="metric-card" style="animation-delay:.15s" onclick="showView('facturation')" id="mc-factu">
           <div class="metric-header">
-            <div class="metric-title">💶 Facturation — Mars 2026</div>
-            <span class="metric-more" onclick="openHoursModal()">Détail →</span>
+            <div class="metric-title" id="mc-factu-title">💶 Facturation</div>
+            <span class="metric-more" onclick="showView('facturation')">Détail →</span>
           </div>
-          <div class="factu-amount">38 450 €</div>
-          <div class="factu-sub">Objectif mensuel : 45 000 € · Atteinte : 85%</div>
+          <div class="factu-amount" id="mc-factu-amount">0 €</div>
+          <div class="factu-sub" id="mc-factu-sub"></div>
           <div class="progress-bar"><div class="progress-fill gold" id="factu-bar" style="width:0%"></div></div>
-          <div class="progress-label"><span>Encaissé : 28 200 €</span><span class="progress-pct">74%</span></div>
-          <div class="metric-stats">
-            <div class="mstat"><div class="mstat-val">18</div><div class="mstat-label">Factures émises</div></div>
-            <div class="mstat"><div class="mstat-val">3</div><div class="mstat-label">En attente</div></div>
-            <div class="mstat"><div class="mstat-val">2 135 €</div><div class="mstat-label">Moy. / dossier</div></div>
-          </div>
+          <div class="progress-label"><span id="mc-factu-enc">Encaissé : 0 €</span><span class="progress-pct" id="mc-factu-pct">0%</span></div>
+          <div class="metric-stats" id="mc-factu-stats"></div>
         </div>
 
         <!-- Heures -->
-        <div class="metric-card" style="animation-delay:.2s" onclick="openHoursModal()">
+        <div class="metric-card" style="animation-delay:.2s" onclick="openHoursModal()" id="mc-hours">
           <div class="metric-header">
-            <div class="metric-title">⏱️ Heures encodées — Mars 2026</div>
+            <div class="metric-title" id="mc-hours-title">⏱️ Heures encodées</div>
             <span class="metric-more" onclick="openHoursModal()">Détail →</span>
           </div>
-          <div class="hours-display">284 h</div>
-          <div class="factu-sub">Objectif mensuel : 320h · Atteinte : 89%</div>
+          <div class="hours-display" id="mc-hours-val">0 h</div>
+          <div class="factu-sub" id="mc-hours-sub"></div>
           <div class="progress-bar"><div class="progress-fill blue" id="hours-bar" style="width:0%"></div></div>
-          <div class="progress-label"><span>Facturables : 241h</span><span class="progress-pct">85%</span></div>
-          <div class="metric-stats">
-            <div class="mstat"><div class="mstat-val">241h</div><div class="mstat-label">Facturables</div></div>
-            <div class="mstat"><div class="mstat-val">43h</div><div class="mstat-label">Non facturables</div></div>
-            <div class="mstat"><div class="mstat-val">9,5h</div><div class="mstat-label">Moy. / jour</div></div>
-          </div>
+          <div class="progress-label"><span id="mc-hours-fact">Facturables : 0h</span><span class="progress-pct" id="mc-hours-pct">0%</span></div>
+          <div class="metric-stats" id="mc-hours-stats"></div>
         </div>
       </div>
 
@@ -1733,7 +1729,7 @@ body{padding-bottom:62px}
             <div class="card-head-left">
               <span class="card-head-icon">📁</span>
               <span class="card-title">Dossiers récents</span>
-              <span class="card-count">47 actifs</span>
+              <span class="card-count" id="card-dossiers-count">0 actifs</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <button class="btn btn-sage" onclick="showView('onboarding')" style="font-size:.75rem;padding:6px 14px">+ Nouveau dossier</button>
@@ -1766,7 +1762,7 @@ body{padding-bottom:62px}
               <div class="card-head-left">
                 <span class="card-head-icon">⚠️</span>
                 <span class="card-title">Alertes compliance</span>
-                <span class="card-count" style="background:var(--danger-bg);color:var(--danger-fg)">3</span>
+                <span class="card-count" id="card-alerts-count" style="background:var(--danger-bg);color:var(--danger-fg)">0</span>
               </div>
               <span class="card-action" onclick="showView('audit')">Voir tout</span>
             </div>
@@ -1779,33 +1775,11 @@ body{padding-bottom:62px}
               <div class="card-head-left">
                 <span class="card-head-icon">🔍</span>
                 <span class="card-title">Alertes screening</span>
-                <span class="card-count" style="background:var(--ok-bg);color:var(--ok-fg)">0 alerte</span>
+                <span class="card-count" id="card-screening-count" style="background:var(--ok-bg);color:var(--ok-fg)">0 alerte</span>
               </div>
               <span class="card-action" onclick="showView('screening')">Lancer tout</span>
             </div>
-            <div style="padding:16px 18px;background:var(--ok-bg);margin:12px;border-radius:9px;border:1px solid rgba(74,111,165,.15)">
-              <div style="font-size:.83rem;font-weight:700;color:var(--ok-fg);margin-bottom:3px">✅ Aucune correspondance détectée</div>
-              <div style="font-size:.75rem;color:var(--mid)">128 screenings effectués ce mois · 6 listes vérifiées · 0 faux positif</div>
-            </div>
-            <div style="padding:8px 18px 4px;font-size:.72rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em">Screenings récents</div>
-            <div class="sc-alert-item" onclick="alert('→ Résultat screening DURAND')">
-              <div class="sc-dot" style="background:var(--ok-fg)"></div>
-              <div class="sc-client-av pp">JD</div>
-              <div class="sc-info"><div class="sc-name">DURAND Jean-Pierre</div><div class="sc-detail">UE + OFAC + ONU + PPE · Négatif</div></div>
-              <div class="sc-meta"><span class="sc-date">24 mars</span><button class="btn-sc view">Voir</button></div>
-            </div>
-            <div class="sc-alert-item" onclick="alert('→ Résultat screening ATLAS')">
-              <div class="sc-dot" style="background:var(--ok-fg)"></div>
-              <div class="sc-client-av pm">AT</div>
-              <div class="sc-info"><div class="sc-name">ATLAS Holdings + 3 UBO</div><div class="sc-detail">6 listes · Négatif</div></div>
-              <div class="sc-meta"><span class="sc-date">21 mars</span><button class="btn-sc view">Voir</button></div>
-            </div>
-            <div class="sc-alert-item" onclick="alert('→ Résultat screening WEBER')">
-              <div class="sc-dot warn"></div>
-              <div class="sc-client-av pp">KW</div>
-              <div class="sc-info"><div class="sc-name">WEBER Klaus</div><div class="sc-detail">Screening planifié · En attente</div></div>
-              <div class="sc-meta"><span class="sc-date">Prévu 31 mars</span><button class="btn-sc qual">Planifier</button></div>
-            </div>
+            <div id="card-screening-body"></div>
           </div>
 
           <!-- REVUES KYC PERIODIQUES -->
@@ -3026,14 +3000,29 @@ document.addEventListener('click',e=>{
 });
 
 function animateDashboard(){
-  // Barres de progression
   setTimeout(()=>{
+    const dossiers = DB.getDossiers();
+    const inScope = dossiers.filter(d => d.inScope && d.status === 'actif');
+    const screenings = DB.getScreenings();
+    const invoices = DB.getInvoices();
+    const hours = DB.load('hours', []);
+    const oalPct = Math.min(100, Math.round(
+      (inScope.length > 0 ? 20 : 0) + (screenings.length > 0 ? 20 : 0) +
+      (dossiers.length >= 5 ? 20 : dossiers.length * 4) +
+      (hours.length > 0 ? 20 : 0) + (invoices.length > 0 ? 20 : 0)
+    ));
+    const totalFact = invoices.reduce((s,i)=>s+i.total,0);
+    const totalPaye = invoices.filter(i=>i.status==='payee').reduce((s,i)=>s+i.total,0);
+    const encPct = totalFact > 0 ? Math.round((totalPaye/totalFact)*100) : 0;
+    const totalH = hours.reduce((s,h)=>s+h.hours,0);
+    const factH = hours.filter(h=>h.billable!==false).reduce((s,h)=>s+h.hours,0);
+    const hPct = totalH > 0 ? Math.round((factH/totalH)*100) : 0;
     const oal=document.getElementById('oal-bar');
     const fac=document.getElementById('factu-bar');
     const hrs=document.getElementById('hours-bar');
-    if(oal) oal.style.width='67%';
-    if(fac) fac.style.width='85%';
-    if(hrs) hrs.style.width='89%';
+    if(oal) oal.style.width=oalPct+'%';
+    if(fac) fac.style.width=encPct+'%';
+    if(hrs) hrs.style.width=hPct+'%';
   },300);
 }
 
@@ -4304,6 +4293,158 @@ function showAllKYCReviews() {
   modal.classList.remove('hidden');
 }
 
+function updateDashboardKPIs() {
+  const dossiers = DB.getDossiers();
+  const actifs = dossiers.filter(d => d.status === 'actif');
+  const inScope = actifs.filter(d => d.inScope);
+  const screenings = DB.getScreenings();
+  const invoices = DB.getInvoices();
+  const hours = DB.load('hours', []);
+  const alerts = computeAlerts();
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+  const isThisMonth = d => { const dt = new Date(d.date || d.createdAt); return dt.getMonth() === thisMonth && dt.getFullYear() === thisYear; };
+  const monthName = now.toLocaleDateString('fr-FR', {month: 'long', year: 'numeric'});
+  const monthNameCap = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+  // ── KPI: Dossiers actifs
+  const el = id => document.getElementById(id);
+  if(el('kpi-dossiers')) el('kpi-dossiers').textContent = actifs.length;
+  if(el('kpi-dossiers-sub')) el('kpi-dossiers-sub').textContent = inScope.length + ' in scope';
+  const newThisMonth = actifs.filter(d => isThisMonth(d)).length;
+  if(el('kpi-dossiers-trend')) {
+    el('kpi-dossiers-trend').textContent = newThisMonth > 0 ? '↑ +' + newThisMonth + ' ce mois' : 'Ce mois';
+    el('kpi-dossiers-trend').className = 'kpi-trend ' + (newThisMonth > 0 ? 'up' : 'neutral');
+  }
+  if(el('card-dossiers-count')) el('card-dossiers-count').textContent = actifs.length + ' actifs';
+
+  // ── KPI: Heures
+  const monthHours = hours.filter(h => isThisMonth(h));
+  const totalH = monthHours.reduce((s, h) => s + h.hours, 0);
+  const factH = monthHours.filter(h => h.billable !== false).reduce((s, h) => s + h.hours, 0);
+  if(el('kpi-heures')) el('kpi-heures').textContent = Math.round(totalH);
+  if(el('kpi-heures-trend')) el('kpi-heures-trend').textContent = factH + 'h facturables';
+  if(el('kpi-heures-sub')) el('kpi-heures-sub').textContent = 'ce mois';
+
+  // ── KPI: Facturation
+  const monthInv = invoices.filter(i => isThisMonth(i));
+  const totalFact = invoices.reduce((s, i) => s + i.total, 0);
+  const monthFact = monthInv.reduce((s, i) => s + i.total, 0);
+  if(el('kpi-factu')) el('kpi-factu').textContent = totalFact.toLocaleString('fr-FR') + ' €';
+  if(el('kpi-factu-trend')) el('kpi-factu-trend').textContent = monthFact > 0 ? '+' + monthFact.toLocaleString('fr-FR') + ' € ce mois' : 'Aucune facture';
+  if(el('kpi-factu-sub')) {
+    const paid = invoices.filter(i => i.status === 'payee').reduce((s, i) => s + i.total, 0);
+    el('kpi-factu-sub').textContent = paid > 0 ? paid.toLocaleString('fr-FR') + ' € encaissé' : '';
+  }
+
+  // ── KPI: Screenings
+  const monthSc = screenings.filter(s => isThisMonth(s));
+  const alertSc = screenings.filter(s => s.result === 'alerte');
+  const negPct = screenings.length > 0 ? Math.round(((screenings.length - alertSc.length) / screenings.length) * 100) : 100;
+  if(el('kpi-screening')) el('kpi-screening').textContent = screenings.length;
+  if(el('kpi-screening-trend')) el('kpi-screening-trend').textContent = negPct + '% négatifs';
+  if(el('kpi-screening-sub')) el('kpi-screening-sub').textContent = alertSc.length + ' alerte(s)';
+
+  // ── KPI: Alertes
+  const critAlerts = alerts.filter(a => a.severity === 'crit');
+  if(el('kpi-alertes')) el('kpi-alertes').textContent = alerts.length;
+  if(el('kpi-alertes-trend')) {
+    el('kpi-alertes-trend').textContent = alerts.length > 0 ? '⚠ À traiter' : '✓ Aucune';
+    el('kpi-alertes-trend').className = 'kpi-trend ' + (alerts.length > 0 ? 'warn' : 'up');
+  }
+  if(el('kpi-alertes-sub')) el('kpi-alertes-sub').textContent = critAlerts.length + ' critique(s)';
+  if(el('card-alerts-count')) el('card-alerts-count').textContent = alerts.length;
+
+  // ── Metric: OAL
+  const oalPct = Math.min(100, Math.round(
+    (inScope.length > 0 ? 20 : 0) +
+    (screenings.length > 0 ? 20 : 0) +
+    (dossiers.length >= 5 ? 20 : dossiers.length * 4) +
+    (hours.length > 0 ? 20 : 0) +
+    (invoices.length > 0 ? 20 : 0)
+  ));
+  if(el('mc-oal-pct')) el('mc-oal-pct').textContent = oalPct + '%';
+  if(el('mc-oal-stats')) el('mc-oal-stats').innerHTML = `
+    <div class="mstat"><div class="mstat-val">${inScope.length}</div><div class="mstat-label">Dossiers in scope</div></div>
+    <div class="mstat"><div class="mstat-val">${screenings.length}</div><div class="mstat-label">Screenings</div></div>
+    <div class="mstat"><div class="mstat-val">0</div><div class="mstat-label">Décl. soupçon</div></div>
+    <div class="mstat"><div class="mstat-val">0</div><div class="mstat-label">Procédures OAL</div></div>`;
+
+  // ── Metric: Facturation
+  const totalPaye = invoices.filter(i => i.status === 'payee').reduce((s, i) => s + i.total, 0);
+  const encPct = totalFact > 0 ? Math.round((totalPaye / totalFact) * 100) : 0;
+  const enAttente = invoices.filter(i => i.status === 'envoyee').length;
+  const moyDossier = actifs.length > 0 ? Math.round(totalFact / actifs.length) : 0;
+  if(el('mc-factu-title')) el('mc-factu-title').textContent = '💶 Facturation — ' + monthNameCap;
+  if(el('mc-factu-amount')) el('mc-factu-amount').textContent = totalFact.toLocaleString('fr-FR') + ' €';
+  if(el('mc-factu-sub')) el('mc-factu-sub').textContent = 'Total cumulé · ' + invoices.length + ' facture(s)';
+  if(el('mc-factu-enc')) el('mc-factu-enc').textContent = 'Encaissé : ' + totalPaye.toLocaleString('fr-FR') + ' €';
+  if(el('mc-factu-pct')) el('mc-factu-pct').textContent = encPct + '%';
+  if(el('mc-factu-stats')) el('mc-factu-stats').innerHTML = `
+    <div class="mstat"><div class="mstat-val">${invoices.length}</div><div class="mstat-label">Factures émises</div></div>
+    <div class="mstat"><div class="mstat-val">${enAttente}</div><div class="mstat-label">En attente</div></div>
+    <div class="mstat"><div class="mstat-val">${moyDossier.toLocaleString('fr-FR')} €</div><div class="mstat-label">Moy. / dossier</div></div>`;
+
+  // ── Metric: Heures
+  const nonFactH = totalH - factH;
+  const moyJour = totalH > 0 ? (totalH / new Date(thisYear, thisMonth + 1, 0).getDate()).toFixed(1) : '0';
+  const hPct = totalH > 0 ? Math.round((factH / totalH) * 100) : 0;
+  if(el('mc-hours-title')) el('mc-hours-title').textContent = '⏱️ Heures — ' + monthNameCap;
+  if(el('mc-hours-val')) el('mc-hours-val').textContent = Math.round(totalH) + ' h';
+  if(el('mc-hours-sub')) el('mc-hours-sub').textContent = hours.length + ' saisie(s) ce mois';
+  if(el('mc-hours-fact')) el('mc-hours-fact').textContent = 'Facturables : ' + Math.round(factH) + 'h';
+  if(el('mc-hours-pct')) el('mc-hours-pct').textContent = hPct + '%';
+  if(el('mc-hours-stats')) el('mc-hours-stats').innerHTML = `
+    <div class="mstat"><div class="mstat-val">${Math.round(factH)}h</div><div class="mstat-label">Facturables</div></div>
+    <div class="mstat"><div class="mstat-val">${Math.round(nonFactH)}h</div><div class="mstat-label">Non facturables</div></div>
+    <div class="mstat"><div class="mstat-val">${moyJour}h</div><div class="mstat-label">Moy. / jour</div></div>`;
+
+  // ── Screening card body
+  const scBody = el('card-screening-body');
+  if(scBody) {
+    const scBadge = el('card-screening-count');
+    if(scBadge) {
+      scBadge.textContent = alertSc.length + ' alerte(s)';
+      scBadge.style.background = alertSc.length > 0 ? 'var(--danger-bg)' : 'var(--ok-bg)';
+      scBadge.style.color = alertSc.length > 0 ? 'var(--danger-fg)' : 'var(--ok-fg)';
+    }
+    const statusBg = alertSc.length > 0 ? 'var(--danger-bg)' : 'var(--ok-bg)';
+    const statusFg = alertSc.length > 0 ? 'var(--danger-fg)' : 'var(--ok-fg)';
+    const statusIcon = alertSc.length > 0 ? '⚠️' : '✅';
+    const statusText = alertSc.length > 0 ? alertSc.length + ' correspondance(s) détectée(s)' : 'Aucune correspondance détectée';
+    let html = `<div style="padding:16px 18px;background:${statusBg};margin:12px;border-radius:9px;border:1px solid rgba(74,111,165,.15)">
+      <div style="font-size:.83rem;font-weight:700;color:${statusFg};margin-bottom:3px">${statusIcon} ${statusText}</div>
+      <div style="font-size:.75rem;color:var(--mid)">${screenings.length} screening(s) effectué(s) · 6 listes vérifiées</div>
+    </div>`;
+    if(screenings.length > 0) {
+      html += '<div style="padding:8px 18px 4px;font-size:.72rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em">Screenings récents</div>';
+      screenings.slice(-5).reverse().forEach(s => {
+        const d = dossiers.find(d => d.ref === s.ref);
+        const name = d ? d.clientName : s.ref;
+        const initials = getInitials(name);
+        const isAlert = s.result === 'alerte';
+        html += `<div class="sc-alert-item" onclick="viewDossier('${s.ref}')">
+          <div class="sc-dot" style="background:${isAlert ? 'var(--danger-fg)' : 'var(--ok-fg)'}"></div>
+          <div class="sc-client-av pp">${initials}</div>
+          <div class="sc-info"><div class="sc-name">${name}</div><div class="sc-detail">${s.lists || 'UE + OFAC + ONU + PPE'} · ${isAlert ? 'Alerte' : 'Négatif'}</div></div>
+          <div class="sc-meta"><span class="sc-date">${new Date(s.date).toLocaleDateString('fr-LU',{day:'numeric',month:'short'})}</span></div>
+        </div>`;
+      });
+    } else {
+      html += '<div style="padding:16px;text-align:center;color:var(--light);font-size:.8rem">Aucun screening effectué</div>';
+    }
+    scBody.innerHTML = html;
+  }
+
+  // ── Hero title
+  const heroTitle = document.querySelector('.hero-title');
+  if(heroTitle) {
+    if(alerts.length === 0) heroTitle.textContent = 'Votre espace compliance est à jour';
+    else heroTitle.textContent = alerts.length + ' alerte(s) requièrent votre attention';
+  }
+}
+
 function initDashboardFromDB() {
   const session = DB.getSession();
   if(session) updateUIForUser(session);
@@ -4313,6 +4454,7 @@ function initDashboardFromDB() {
   renderCalendar();
   renderFinancialOverview();
   renderKYCReviews();
+  updateDashboardKPIs();
 }
 
 function renderFinancialOverview() {
@@ -5978,6 +6120,56 @@ function saveSettingsForm() {
   closeSettingsModal();
   showToast('Paramètres enregistrés', 'Les informations du cabinet ont été mises à jour', 'ok', '✅');
   DB.addAudit({type:'settings', action:'Paramètres cabinet mis à jour', user: DB.getSession()?.name || 'Système'});
+}
+
+// ══ EXPORT / IMPORT ══
+function exportAllData() {
+  const keys = [];
+  for(let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if(k.startsWith('norvy_')) keys.push(k);
+  }
+  const data = {};
+  keys.forEach(k => { try { data[k] = JSON.parse(localStorage.getItem(k)); } catch(e) { data[k] = localStorage.getItem(k); } });
+  data._exportDate = new Date().toISOString();
+  data._version = '1.0';
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'norvy-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Export réussi', keys.length + ' clés exportées dans le fichier JSON', 'ok', '📥');
+  DB.addAudit({type:'export', action:'Export complet des données (' + keys.length + ' clés)', user: DB.getSession()?.name || 'Système'});
+}
+
+function importAllData(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!data._version) { showToast('Erreur import', 'Fichier non reconnu — pas un export Norvy', 'error', '❌'); return; }
+      const count = Object.keys(data).filter(k => k.startsWith('norvy_')).length;
+      if(count === 0) { showToast('Erreur import', 'Aucune donnée Norvy trouvée dans ce fichier', 'error', '❌'); return; }
+      if(!confirm('Importer ' + count + ' jeux de données ?\nCette action remplacera les données existantes.\n\nExport du : ' + new Date(data._exportDate).toLocaleDateString('fr-LU'))) return;
+      Object.keys(data).forEach(k => {
+        if(k.startsWith('norvy_')) {
+          localStorage.setItem(k, typeof data[k] === 'string' ? data[k] : JSON.stringify(data[k]));
+        }
+      });
+      showToast('Import réussi', count + ' jeux de données restaurés', 'ok', '📤');
+      DB.addAudit({type:'import', action:'Import de données (' + count + ' clés) depuis ' + file.name, user: DB.getSession()?.name || 'Système'});
+      initDashboardFromDB();
+      animateDashboard();
+    } catch(err) {
+      showToast('Erreur import', 'Fichier JSON invalide : ' + err.message, 'error', '❌');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
 }
 
 // ══ DOSSIERS LIST VIEW ══
