@@ -233,7 +233,9 @@ body{font-family:var(--font);background:var(--cream);color:var(--charcoal);min-h
 .main-grid{display:grid;grid-template-columns:1fr 380px;gap:20px;margin-bottom:24px}
 
 /* ══ CARDS ══ */
-.card{background:white;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:fadeUp .4s ease both}
+.card{background:white;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:fadeUp .4s ease both;transition:box-shadow .2s,transform .2s,border-color .2s}
+.card.clickable{cursor:pointer}
+.card.clickable:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);border-color:var(--sage-muted)}
 .card-head{
   padding:15px 20px;border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -334,7 +336,8 @@ body{font-family:var(--font);background:var(--cream);color:var(--charcoal);min-h
 
 /* ══ OAL + FACTURATION BAND ══ */
 .metrics-band{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px}
-.metric-card{background:white;border:1px solid var(--border);border-radius:var(--radius);padding:20px;animation:fadeUp .4s ease both}
+.metric-card{background:white;border:1px solid var(--border);border-radius:var(--radius);padding:20px;animation:fadeUp .4s ease both;cursor:pointer;transition:box-shadow .2s,transform .2s,border-color .2s}
+.metric-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);border-color:var(--sage-muted)}
 .metric-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .metric-title{font-size:.82rem;font-weight:700;color:var(--charcoal);display:flex;align-items:center;gap:7px}
 .metric-more{font-size:.72rem;color:var(--sage);cursor:pointer;font-weight:600}
@@ -1577,7 +1580,7 @@ body{padding-bottom:62px}
             <span class="kpi-sub">ce mois</span>
           </div>
         </div>
-        <div class="kpi" style="animation-delay:.15s" onclick="openHoursModal()">
+        <div class="kpi" style="animation-delay:.15s" onclick="showView('facturation')">
           <div class="kpi-header">
             <span class="kpi-label">Facturation</span>
             <div class="kpi-icon-wrap gold">💶</div>
@@ -1588,7 +1591,7 @@ body{padding-bottom:62px}
             <span class="kpi-sub">taux horaire</span>
           </div>
         </div>
-        <div class="kpi" style="animation-delay:.2s">
+        <div class="kpi" style="animation-delay:.2s" onclick="showView('screening')">
           <div class="kpi-header">
             <span class="kpi-label">Screenings ce mois</span>
             <div class="kpi-icon-wrap green">🔍</div>
@@ -1599,7 +1602,7 @@ body{padding-bottom:62px}
             <span class="kpi-sub">0 alerte</span>
           </div>
         </div>
-        <div class="kpi" style="animation-delay:.25s">
+        <div class="kpi" style="animation-delay:.25s" onclick="showView('audit')">
           <div class="kpi-header">
             <span class="kpi-label">Alertes ouvertes</span>
             <div class="kpi-icon-wrap red">⚠️</div>
@@ -1646,7 +1649,7 @@ body{padding-bottom:62px}
       <div class="metrics-band">
 
         <!-- OAL Progress -->
-        <div class="metric-card" style="animation-delay:.1s">
+        <div class="metric-card" style="animation-delay:.1s" onclick="showView('oal')">
           <div class="metric-header">
             <div class="metric-title">📋 Questionnaire OAL 2026</div>
             <span class="metric-more" onclick="showView('oal')">Générer →</span>
@@ -1666,7 +1669,7 @@ body{padding-bottom:62px}
         </div>
 
         <!-- Facturation -->
-        <div class="metric-card" style="animation-delay:.15s">
+        <div class="metric-card" style="animation-delay:.15s" onclick="showView('facturation')">
           <div class="metric-header">
             <div class="metric-title">💶 Facturation — Mars 2026</div>
             <span class="metric-more" onclick="openHoursModal()">Détail →</span>
@@ -1683,7 +1686,7 @@ body{padding-bottom:62px}
         </div>
 
         <!-- Heures -->
-        <div class="metric-card" style="animation-delay:.2s">
+        <div class="metric-card" style="animation-delay:.2s" onclick="openHoursModal()">
           <div class="metric-header">
             <div class="metric-title">⏱️ Heures encodées — Mars 2026</div>
             <span class="metric-more" onclick="openHoursModal()">Détail →</span>
@@ -1701,7 +1704,7 @@ body{padding-bottom:62px}
       </div>
 
       <!-- FINANCIAL OVERVIEW -->
-      <div class="card" style="animation-delay:.12s;margin-bottom:18px" id="financial-overview">
+      <div class="card clickable" style="animation-delay:.12s;margin-bottom:18px" id="financial-overview" onclick="showView('facturation')">
         <div class="card-head">
           <div class="card-head-left"><span class="card-head-icon">💰</span><span class="card-title">Aperçu financier</span></div>
           <span class="card-action" onclick="showView('facturation')">Détail →</span>
@@ -1725,7 +1728,7 @@ body{padding-bottom:62px}
       <div class="main-grid">
 
         <!-- DOSSIERS RÉCENTS -->
-        <div class="card" style="animation-delay:.15s">
+        <div class="card clickable" style="animation-delay:.15s" onclick="showView('dossiers')">
           <div class="card-head">
             <div class="card-head-left">
               <span class="card-head-icon">📁</span>
@@ -1758,7 +1761,7 @@ body{padding-bottom:62px}
         <div style="display:flex;flex-direction:column;gap:16px">
 
           <!-- ALERTES COMPLIANCE -->
-          <div class="card" style="animation-delay:.2s">
+          <div class="card clickable" style="animation-delay:.2s" onclick="showView('audit')">
             <div class="card-head">
               <div class="card-head-left">
                 <span class="card-head-icon">⚠️</span>
@@ -1771,7 +1774,7 @@ body{padding-bottom:62px}
           </div>
 
           <!-- DOSSIERS EN ALERTE SCREENING -->
-          <div class="card" style="animation-delay:.25s">
+          <div class="card clickable" style="animation-delay:.25s" onclick="showView('screening')">
             <div class="card-head">
               <div class="card-head-left">
                 <span class="card-head-icon">🔍</span>
@@ -1806,7 +1809,7 @@ body{padding-bottom:62px}
           </div>
 
           <!-- REVUES KYC PERIODIQUES -->
-          <div class="card" style="animation-delay:.28s">
+          <div class="card clickable" style="animation-delay:.28s" onclick="showAllKYCReviews()">
             <div class="card-head">
               <div class="card-head-left">
                 <span class="card-head-icon">🔄</span>
@@ -1819,13 +1822,13 @@ body{padding-bottom:62px}
           </div>
 
           <!-- CALENDRIER MINI -->
-          <div class="card" style="animation-delay:.3s">
+          <div class="card clickable" style="animation-delay:.3s" onclick="showView('audiences')">
             <div class="card-head">
               <div class="card-head-left">
                 <span class="card-head-icon">📅</span>
                 <span class="card-title"><span id="cal-title">Agenda</span></span>
               </div>
-              <span class="card-action" onclick="alert('→ Agenda complet')">Voir tout</span>
+              <span class="card-action" onclick="showView('audiences')">Voir tout</span>
             </div>
             <div id="cal-grid-dynamic"></div>
             <div id="cal-event-list-dynamic"></div>
@@ -7269,6 +7272,12 @@ function toggleSecteur(el, id){
 }
 
 // ══ INIT ══
+document.addEventListener('click',e=>{
+  if(e.target.closest('.card.clickable button, .card.clickable .btn, .card.clickable .card-action, .card.clickable .dos-row, .card.clickable .sc-alert-item, .card.clickable .btn-sc, .metric-card button, .metric-card .btn, .metric-card .metric-more')){
+    e.stopPropagation();
+  }
+});
+
 window.addEventListener('load',()=>{
   try {
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
