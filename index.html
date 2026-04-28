@@ -232,6 +232,23 @@ body{font-family:var(--font);background:var(--cream);color:var(--charcoal);min-h
 /* ══ MAIN GRID ══ */
 .main-grid{display:grid;grid-template-columns:1fr 380px;gap:20px;margin-bottom:24px}
 
+/* ══ DASHBOARD TABS ══ */
+.dash-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--cream2);border-radius:12px;padding:4px;border:1px solid var(--border)}
+.dash-tab{flex:1;padding:10px 16px;border-radius:9px;border:none;background:transparent;font-family:var(--font);font-size:.82rem;font-weight:600;color:var(--mid);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.dash-tab:hover{color:var(--charcoal);background:rgba(255,255,255,.5)}
+.dash-tab.active{background:var(--white);color:var(--charcoal);box-shadow:0 1px 4px rgba(0,0,0,.08);font-weight:700}
+.dash-tab .tab-badge{font-size:.6rem;font-weight:700;padding:1px 6px;border-radius:99px;background:var(--danger-bg);color:var(--danger-fg);line-height:1.4}
+.dash-tab-content{display:none;animation:fadeUp .25s ease both}
+.dash-tab-content.active{display:block}
+[data-theme="dark"] .dash-tabs{background:var(--dark);border-color:var(--border)}
+[data-theme="dark"] .dash-tab.active{background:var(--charcoal)}
+.fin-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px}
+.fin-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.rec-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);transition:background .15s}
+.rec-row:hover{background:var(--cream)}
+.rec-row:last-child{border-bottom:none}
+.rec-badge{font-size:.6rem;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap}
+
 /* ══ CARDS ══ */
 .card{background:white;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:fadeUp .4s ease both;transition:box-shadow .2s,transform .2s,border-color .2s}
 .card.clickable{cursor:pointer}
@@ -656,6 +673,8 @@ textarea{resize:vertical;min-height:75px;line-height:1.5}
   .qa-grid{grid-template-columns:repeat(3,1fr)}
   .metrics-band{grid-template-columns:1fr 1fr}
   .main-grid{grid-template-columns:1fr}
+  .fin-grid-3{grid-template-columns:1fr 1fr}
+  .fin-grid-2{grid-template-columns:1fr}
 }
 
 /* ── Tablette ── */
@@ -715,6 +734,10 @@ textarea{resize:vertical;min-height:75px;line-height:1.5}
     grid-template-columns:1fr;
     gap:12px;margin-bottom:16px;
   }
+
+  .dash-tabs{overflow-x:auto;gap:2px;padding:3px}
+  .dash-tab{font-size:.72rem;padding:8px 10px;white-space:nowrap;min-width:0}
+  .fin-grid-3,.fin-grid-2{grid-template-columns:1fr}
 
   /* Table dossiers - version mobile */
   .dos-head{display:none}
@@ -1548,266 +1571,271 @@ body{padding-bottom:62px}
           <div class="hero-greeting">Bonjour, Maître Dupont · NC Advocat Sàrl</div>
           <div class="hero-title">Votre espace compliance est à jour</div>
           <div class="hero-sub">
-            <strong>3 alertes</strong> en attente · Questionnaire OAL à <strong>67%</strong> · 
-            <strong>0 procédure disciplinaire</strong> cette année
+            <strong>3 alertes</strong> en attente · <strong>0 procédure disciplinaire</strong> cette année
           </div>
         </div>
         <div class="hero-right">
-          <button class="btn-hero btn-hero-main" onclick="showView('onboarding')">
-            + Nouveau dossier
-          </button>
-          <button class="btn-hero btn-hero-sec" onclick="showView('oal')">
-            📋 Questionnaire OAL
-          </button>
-          <button class="btn-hero btn-hero-sec" onclick="generateRapportCSSF()">
-            📊 Rapport CSSF
-          </button>
+          <button class="btn-hero btn-hero-main" onclick="showView('onboarding')">+ Nouveau dossier</button>
+          <button class="btn-hero btn-hero-sec" onclick="generateRapportCSSF()">📊 Rapport CSSF</button>
+          <button class="btn-hero btn-hero-sec" onclick="exportAllData()">📥 Export</button>
         </div>
       </div>
 
-      <!-- KPIs -->
-      <div class="kpi-grid">
-        <div class="kpi" style="animation-delay:.05s" onclick="showView('dossiers')">
-          <div class="kpi-header">
-            <span class="kpi-label">Dossiers actifs</span>
-            <div class="kpi-icon-wrap green">📁</div>
-          </div>
-          <div class="kpi-val animated" id="kpi-dossiers">0</div>
-          <div class="kpi-footer">
-            <span class="kpi-trend neutral" id="kpi-dossiers-trend"></span>
-            <span class="kpi-sub" id="kpi-dossiers-sub">0 in scope</span>
-          </div>
-        </div>
-        <div class="kpi" style="animation-delay:.1s" onclick="openHoursModal()">
-          <div class="kpi-header">
-            <span class="kpi-label">Heures encodées</span>
-            <div class="kpi-icon-wrap blue">⏱️</div>
-          </div>
-          <div class="kpi-val animated" id="kpi-heures">0</div>
-          <div class="kpi-footer">
-            <span class="kpi-trend neutral" id="kpi-heures-trend">ce mois</span>
-            <span class="kpi-sub" id="kpi-heures-sub">ce mois</span>
-          </div>
-        </div>
-        <div class="kpi" style="animation-delay:.15s" onclick="showView('facturation')">
-          <div class="kpi-header">
-            <span class="kpi-label">Facturation</span>
-            <div class="kpi-icon-wrap gold">💶</div>
-          </div>
-          <div class="kpi-val animated" style="font-size:1.55rem" id="kpi-factu">0 €</div>
-          <div class="kpi-footer">
-            <span class="kpi-trend neutral" id="kpi-factu-trend"></span>
-            <span class="kpi-sub" id="kpi-factu-sub"></span>
-          </div>
-        </div>
-        <div class="kpi" style="animation-delay:.2s" onclick="showView('screening')">
-          <div class="kpi-header">
-            <span class="kpi-label">Screenings</span>
-            <div class="kpi-icon-wrap green">🔍</div>
-          </div>
-          <div class="kpi-val animated" id="kpi-screening">0</div>
-          <div class="kpi-footer">
-            <span class="kpi-trend neutral" id="kpi-screening-trend">0% négatifs</span>
-            <span class="kpi-sub" id="kpi-screening-sub">0 alerte</span>
-          </div>
-        </div>
-        <div class="kpi" style="animation-delay:.25s" onclick="showView('audit')">
-          <div class="kpi-header">
-            <span class="kpi-label">Alertes ouvertes</span>
-            <div class="kpi-icon-wrap red">⚠️</div>
-          </div>
-          <div class="kpi-val animated" style="color:var(--warn-fg)" id="kpi-alertes">0</div>
-          <div class="kpi-footer">
-            <span class="kpi-trend neutral" id="kpi-alertes-trend"></span>
-            <span class="kpi-sub" id="kpi-alertes-sub">0 critique</span>
-          </div>
-        </div>
+      <!-- DASHBOARD TABS -->
+      <div class="dash-tabs" id="dash-tabs">
+        <button class="dash-tab active" onclick="switchDashTab('dossiers')">📁 Dossiers</button>
+        <button class="dash-tab" onclick="switchDashTab('finance')">💶 Financier</button>
+        <button class="dash-tab" onclick="switchDashTab('compliance')">🛡️ Compliance <span class="tab-badge" id="tab-badge-compliance" style="display:none">0</span></button>
+        <button class="dash-tab" onclick="switchDashTab('recouvrement')">📨 Recouvrement <span class="tab-badge" id="tab-badge-recouvrement" style="display:none">0</span></button>
       </div>
 
-      <!-- ACTIONS RAPIDES -->
-      <div style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--light);margin-bottom:10px">Actions rapides</div>
-      <div class="qa-grid">
-        <div class="qa primary" style="animation-delay:.05s" onclick="showView('onboarding')">
-          <span class="qa-icon">📂</span>
-          <div class="qa-label">Nouveau dossier client</div>
-          <div class="qa-sublabel">Onboarding KYC · 7 étapes</div>
-        </div>
-        <div class="qa" style="animation-delay:.1s" onclick="showView('screening')">
-          <span class="qa-icon">🔍</span>
-          <div class="qa-label">Lancer un screening</div>
-          <div class="qa-sublabel">Vérification sanctions & PPE</div>
-        </div>
-        <div class="qa" style="animation-delay:.15s" onclick="showView('oal')">
-          <span class="qa-icon">📋</span>
-          <div class="qa-label">Questionnaire OAL</div>
-          <div class="qa-sublabel">Générer le PDF annuel</div>
-        </div>
-        <div class="qa" style="animation-delay:.2s" onclick="openHoursModal()">
-          <span class="qa-icon">⏱️</span>
-          <div class="qa-label">Encoder des heures</div>
-          <div class="qa-sublabel">Time tracking & facturation</div>
-        </div>
-        <div class="qa" style="animation-delay:.25s" onclick="showView('audit')">
-          <span class="qa-icon">📊</span>
-          <div class="qa-label">Journal d'audit</div>
-          <div class="qa-sublabel">Historique compliance</div>
-        </div>
-      </div>
+      <!-- ═══ TAB 1: DOSSIERS ═══ -->
+      <div class="dash-tab-content active" id="dtab-dossiers">
 
-      <!-- MÉTRIQUES BAND -->
-      <div class="metrics-band">
-
-        <!-- OAL Progress -->
-        <div class="metric-card" style="animation-delay:.1s" onclick="showView('oal')" id="mc-oal">
-          <div class="metric-header">
-            <div class="metric-title">📋 Questionnaire OAL 2026</div>
-            <span class="metric-more" onclick="showView('oal')">Générer →</span>
+        <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+          <div class="kpi" onclick="showView('dossiers')">
+            <div class="kpi-header"><span class="kpi-label">Dossiers actifs</span><div class="kpi-icon-wrap green">📁</div></div>
+            <div class="kpi-val animated" id="kpi-dossiers">0</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-dossiers-trend"></span><span class="kpi-sub" id="kpi-dossiers-sub">0 in scope</span></div>
           </div>
-          <div class="progress-label"><span>Progression automatique</span><span class="progress-pct" id="mc-oal-pct">0%</span></div>
-          <div class="progress-bar"><div class="progress-fill sage" id="oal-bar" style="width:0%"></div></div>
-          <div style="font-size:.73rem;color:var(--mid);margin-bottom:14px">Mise à jour en temps réel à chaque dossier créé</div>
-          <div class="metric-stats" id="mc-oal-stats"></div>
-          <div style="margin-top:14px">
-            <button class="btn btn-sage" style="width:100%;justify-content:center" onclick="showView('oal')">Générer le questionnaire OAL</button>
+          <div class="kpi" onclick="showView('dossiers')">
+            <div class="kpi-header"><span class="kpi-label">In scope LCB</span><div class="kpi-icon-wrap orange">🛡️</div></div>
+            <div class="kpi-val animated" id="kpi-inscope">0</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-inscope-trend"></span><span class="kpi-sub" id="kpi-inscope-sub"></span></div>
+          </div>
+          <div class="kpi" onclick="openHoursModal()">
+            <div class="kpi-header"><span class="kpi-label">Heures ce mois</span><div class="kpi-icon-wrap blue">⏱️</div></div>
+            <div class="kpi-val animated" id="kpi-heures">0</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-heures-trend"></span><span class="kpi-sub" id="kpi-heures-sub">ce mois</span></div>
+          </div>
+          <div class="kpi" onclick="showView('audiences')">
+            <div class="kpi-header"><span class="kpi-label">Audiences</span><div class="kpi-icon-wrap blue">📅</div></div>
+            <div class="kpi-val animated" id="kpi-audiences">0</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-audiences-trend"></span><span class="kpi-sub" id="kpi-audiences-sub">à venir</span></div>
           </div>
         </div>
 
-        <!-- Facturation -->
-        <div class="metric-card" style="animation-delay:.15s" onclick="showView('facturation')" id="mc-factu">
-          <div class="metric-header">
-            <div class="metric-title" id="mc-factu-title">💶 Facturation</div>
-            <span class="metric-more" onclick="showView('facturation')">Détail →</span>
-          </div>
-          <div class="factu-amount" id="mc-factu-amount">0 €</div>
-          <div class="factu-sub" id="mc-factu-sub"></div>
-          <div class="progress-bar"><div class="progress-fill gold" id="factu-bar" style="width:0%"></div></div>
-          <div class="progress-label"><span id="mc-factu-enc">Encaissé : 0 €</span><span class="progress-pct" id="mc-factu-pct">0%</span></div>
-          <div class="metric-stats" id="mc-factu-stats"></div>
+        <div class="qa-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:18px">
+          <div class="qa primary" onclick="showView('onboarding')"><span class="qa-icon">📂</span><div class="qa-label">Nouveau dossier</div><div class="qa-sublabel">Onboarding KYC</div></div>
+          <div class="qa" onclick="openHoursModal()"><span class="qa-icon">⏱️</span><div class="qa-label">Encoder des heures</div><div class="qa-sublabel">Time tracking</div></div>
+          <div class="qa" onclick="showView('screening')"><span class="qa-icon">🔍</span><div class="qa-label">Screening KYC</div><div class="qa-sublabel">Sanctions & PPE</div></div>
+          <div class="qa" onclick="showView('audiences')"><span class="qa-icon">📅</span><div class="qa-label">Agenda</div><div class="qa-sublabel">Audiences & RDV</div></div>
         </div>
 
-        <!-- Heures -->
-        <div class="metric-card" style="animation-delay:.2s" onclick="openHoursModal()" id="mc-hours">
-          <div class="metric-header">
-            <div class="metric-title" id="mc-hours-title">⏱️ Heures encodées</div>
-            <span class="metric-more" onclick="openHoursModal()">Détail →</span>
-          </div>
-          <div class="hours-display" id="mc-hours-val">0 h</div>
-          <div class="factu-sub" id="mc-hours-sub"></div>
-          <div class="progress-bar"><div class="progress-fill blue" id="hours-bar" style="width:0%"></div></div>
-          <div class="progress-label"><span id="mc-hours-fact">Facturables : 0h</span><span class="progress-pct" id="mc-hours-pct">0%</span></div>
-          <div class="metric-stats" id="mc-hours-stats"></div>
-        </div>
-      </div>
-
-      <!-- FINANCIAL OVERVIEW -->
-      <div class="card clickable" style="animation-delay:.12s;margin-bottom:18px" id="financial-overview" onclick="showView('facturation')">
-        <div class="card-head">
-          <div class="card-head-left"><span class="card-head-icon">💰</span><span class="card-title">Aperçu financier</span></div>
-          <span class="card-action" onclick="showView('facturation')">Détail →</span>
-        </div>
-        <div style="padding:16px 18px">
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px" id="fin-kpis"></div>
-          <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
-            <div>
-              <div style="font-size:.7rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Répartition par statut</div>
-              <canvas id="fin-chart-bar" height="120" style="width:100%"></canvas>
-            </div>
-            <div>
-              <div style="font-size:.7rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Risque AMLR6</div>
-              <canvas id="fin-chart-risk" height="120" style="width:100%"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- MAIN GRID -->
-      <div class="main-grid">
-
-        <!-- DOSSIERS RÉCENTS -->
-        <div class="card clickable" style="animation-delay:.15s" onclick="showView('dossiers')">
+        <div class="card" style="margin-bottom:18px">
           <div class="card-head">
-            <div class="card-head-left">
-              <span class="card-head-icon">📁</span>
-              <span class="card-title">Dossiers récents</span>
-              <span class="card-count" id="card-dossiers-count">0 actifs</span>
-            </div>
+            <div class="card-head-left"><span class="card-head-icon">📁</span><span class="card-title">Dossiers récents</span><span class="card-count" id="card-dossiers-count">0 actifs</span></div>
             <div style="display:flex;align-items:center;gap:10px">
-              <button class="btn btn-sage" onclick="showView('onboarding')" style="font-size:.75rem;padding:6px 14px">+ Nouveau dossier</button>
+              <button class="btn btn-sage" onclick="showView('onboarding')" style="font-size:.75rem;padding:6px 14px">+ Nouveau</button>
               <span class="card-action" onclick="showView('dossiers')">Voir tout</span>
             </div>
           </div>
-          <!-- Table head -->
           <div class="dos-head">
-            <div class="dos-head-cell">Client</div>
-            <div class="dos-head-cell">Mission</div>
-            <div class="dos-head-cell">Scope</div>
-            <div class="dos-head-cell">Vigilance</div>
-            <div class="dos-head-cell">Screening</div>
-            <div class="dos-head-cell">AMLR6</div>
-            <div class="dos-head-cell">Date</div>
+            <div class="dos-head-cell">Client</div><div class="dos-head-cell">Mission</div><div class="dos-head-cell">Scope</div>
+            <div class="dos-head-cell">Vigilance</div><div class="dos-head-cell">Screening</div><div class="dos-head-cell">AMLR6</div><div class="dos-head-cell">Date</div>
           </div>
-          <!-- Dynamic rows -->
           <div id="dossiers-table-body"></div>
           <div style="padding:12px 20px;border-top:1px solid var(--border)">
-            <button class="btn btn-outline" id="btn-all-dossiers" style="width:100%;justify-content:center;font-size:.78rem" onclick="showView('dossiers')">Afficher tous les dossiers →</button>
+            <button class="btn btn-outline" id="btn-all-dossiers" style="width:100%;justify-content:center;font-size:.78rem" onclick="showView('dossiers')">Afficher tous les dossiers</button>
           </div>
         </div>
 
-        <!-- COLONNE DROITE -->
-        <div style="display:flex;flex-direction:column;gap:16px">
-
-          <!-- ALERTES COMPLIANCE -->
-          <div class="card clickable" style="animation-delay:.2s" onclick="showView('audit')">
-            <div class="card-head">
-              <div class="card-head-left">
-                <span class="card-head-icon">⚠️</span>
-                <span class="card-title">Alertes compliance</span>
-                <span class="card-count" id="card-alerts-count" style="background:var(--danger-bg);color:var(--danger-fg)">0</span>
-              </div>
-              <span class="card-action" onclick="showView('audit')">Voir tout</span>
-            </div>
-            <div class="alert-list" id="alerts-list"></div>
-          </div>
-
-          <!-- DOSSIERS EN ALERTE SCREENING -->
-          <div class="card clickable" style="animation-delay:.25s" onclick="showView('screening')">
-            <div class="card-head">
-              <div class="card-head-left">
-                <span class="card-head-icon">🔍</span>
-                <span class="card-title">Alertes screening</span>
-                <span class="card-count" id="card-screening-count" style="background:var(--ok-bg);color:var(--ok-fg)">0 alerte</span>
-              </div>
-              <span class="card-action" onclick="showView('screening')">Lancer tout</span>
-            </div>
-            <div id="card-screening-body"></div>
-          </div>
-
-          <!-- REVUES KYC PERIODIQUES -->
-          <div class="card clickable" style="animation-delay:.28s" onclick="showAllKYCReviews()">
-            <div class="card-head">
-              <div class="card-head-left">
-                <span class="card-head-icon">🔄</span>
-                <span class="card-title">Revues KYC</span>
-                <span class="card-count" id="kyc-review-count" style="background:var(--warn-bg);color:var(--warn-fg)">0</span>
-              </div>
-              <span class="card-action" onclick="showAllKYCReviews()">Voir tout</span>
-            </div>
-            <div id="kyc-reviews-list"></div>
-          </div>
-
-          <!-- CALENDRIER MINI -->
-          <div class="card clickable" style="animation-delay:.3s" onclick="showView('audiences')">
-            <div class="card-head">
-              <div class="card-head-left">
-                <span class="card-head-icon">📅</span>
-                <span class="card-title"><span id="cal-title">Agenda</span></span>
-              </div>
-              <span class="card-action" onclick="showView('audiences')">Voir tout</span>
-            </div>
+        <div class="fin-grid-2">
+          <div class="card clickable" onclick="showView('audiences')">
+            <div class="card-head"><div class="card-head-left"><span class="card-head-icon">📅</span><span class="card-title"><span id="cal-title">Agenda</span></span></div><span class="card-action" onclick="showView('audiences')">Voir tout</span></div>
             <div id="cal-grid-dynamic"></div>
             <div id="cal-event-list-dynamic"></div>
           </div>
+          <div class="card">
+            <div class="card-head"><div class="card-head-left"><span class="card-head-icon">⏱️</span><span class="card-title">Heures encodées</span></div><span class="card-action" onclick="openHoursModal()">Encoder</span></div>
+            <div style="padding:16px 18px">
+              <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
+                <div style="font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--charcoal)" id="mc-hours-val">0 h</div>
+                <span style="font-size:.75rem;color:var(--mid)" id="mc-hours-sub"></span>
+              </div>
+              <div class="progress-bar" style="margin-bottom:8px"><div class="progress-fill blue" id="hours-bar" style="width:0%"></div></div>
+              <div class="progress-label"><span id="mc-hours-fact">Facturables : 0h</span><span class="progress-pct" id="mc-hours-pct">0%</span></div>
+              <div class="metric-stats" id="mc-hours-stats" style="margin-top:12px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
 
+      <!-- ═══ TAB 2: FINANCIER ═══ -->
+      <div class="dash-tab-content" id="dtab-finance">
+
+        <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+          <div class="kpi" onclick="showView('facturation')">
+            <div class="kpi-header"><span class="kpi-label">Total facturé</span><div class="kpi-icon-wrap gold">💶</div></div>
+            <div class="kpi-val animated" style="font-size:1.55rem" id="kpi-factu">0 €</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-factu-trend"></span><span class="kpi-sub" id="kpi-factu-sub"></span></div>
+          </div>
+          <div class="kpi" onclick="showView('facturation')">
+            <div class="kpi-header"><span class="kpi-label">Encaissé</span><div class="kpi-icon-wrap green">✅</div></div>
+            <div class="kpi-val animated" style="font-size:1.55rem" id="kpi-encaisse">0 €</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-encaisse-trend"></span><span class="kpi-sub" id="kpi-encaisse-sub"></span></div>
+          </div>
+          <div class="kpi" onclick="openHoursModal()">
+            <div class="kpi-header"><span class="kpi-label">Heures facturables</span><div class="kpi-icon-wrap blue">⏱️</div></div>
+            <div class="kpi-val animated" id="kpi-heures-fact">0</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-heures-fact-trend"></span><span class="kpi-sub" id="kpi-heures-fact-sub"></span></div>
+          </div>
+          <div class="kpi" onclick="showView('facturation')">
+            <div class="kpi-header"><span class="kpi-label">Factures émises</span><div class="kpi-icon-wrap gold">🧾</div></div>
+            <div class="kpi-val animated" id="kpi-nb-factures">0</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-nb-factures-trend"></span><span class="kpi-sub" id="kpi-nb-factures-sub"></span></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:18px" id="financial-overview">
+          <div class="card-head">
+            <div class="card-head-left"><span class="card-head-icon">💰</span><span class="card-title">Aperçu financier</span></div>
+            <span class="card-action" onclick="showView('facturation')">Détail</span>
+          </div>
+          <div style="padding:16px 18px">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px" id="fin-kpis"></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
+              <div>
+                <div style="font-size:.7rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Répartition par statut</div>
+                <canvas id="fin-chart-bar" height="120" style="width:100%"></canvas>
+              </div>
+              <div>
+                <div style="font-size:.7rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Risque AMLR6</div>
+                <canvas id="fin-chart-risk" height="120" style="width:100%"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fin-grid-3">
+          <div class="card">
+            <div class="card-head"><div class="card-head-left"><span class="card-head-icon">👤</span><span class="card-title">Par client</span></div></div>
+            <div id="fin-by-client" style="max-height:300px;overflow-y:auto"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-head-left"><span class="card-head-icon">⚖️</span><span class="card-title">Par matière</span></div></div>
+            <div id="fin-by-matiere" style="max-height:300px;overflow-y:auto"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-head-left"><span class="card-head-icon">⏱️</span><span class="card-title">Heures par dossier</span></div></div>
+            <div id="fin-by-hours" style="max-height:300px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ TAB 3: COMPLIANCE ═══ -->
+      <div class="dash-tab-content" id="dtab-compliance">
+
+        <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+          <div class="kpi" onclick="showView('audit')">
+            <div class="kpi-header"><span class="kpi-label">Alertes ouvertes</span><div class="kpi-icon-wrap red">⚠️</div></div>
+            <div class="kpi-val animated" style="color:var(--warn-fg)" id="kpi-alertes">0</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-alertes-trend"></span><span class="kpi-sub" id="kpi-alertes-sub">0 critique</span></div>
+          </div>
+          <div class="kpi" onclick="showView('screening')">
+            <div class="kpi-header"><span class="kpi-label">Screenings</span><div class="kpi-icon-wrap green">🔍</div></div>
+            <div class="kpi-val animated" id="kpi-screening">0</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-screening-trend">0% négatifs</span><span class="kpi-sub" id="kpi-screening-sub">0 alerte</span></div>
+          </div>
+          <div class="kpi" onclick="showAllKYCReviews()">
+            <div class="kpi-header"><span class="kpi-label">Revues KYC</span><div class="kpi-icon-wrap orange">🔄</div></div>
+            <div class="kpi-val animated" id="kpi-kyc-due">0</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-kyc-due-trend"></span><span class="kpi-sub" id="kpi-kyc-due-sub"></span></div>
+          </div>
+          <div class="kpi" onclick="showView('oal')">
+            <div class="kpi-header"><span class="kpi-label">OAL</span><div class="kpi-icon-wrap green">📋</div></div>
+            <div class="kpi-val animated" id="mc-oal-pct-kpi">0%</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral">Progression</span><span class="kpi-sub">questionnaire</span></div>
+          </div>
+        </div>
+
+        <div class="main-grid">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="card clickable" onclick="showView('audit')">
+              <div class="card-head">
+                <div class="card-head-left"><span class="card-head-icon">⚠️</span><span class="card-title">Alertes compliance</span><span class="card-count" id="card-alerts-count" style="background:var(--danger-bg);color:var(--danger-fg)">0</span></div>
+                <span class="card-action" onclick="showView('audit')">Voir tout</span>
+              </div>
+              <div class="alert-list" id="alerts-list"></div>
+            </div>
+            <div class="card clickable" onclick="showView('screening')">
+              <div class="card-head">
+                <div class="card-head-left"><span class="card-head-icon">🔍</span><span class="card-title">Screening</span><span class="card-count" id="card-screening-count" style="background:var(--ok-bg);color:var(--ok-fg)">0</span></div>
+                <span class="card-action" onclick="showView('screening')">Lancer</span>
+              </div>
+              <div id="card-screening-body"></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="card clickable" onclick="showAllKYCReviews()">
+              <div class="card-head">
+                <div class="card-head-left"><span class="card-head-icon">🔄</span><span class="card-title">Revues KYC</span><span class="card-count" id="kyc-review-count" style="background:var(--warn-bg);color:var(--warn-fg)">0</span></div>
+                <span class="card-action" onclick="showAllKYCReviews()">Voir tout</span>
+              </div>
+              <div id="kyc-reviews-list"></div>
+            </div>
+            <div class="card" id="mc-oal">
+              <div class="card-head"><div class="card-head-left"><span class="card-head-icon">📋</span><span class="card-title">Questionnaire OAL</span></div><span class="card-action" onclick="showView('oal')">Ouvrir</span></div>
+              <div style="padding:16px 18px">
+                <div class="progress-label"><span>Progression</span><span class="progress-pct" id="mc-oal-pct">0%</span></div>
+                <div class="progress-bar"><div class="progress-fill sage" id="oal-bar" style="width:0%"></div></div>
+                <div class="metric-stats" id="mc-oal-stats" style="margin-top:12px"></div>
+                <button class="btn btn-sage" style="width:100%;justify-content:center;margin-top:12px" onclick="showView('oal')">Ouvrir le questionnaire</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div class="card-head-left"><span class="card-head-icon">📊</span><span class="card-title">Risque AMLR6</span></div></div>
+              <div style="padding:16px 18px"><canvas id="compliance-risk-chart" height="140" style="width:100%"></canvas></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ TAB 4: RECOUVREMENT ═══ -->
+      <div class="dash-tab-content" id="dtab-recouvrement">
+
+        <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+          <div class="kpi">
+            <div class="kpi-header"><span class="kpi-label">Total impayé</span><div class="kpi-icon-wrap red">💸</div></div>
+            <div class="kpi-val animated" style="font-size:1.55rem;color:var(--danger-fg)" id="kpi-impaye">0 €</div>
+            <div class="kpi-footer"><span class="kpi-trend warn" id="kpi-impaye-trend"></span><span class="kpi-sub" id="kpi-impaye-sub"></span></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-header"><span class="kpi-label">Factures impayées</span><div class="kpi-icon-wrap red">🧾</div></div>
+            <div class="kpi-val animated" id="kpi-nb-impaye">0</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-nb-impaye-trend"></span><span class="kpi-sub" id="kpi-nb-impaye-sub"></span></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-header"><span class="kpi-label">Retard moyen</span><div class="kpi-icon-wrap orange">📆</div></div>
+            <div class="kpi-val animated" id="kpi-retard-moy">0j</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-retard-moy-trend"></span><span class="kpi-sub">jours</span></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-header"><span class="kpi-label">Taux recouvrement</span><div class="kpi-icon-wrap green">📈</div></div>
+            <div class="kpi-val animated" id="kpi-taux-recouv">0%</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-taux-recouv-trend"></span><span class="kpi-sub" id="kpi-taux-recouv-sub"></span></div>
+          </div>
+        </div>
+
+        <div class="fin-grid-2">
+          <div class="card" style="grid-column:span 2">
+            <div class="card-head">
+              <div class="card-head-left"><span class="card-head-icon">📨</span><span class="card-title">Factures impayées</span></div>
+              <span class="card-action" onclick="showView('facturation')">Toutes les factures</span>
+            </div>
+            <div id="recouvrement-list"></div>
+          </div>
+        </div>
+
+        <div class="fin-grid-2">
+          <div class="card">
+            <div class="card-head"><div class="card-head-left"><span class="card-head-icon">👤</span><span class="card-title">Impayés par client</span></div></div>
+            <div id="rec-by-client" style="max-height:300px;overflow-y:auto"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-head-left"><span class="card-head-icon">📊</span><span class="card-title">Ancienneté des créances</span></div></div>
+            <div id="rec-aging" style="padding:16px 18px"><canvas id="rec-aging-chart" height="160" style="width:100%"></canvas></div>
+          </div>
         </div>
       </div>
 
@@ -4293,6 +4321,222 @@ function showAllKYCReviews() {
   modal.classList.remove('hidden');
 }
 
+// ══ DASHBOARD TAB SWITCHING ══
+let currentDashTab = 'dossiers';
+function switchDashTab(tab) {
+  currentDashTab = tab;
+  document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.dash-tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`.dash-tab[onclick*="${tab}"]`)?.classList.add('active');
+  const content = document.getElementById('dtab-' + tab);
+  if(content) content.classList.add('active');
+  if(tab === 'finance') { renderFinancialOverview(); renderFinancialBreakdowns(); }
+  if(tab === 'compliance') { renderComplianceRiskChart(); }
+  if(tab === 'recouvrement') { renderRecouvrementTab(); }
+  updateDashboardKPIs();
+  animateDashboard();
+}
+
+function renderFinancialBreakdowns() {
+  const dossiers = DB.getDossiers();
+  const invoices = DB.getInvoices();
+  const hours = DB.load('hours', []);
+
+  // By client
+  const byClient = {};
+  invoices.forEach(i => {
+    const k = i.client || 'Non attribué';
+    if(!byClient[k]) byClient[k] = {total:0, count:0, paid:0};
+    byClient[k].total += i.total;
+    byClient[k].count++;
+    if(i.status === 'payee') byClient[k].paid += i.total;
+  });
+  const clientEl = document.getElementById('fin-by-client');
+  if(clientEl) {
+    const sorted = Object.entries(byClient).sort((a,b) => b[1].total - a[1].total);
+    if(sorted.length === 0) { clientEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--light);font-size:.8rem">Aucune facture</div>'; }
+    else clientEl.innerHTML = sorted.map(([name, d]) => `<div class="rec-row">
+      <div style="flex:1;min-width:0"><div style="font-size:.8rem;font-weight:600;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div><div style="font-size:.65rem;color:var(--light)">${d.count} facture(s) · ${Math.round(d.paid/d.total*100)}% encaissé</div></div>
+      <div style="font-family:var(--font-display);font-size:.9rem;font-weight:700;color:var(--charcoal)">${d.total.toLocaleString('fr-FR')} €</div>
+    </div>`).join('');
+  }
+
+  // By matiere
+  const byMatiere = {};
+  dossiers.forEach(d => {
+    const label = d.missionLabel || 'Non défini';
+    if(!byMatiere[label]) byMatiere[label] = {count:0, total:0};
+    byMatiere[label].count++;
+    const dInv = invoices.filter(i => i.ref === d.ref);
+    byMatiere[label].total += dInv.reduce((s,i) => s + i.total, 0);
+  });
+  const matEl = document.getElementById('fin-by-matiere');
+  if(matEl) {
+    const sorted = Object.entries(byMatiere).sort((a,b) => b[1].total - a[1].total);
+    if(sorted.length === 0) { matEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--light);font-size:.8rem">Aucun dossier</div>'; }
+    else matEl.innerHTML = sorted.map(([label, d]) => `<div class="rec-row">
+      <div style="flex:1;min-width:0"><div style="font-size:.8rem;font-weight:600;color:var(--charcoal)">${label}</div><div style="font-size:.65rem;color:var(--light)">${d.count} dossier(s)</div></div>
+      <div style="font-family:var(--font-display);font-size:.9rem;font-weight:700;color:var(--charcoal)">${d.total.toLocaleString('fr-FR')} €</div>
+    </div>`).join('');
+  }
+
+  // Hours by dossier
+  const byHours = {};
+  hours.forEach(h => {
+    const k = h.ref || 'Non attribué';
+    if(!byHours[k]) byHours[k] = {hours:0, amount:0, name:''};
+    byHours[k].hours += h.hours;
+    byHours[k].amount += h.amount || 0;
+    if(!byHours[k].name) {
+      const d = dossiers.find(d => d.ref === k);
+      byHours[k].name = d ? d.clientName : k;
+    }
+  });
+  const hEl = document.getElementById('fin-by-hours');
+  if(hEl) {
+    const sorted = Object.entries(byHours).sort((a,b) => b[1].hours - a[1].hours);
+    if(sorted.length === 0) { hEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--light);font-size:.8rem">Aucune heure encodée</div>'; }
+    else hEl.innerHTML = sorted.map(([ref, d]) => `<div class="rec-row">
+      <div style="flex:1;min-width:0"><div style="font-size:.8rem;font-weight:600;color:var(--charcoal)">${d.name}</div><div style="font-size:.65rem;color:var(--light)">${ref}</div></div>
+      <div style="text-align:right"><div style="font-family:var(--font-display);font-size:.9rem;font-weight:700;color:var(--charcoal)">${d.hours.toFixed(1)}h</div><div style="font-size:.6rem;color:var(--light)">${d.amount.toLocaleString('fr-FR')} €</div></div>
+    </div>`).join('');
+  }
+}
+
+function renderComplianceRiskChart() {
+  const dossiers = DB.getDossiers();
+  const canvas = document.getElementById('compliance-risk-chart');
+  if(!canvas || dossiers.length === 0) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width = canvas.offsetWidth * 2;
+  const h = canvas.height = 280;
+  ctx.clearRect(0,0,w,h);
+  const levels = {faible:0,modere:0,eleve:0,critique:0};
+  dossiers.forEach(d => { const sc = computeAMLR6Score(d); levels[sc.level]++; });
+  const colors = {faible:'#27ae60',modere:'#f39c12',eleve:'#e67e22',critique:'#c0392b'};
+  const labels = {faible:'Faible',modere:'Modéré',eleve:'Élevé',critique:'Critique'};
+  const total = dossiers.length;
+  const cx = w/2, cy = h/2 - 10, r = Math.min(w,h)/2 - 35;
+  let angle = -Math.PI/2;
+  for(const [level, count] of Object.entries(levels)) {
+    if(count === 0) continue;
+    const slice = (count/total) * Math.PI * 2;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, angle, angle + slice); ctx.closePath();
+    ctx.fillStyle = colors[level]; ctx.fill();
+    if(slice > 0.3) {
+      const mid = angle + slice/2;
+      ctx.fillStyle = '#fff'; ctx.font = '700 22px Plus Jakarta Sans,sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(count, cx + r*0.6*Math.cos(mid), cy + r*0.6*Math.sin(mid));
+    }
+    angle += slice;
+  }
+  let lx = 8;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  for(const [level, count] of Object.entries(levels)) {
+    ctx.fillStyle = colors[level]; ctx.fillRect(lx, h-18, 12, 12);
+    ctx.fillStyle = '#5a5e66'; ctx.font = '600 17px Plus Jakarta Sans,sans-serif';
+    ctx.fillText(labels[level]+' ('+count+')', lx+16, h-8);
+    lx += ctx.measureText(labels[level]+' ('+count+')').width + 30;
+  }
+}
+
+function renderRecouvrementTab() {
+  const invoices = DB.getInvoices();
+  const now = new Date();
+  const unpaid = getUnpaidInvoices();
+  const totalImpaye = unpaid.reduce((s,i) => s + i.total, 0);
+  const totalFact = invoices.reduce((s,i) => s + i.total, 0);
+  const totalPaye = invoices.filter(i => i.status === 'payee').reduce((s,i) => s + i.total, 0);
+  const tauxRecouv = totalFact > 0 ? Math.round((totalPaye / totalFact) * 100) : 100;
+
+  const delays = unpaid.map(i => i.dueDate ? Math.max(0, Math.floor((now - new Date(i.dueDate)) / 86400000)) : 0);
+  const avgDelay = delays.length > 0 ? Math.round(delays.reduce((s,d) => s+d, 0) / delays.length) : 0;
+
+  const el = id => document.getElementById(id);
+  if(el('kpi-impaye')) el('kpi-impaye').textContent = totalImpaye.toLocaleString('fr-FR') + ' €';
+  if(el('kpi-impaye-trend')) el('kpi-impaye-trend').textContent = unpaid.length > 0 ? '⚠ À recouvrer' : '✓ Rien';
+  if(el('kpi-nb-impaye')) el('kpi-nb-impaye').textContent = unpaid.length;
+  if(el('kpi-nb-impaye-sub')) el('kpi-nb-impaye-sub').textContent = 'sur ' + invoices.length + ' total';
+  if(el('kpi-retard-moy')) el('kpi-retard-moy').textContent = avgDelay + 'j';
+  if(el('kpi-taux-recouv')) el('kpi-taux-recouv').textContent = tauxRecouv + '%';
+  if(el('kpi-taux-recouv-sub')) el('kpi-taux-recouv-sub').textContent = totalPaye.toLocaleString('fr-FR') + ' € / ' + totalFact.toLocaleString('fr-FR') + ' €';
+
+  // Unpaid list
+  const listEl = el('recouvrement-list');
+  if(listEl) {
+    if(unpaid.length === 0) {
+      listEl.innerHTML = '<div style="padding:30px;text-align:center"><div style="font-size:2rem;margin-bottom:8px">✅</div><div style="font-size:.9rem;font-weight:700;color:var(--ok-fg);margin-bottom:4px">Aucune facture impayée</div><div style="font-size:.75rem;color:var(--mid)">Toutes les factures sont à jour</div></div>';
+    } else {
+      listEl.innerHTML = unpaid.sort((a,b) => {
+        const da = a.dueDate ? new Date(a.dueDate) : new Date();
+        const db = b.dueDate ? new Date(b.dueDate) : new Date();
+        return da - db;
+      }).map(inv => {
+        const days = inv.dueDate ? Math.max(0, Math.floor((now - new Date(inv.dueDate)) / 86400000)) : 0;
+        const severity = days > 60 ? 'danger' : days > 30 ? 'warn' : 'info';
+        const sevLabel = days > 60 ? 'Critique' : days > 30 ? 'Retard' : 'Récent';
+        return `<div class="rec-row" style="cursor:pointer" onclick="showView('facturation')">
+          <div style="width:6px;height:36px;border-radius:3px;background:var(--${severity}-fg);flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.8rem;font-weight:600;color:var(--charcoal)">${inv.client || 'Client'} <span style="color:var(--light);font-weight:400">· ${inv.number}</span></div>
+            <div style="font-size:.65rem;color:var(--mid)">Échéance : ${inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('fr-LU') : 'Non définie'} · ${days > 0 ? days + ' jours de retard' : 'À échéance'}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-family:var(--font-display);font-size:.95rem;font-weight:700;color:var(--danger-fg)">${inv.total.toLocaleString('fr-FR')} €</div>
+            <span class="rec-badge" style="background:var(--${severity}-bg);color:var(--${severity}-fg)">${sevLabel}</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // By client
+  const byClient = {};
+  unpaid.forEach(i => {
+    const k = i.client || 'Non attribué';
+    if(!byClient[k]) byClient[k] = {total:0, count:0};
+    byClient[k].total += i.total; byClient[k].count++;
+  });
+  const rcEl = el('rec-by-client');
+  if(rcEl) {
+    const sorted = Object.entries(byClient).sort((a,b) => b[1].total - a[1].total);
+    if(sorted.length === 0) { rcEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--light);font-size:.8rem">Aucun impayé</div>'; }
+    else rcEl.innerHTML = sorted.map(([name, d]) => `<div class="rec-row">
+      <div style="flex:1"><div style="font-size:.8rem;font-weight:600;color:var(--charcoal)">${name}</div><div style="font-size:.65rem;color:var(--light)">${d.count} facture(s)</div></div>
+      <div style="font-family:var(--font-display);font-size:.9rem;font-weight:700;color:var(--danger-fg)">${d.total.toLocaleString('fr-FR')} €</div>
+    </div>`).join('');
+  }
+
+  // Aging chart
+  const agingCanvas = el('rec-aging-chart');
+  if(agingCanvas) {
+    const ctx = agingCanvas.getContext('2d');
+    const w = agingCanvas.width = agingCanvas.offsetWidth * 2;
+    const h = agingCanvas.height = 320;
+    ctx.clearRect(0,0,w,h);
+    const buckets = [{label:'0-15j',min:0,max:15,total:0},{label:'16-30j',min:16,max:30,total:0},{label:'31-60j',min:31,max:60,total:0},{label:'61-90j',min:61,max:90,total:0},{label:'+90j',min:91,max:9999,total:0}];
+    unpaid.forEach(inv => {
+      const days = inv.dueDate ? Math.max(0, Math.floor((now - new Date(inv.dueDate)) / 86400000)) : 0;
+      const b = buckets.find(b => days >= b.min && days <= b.max);
+      if(b) b.total += inv.total;
+    });
+    const maxAmt = Math.max(...buckets.map(b => b.total), 1);
+    const barW = Math.floor((w-80)/buckets.length) - 16;
+    const barColors = ['#27ae60','#f1c40f','#e67e22','#e74c3c','#8e44ad'];
+    buckets.forEach((b,i) => {
+      const x = 40 + i * (barW + 16);
+      const barH = (b.total / maxAmt) * (h - 70);
+      ctx.fillStyle = barColors[i];
+      ctx.beginPath(); ctx.roundRect(x, h - 35 - barH, barW, barH, 4); ctx.fill();
+      ctx.fillStyle = '#5a5e66'; ctx.font = '600 18px Plus Jakarta Sans,sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(b.label, x + barW/2, h - 10);
+      ctx.font = '800 18px Plus Jakarta Sans,sans-serif'; ctx.fillStyle = barColors[i];
+      ctx.fillText(b.total > 0 ? b.total.toLocaleString('fr-FR')+'€' : '-', x + barW/2, h - 42 - barH);
+    });
+  }
+}
+
 function updateDashboardKPIs() {
   const dossiers = DB.getDossiers();
   const actifs = dossiers.filter(d => d.status === 'actif');
@@ -4442,6 +4686,64 @@ function updateDashboardKPIs() {
   if(heroTitle) {
     if(alerts.length === 0) heroTitle.textContent = 'Votre espace compliance est à jour';
     else heroTitle.textContent = alerts.length + ' alerte(s) requièrent votre attention';
+  }
+
+  // ── Tab: Dossiers — extra KPIs
+  if(el('kpi-inscope')) el('kpi-inscope').textContent = inScope.length;
+  if(el('kpi-inscope-sub')) {
+    const pct = actifs.length > 0 ? Math.round((inScope.length / actifs.length) * 100) : 0;
+    el('kpi-inscope-sub').textContent = pct + '% du portefeuille';
+  }
+  const audiences = DB.getAudiences();
+  const upcomingAud = audiences.filter(a => new Date(a.date) >= now);
+  if(el('kpi-audiences')) el('kpi-audiences').textContent = upcomingAud.length;
+  if(el('kpi-audiences-sub')) el('kpi-audiences-sub').textContent = 'à venir';
+  if(el('kpi-audiences-trend') && upcomingAud.length > 0) {
+    const next = upcomingAud.sort((a,b) => new Date(a.date) - new Date(b.date))[0];
+    const daysTo = Math.ceil((new Date(next.date) - now) / 86400000);
+    el('kpi-audiences-trend').textContent = 'Prochaine dans ' + daysTo + 'j';
+  }
+
+  // ── Tab: Finance — extra KPIs
+  const totalPaye2 = invoices.filter(i => i.status === 'payee').reduce((s,i) => s + i.total, 0);
+  if(el('kpi-encaisse')) el('kpi-encaisse').textContent = totalPaye2.toLocaleString('fr-FR') + ' €';
+  if(el('kpi-encaisse-sub')) {
+    const pct = totalFact > 0 ? Math.round((totalPaye2 / totalFact) * 100) : 0;
+    el('kpi-encaisse-sub').textContent = pct + '% du total';
+  }
+  if(el('kpi-heures-fact')) el('kpi-heures-fact').textContent = Math.round(factH) + 'h';
+  if(el('kpi-heures-fact-sub')) el('kpi-heures-fact-sub').textContent = 'ce mois';
+  if(el('kpi-nb-factures')) el('kpi-nb-factures').textContent = invoices.length;
+  if(el('kpi-nb-factures-sub')) {
+    const envoyees = invoices.filter(i => i.status === 'envoyee').length;
+    el('kpi-nb-factures-sub').textContent = envoyees + ' en attente';
+  }
+
+  // ── Tab: Compliance — KYC due
+  const kycDossiers = actifs.filter(d => d.inScope);
+  const kycReviews = kycDossiers.map(d => getKYCReviewStatus(d));
+  const kycAction = kycReviews.filter(r => r.isOverdue || r.isDueSoon);
+  const kycOverdue = kycReviews.filter(r => r.isOverdue);
+  if(el('kpi-kyc-due')) el('kpi-kyc-due').textContent = kycAction.length;
+  if(el('kpi-kyc-due-trend')) {
+    el('kpi-kyc-due-trend').textContent = kycOverdue.length > 0 ? kycOverdue.length + ' en retard' : 'À jour';
+    el('kpi-kyc-due-trend').className = 'kpi-trend ' + (kycOverdue.length > 0 ? 'warn' : 'up');
+  }
+  if(el('kpi-kyc-due-sub')) el('kpi-kyc-due-sub').textContent = 'à planifier';
+  if(el('mc-oal-pct-kpi')) el('mc-oal-pct-kpi').textContent = oalPct + '%';
+
+  // ── Tab badges
+  const badgeCompliance = el('tab-badge-compliance');
+  if(badgeCompliance) {
+    const total = alerts.length + kycOverdue.length;
+    badgeCompliance.textContent = total;
+    badgeCompliance.style.display = total > 0 ? 'inline' : 'none';
+  }
+  const unpaidCount = getUnpaidInvoices().length;
+  const badgeRecouv = el('tab-badge-recouvrement');
+  if(badgeRecouv) {
+    badgeRecouv.textContent = unpaidCount;
+    badgeRecouv.style.display = unpaidCount > 0 ? 'inline' : 'none';
   }
 }
 
