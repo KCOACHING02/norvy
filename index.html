@@ -1547,6 +1547,9 @@ body{padding-bottom:62px}
           <button class="btn-hero btn-hero-sec" onclick="showView('oal')">
             📋 Questionnaire OAL
           </button>
+          <button class="btn-hero btn-hero-sec" onclick="generateRapportCSSF()">
+            📊 Rapport CSSF
+          </button>
         </div>
       </div>
 
@@ -1800,6 +1803,19 @@ body{padding-bottom:62px}
               <div class="sc-info"><div class="sc-name">WEBER Klaus</div><div class="sc-detail">Screening planifié · En attente</div></div>
               <div class="sc-meta"><span class="sc-date">Prévu 31 mars</span><button class="btn-sc qual">Planifier</button></div>
             </div>
+          </div>
+
+          <!-- REVUES KYC PERIODIQUES -->
+          <div class="card" style="animation-delay:.28s">
+            <div class="card-head">
+              <div class="card-head-left">
+                <span class="card-head-icon">🔄</span>
+                <span class="card-title">Revues KYC</span>
+                <span class="card-count" id="kyc-review-count" style="background:var(--warn-bg);color:var(--warn-fg)">0</span>
+              </div>
+              <span class="card-action" onclick="showAllKYCReviews()">Voir tout</span>
+            </div>
+            <div id="kyc-reviews-list"></div>
           </div>
 
           <!-- CALENDRIER MINI -->
@@ -4025,11 +4041,13 @@ function computeAlerts() {
     if(d.status === 'actif' && d.inScope && docs.length === 0) {
       alerts.push({ severity:'warn', icon:'🟡', title:'Documents manquants — ' + d.clientName, sub:'Dossier IN SCOPE sans documents KYC enregistrés. Risque de non-conformité.', ref: d.ref, time:'Action', category:'compliance' });
     }
-    // KYC review reminder (dossiers older than 180 days with enhanced vigilance)
-    if(d.vigilance === 'renforcee' && d.status === 'actif') {
-      const age = (Date.now() - new Date(d.createdAt).getTime()) / 86400000;
-      if(age > 180) {
-        alerts.push({ severity:'warn', icon:'🟠', title:'Revue KYC requise — ' + d.clientName, sub:'Dossier en vigilance renforcée ouvert il y a plus de 6 mois. Revue périodique obligatoire.', ref: d.ref, time:'Planifier', category:'compliance' });
+    // KYC periodic review alerts
+    if(d.status === 'actif' && d.inScope) {
+      const review = getKYCReviewStatus(d);
+      if(review.isOverdue) {
+        alerts.push({ severity:'crit', icon:'🔴', title:'Revue KYC en retard — ' + d.clientName, sub:'Revue périodique en retard de ' + Math.abs(review.daysUntilDue) + ' jours. Fréquence : ' + review.period + ' (' + review.levelLabel + ').', ref: d.ref, time:'Urgent', category:'compliance' });
+      } else if(review.isDueSoon) {
+        alerts.push({ severity:'warn', icon:'🟠', title:'Revue KYC à planifier — ' + d.clientName, sub:'Revue périodique dans ' + review.daysUntilDue + ' jours. Fréquence : ' + review.period + '.', ref: d.ref, time:'Planifier', category:'compliance' });
       }
     }
   });
@@ -4162,6 +4180,127 @@ function updateHeroBand() {
   if(topDate) topDate.textContent = new Date().toLocaleDateString('fr-LU', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
 }
 
+// ══ REVUES KYC PERIODIQUES ══
+const KYC_REVIEW_PERIODS = {
+  critique: {months:6, label:'6 mois'},
+  eleve:    {months:12, label:'1 an'},
+  modere:   {months:24, label:'2 ans'},
+  faible:   {months:36, label:'3 ans'},
+};
+
+function getKYCReviewStatus(dossier) {
+  const score = computeAMLR6Score(dossier);
+  const period = KYC_REVIEW_PERIODS[score.level] || KYC_REVIEW_PERIODS.modere;
+  const reviews = DB.load('kyc_reviews', {});
+  const lastReview = reviews[dossier.ref];
+  const baseDate = lastReview ? new Date(lastReview.date) : new Date(dossier.createdAt);
+  const nextDue = new Date(baseDate);
+  nextDue.setMonth(nextDue.getMonth() + period.months);
+  const now = new Date();
+  const daysUntilDue = Math.ceil((nextDue - now) / 86400000);
+  const isOverdue = daysUntilDue < 0;
+  const isDueSoon = daysUntilDue >= 0 && daysUntilDue <= 30;
+  return {
+    ref: dossier.ref,
+    clientName: dossier.clientName,
+    level: score.level,
+    levelLabel: score.label,
+    period: period.label,
+    lastReview: lastReview ? lastReview.date : null,
+    lastReviewBy: lastReview ? lastReview.by : null,
+    nextDue,
+    daysUntilDue,
+    isOverdue,
+    isDueSoon,
+    status: isOverdue ? 'overdue' : isDueSoon ? 'due-soon' : 'ok'
+  };
+}
+
+function renderKYCReviews() {
+  const list = document.getElementById('kyc-reviews-list');
+  const countEl = document.getElementById('kyc-review-count');
+  if(!list) return;
+
+  const dossiers = DB.getDossiers().filter(d => d.status === 'actif' && d.inScope);
+  const reviews = dossiers.map(d => getKYCReviewStatus(d));
+  const actionNeeded = reviews.filter(r => r.isOverdue || r.isDueSoon)
+    .sort((a,b) => a.daysUntilDue - b.daysUntilDue);
+
+  if(countEl) {
+    countEl.textContent = actionNeeded.length;
+    countEl.style.background = actionNeeded.some(r => r.isOverdue) ? 'var(--danger-bg)' : 'var(--warn-bg)';
+    countEl.style.color = actionNeeded.some(r => r.isOverdue) ? 'var(--danger-fg)' : 'var(--warn-fg)';
+  }
+
+  if(actionNeeded.length === 0) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--light);font-size:.8rem">Toutes les revues KYC sont à jour</div>';
+    return;
+  }
+
+  list.innerHTML = actionNeeded.slice(0, 5).map(r => {
+    const statusColor = r.isOverdue ? 'var(--danger-fg)' : 'var(--warn-fg)';
+    const statusBg = r.isOverdue ? 'var(--danger-bg)' : 'var(--warn-bg)';
+    const statusText = r.isOverdue ? 'En retard (' + Math.abs(r.daysUntilDue) + 'j)' : 'Dans ' + r.daysUntilDue + 'j';
+    const initials = getInitials(r.clientName);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer" onclick="viewDossier('${r.ref}')">
+      <div class="dos-av" style="width:28px;height:28px;font-size:.6rem;border-radius:6px;background:var(--sage-pale);color:var(--accent)">${initials}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:600;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.clientName}</div>
+        <div style="font-size:.65rem;color:var(--light)">Fréquence : ${r.period} · ${r.levelLabel}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <span style="font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:99px;background:${statusBg};color:${statusColor}">${statusText}</span>
+        <button class="btn btn-outline" style="font-size:.6rem;padding:3px 8px" onclick="event.stopPropagation();markKYCReviewed('${r.ref}')">Revu</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  if(actionNeeded.length > 5) {
+    list.innerHTML += `<div style="padding:8px 16px;text-align:center;font-size:.72rem;color:var(--light)">+ ${actionNeeded.length - 5} autre(s) revue(s) à planifier</div>`;
+  }
+}
+
+function markKYCReviewed(ref) {
+  const reviews = DB.load('kyc_reviews', {});
+  const session = DB.getSession();
+  reviews[ref] = { date: new Date().toISOString(), by: session?.name || 'Système' };
+  DB.save('kyc_reviews', reviews);
+  const d = DB.getDossiers().find(x => x.ref === ref);
+  DB.addAudit({type:'kyc_review', action:'Revue KYC effectuée — ' + (d?.clientName||ref), user: session?.name});
+  showToast('Revue KYC enregistrée', (d?.clientName||ref) + ' — Prochaine revue programmée', 'ok', '✅');
+  renderKYCReviews();
+  renderAlerts();
+}
+
+function showAllKYCReviews() {
+  const dossiers = DB.getDossiers().filter(d => d.status === 'actif' && d.inScope);
+  const reviews = dossiers.map(d => getKYCReviewStatus(d)).sort((a,b) => a.daysUntilDue - b.daysUntilDue);
+  const modal = document.getElementById('dossier-modal');
+  const title = document.getElementById('dm-title');
+  const tabs = document.getElementById('dm-tabs');
+  const content = document.getElementById('dm-content');
+  title.textContent = 'Revues KYC périodiques';
+  tabs.style.display = 'none';
+  content.innerHTML = `
+    <div style="margin-bottom:12px;font-size:.78rem;color:var(--mid)">Fréquence de revue basée sur le score AMLR6 : Critique = 6 mois · Élevé = 1 an · Modéré = 2 ans · Faible = 3 ans</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+    ${reviews.map(r => {
+      const statusColor = r.isOverdue ? 'var(--danger-fg)' : r.isDueSoon ? 'var(--warn-fg)' : 'var(--ok-fg)';
+      const statusBg = r.isOverdue ? 'var(--danger-bg)' : r.isDueSoon ? 'var(--warn-bg)' : 'var(--ok-bg)';
+      const statusText = r.isOverdue ? 'En retard (' + Math.abs(r.daysUntilDue) + 'j)' : r.isDueSoon ? 'Dans ' + r.daysUntilDue + 'j' : 'OK — dans ' + r.daysUntilDue + 'j';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.8rem;font-weight:600;color:var(--charcoal)">${r.clientName} <span style="font-size:.65rem;color:var(--light)">${r.ref}</span></div>
+          <div style="font-size:.65rem;color:var(--mid)">Risque ${r.levelLabel} · Revue tous les ${r.period}${r.lastReview ? ' · Dernière : ' + new Date(r.lastReview).toLocaleDateString('fr-LU') + ' par ' + r.lastReviewBy : ' · Jamais revu'}</div>
+        </div>
+        <span style="font-size:.62rem;font-weight:700;padding:3px 8px;border-radius:99px;background:${statusBg};color:${statusColor};white-space:nowrap">${statusText}</span>
+        <button class="btn btn-outline" style="font-size:.65rem;padding:4px 10px" onclick="markKYCReviewed('${r.ref}');showAllKYCReviews()">Marquer revu</button>
+      </div>`;
+    }).join('')}
+    </div>`;
+  modal.classList.remove('hidden');
+}
+
 function initDashboardFromDB() {
   const session = DB.getSession();
   if(session) updateUIForUser(session);
@@ -4170,6 +4309,7 @@ function initDashboardFromDB() {
   updateHeroBand();
   renderCalendar();
   renderFinancialOverview();
+  renderKYCReviews();
 }
 
 function renderFinancialOverview() {
@@ -4388,6 +4528,7 @@ function viewDossier(ref) {
   const title = document.getElementById('dm-title');
   title.textContent = d.ref + ' — ' + d.clientName;
   title.dataset.ref = ref;
+  document.getElementById('dm-tabs').style.display = '';
   document.querySelectorAll('#dm-tabs .dm-tab').forEach((t,i) => t.classList.toggle('active', i===0));
   renderDossierTabContent(ref, 'info');
   modal.classList.remove('hidden');
@@ -5269,6 +5410,386 @@ function generateDossierPDF(ref) {
   DB.addAudit({type:'export', action:'Fiche client PDF exportée — ' + d.ref + ' ' + d.clientName, user: session?.name || 'Système'});
 }
 
+function generateRapportCSSF() {
+  if(typeof window.jspdf === 'undefined') { showToast('PDF non disponible','jsPDF non chargé','warn','⚠️'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const session = DB.getSession();
+  const settings = DB.getSettings();
+  const W = 210, M = 20, R = W - M;
+  const cabinetName = settings.cabinetName || session?.cabinet || 'Cabinet d\'Avocats';
+  const cabinetTVA = settings.cabinetTVA || '';
+  const cabinetRCS = settings.cabinetRCS || '';
+  const dossiers = DB.getDossiers();
+  const screenings = DB.getScreenings();
+  const auditLog = DB.getAuditLog();
+  const now = new Date();
+  const year = now.getFullYear();
+
+  let y = 0;
+
+  function sectionTitle(title, num) {
+    if(y > 255) { doc.addPage(); y = 25; }
+    doc.setFillColor(240,241,244);
+    doc.rect(M, y, R - M, 10, 'F');
+    doc.setTextColor(40,50,65);
+    doc.setFontSize(10);
+    doc.setFont('helvetica','bold');
+    doc.text(num + '  ' + title, M + 4, y + 7);
+    y += 15;
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(50,50,50);
+    doc.setFontSize(8);
+  }
+
+  function kv(label, value) {
+    if(y > 275) { doc.addPage(); y = 25; }
+    doc.setTextColor(130,140,150);
+    doc.setFontSize(7.5);
+    doc.text(label, M + 2, y);
+    doc.setTextColor(40,40,40);
+    doc.setFontSize(8.5);
+    doc.text(String(value || '—'), M + 60, y);
+    y += 5.5;
+  }
+
+  // ── PAGE DE GARDE ──
+  doc.setFillColor(40, 50, 65);
+  doc.rect(0, 0, W, 297, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(14);
+  doc.setFont('helvetica','bold');
+  doc.text('norvy', W/2, 80, {align:'center'});
+  doc.setFontSize(8);
+  doc.setFont('helvetica','normal');
+  doc.text('COMPLIANCE LEGALTECH · LUXEMBOURG', W/2, 90, {align:'center'});
+  doc.setFontSize(28);
+  doc.setFont('helvetica','bold');
+  doc.text('RAPPORT ANNUEL', W/2, 130, {align:'center'});
+  doc.text('LAB/CFT', W/2, 145, {align:'center'});
+  doc.setFontSize(12);
+  doc.setFont('helvetica','normal');
+  doc.text('Exercice ' + year, W/2, 162, {align:'center'});
+  doc.setFontSize(9);
+  doc.setTextColor(180,190,200);
+  doc.text(cabinetName, W/2, 185, {align:'center'});
+  if(cabinetRCS) doc.text('RCS Luxembourg ' + cabinetRCS, W/2, 193, {align:'center'});
+  if(cabinetTVA) doc.text('TVA ' + cabinetTVA, W/2, 201, {align:'center'});
+  doc.setFontSize(8);
+  doc.text('Art. 45 Règlement UE 2024/1624 (AMLR)', W/2, 220, {align:'center'});
+  doc.text('Rapport confidentiel — Usage interne et contrôle CSSF', W/2, 228, {align:'center'});
+  doc.setFontSize(7);
+  doc.setTextColor(120,130,140);
+  doc.text('Généré le ' + now.toLocaleDateString('fr-LU', {day:'numeric',month:'long',year:'numeric'}) + ' par Norvy', W/2, 270, {align:'center'});
+
+  // ── PAGE 2: SOMMAIRE ──
+  doc.addPage();
+  y = 30;
+  doc.setFillColor(40, 50, 65);
+  doc.rect(0, 0, W, 20, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(10);
+  doc.setFont('helvetica','bold');
+  doc.text('RAPPORT LAB/CFT — ' + cabinetName + ' — Exercice ' + year, M, 13);
+
+  doc.setTextColor(40,50,65);
+  doc.setFontSize(14);
+  doc.text('SOMMAIRE', M, y);
+  y += 12;
+  doc.setFontSize(9);
+  doc.setFont('helvetica','normal');
+  doc.setTextColor(60,60,60);
+  const toc = [
+    'I. Informations générales du cabinet',
+    'II. Synthèse des activités compliance',
+    'III. Portefeuille clients — Répartition des risques',
+    'IV. Détail des dossiers clients',
+    'V. Screening et filtrage',
+    'VI. Revues KYC périodiques',
+    'VII. Alertes et incidents',
+    'VIII. Journal d\'audit',
+    'IX. Conclusions et recommandations'
+  ];
+  toc.forEach(item => { doc.text(item, M + 4, y); y += 7; });
+
+  // ── I. INFORMATIONS GENERALES ──
+  doc.addPage();
+  y = 30;
+  doc.setFillColor(40, 50, 65);
+  doc.rect(0, 0, W, 20, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(10);
+  doc.setFont('helvetica','bold');
+  doc.text('RAPPORT LAB/CFT — ' + cabinetName + ' — Exercice ' + year, M, 13);
+
+  sectionTitle('INFORMATIONS GÉNÉRALES DU CABINET', 'I.');
+  kv('Nom du cabinet', cabinetName);
+  kv('RCS Luxembourg', cabinetRCS || '—');
+  kv('Numéro TVA', cabinetTVA || '—');
+  kv('Adresse', (settings.cabinetAddress || '—').replace(/\n/g, ', '));
+  kv('Responsable compliance', session?.name || '—');
+  kv('Période du rapport', '01/01/' + year + ' — 31/12/' + year);
+  kv('Date de génération', now.toLocaleDateString('fr-LU', {day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}));
+  y += 6;
+
+  // ── II. SYNTHESE ──
+  sectionTitle('SYNTHÈSE DES ACTIVITÉS COMPLIANCE', 'II.');
+  const activeDossiers = dossiers.filter(d => d.status === 'actif');
+  const inScope = dossiers.filter(d => d.inScope);
+  const outScope = dossiers.filter(d => !d.inScope);
+  const suspended = dossiers.filter(d => d.status === 'suspendu');
+  const refused = dossiers.filter(d => d.status === 'refuse');
+  const riskLevels = {faible:0,modere:0,eleve:0,critique:0};
+  dossiers.forEach(d => { const s = computeAMLR6Score(d); riskLevels[s.level]++; });
+  const alertScreenings = screenings.filter(s => s.result === 'alerte');
+
+  kv('Total dossiers', dossiers.length);
+  kv('Dossiers actifs', activeDossiers.length);
+  kv('Dossiers IN SCOPE (assujettis)', inScope.length);
+  kv('Dossiers OUT OF SCOPE', outScope.length);
+  kv('Dossiers suspendus', suspended.length);
+  kv('Missions refusées', refused.length);
+  kv('Screenings effectués', screenings.length);
+  kv('Alertes screening', alertScreenings.length);
+  kv('Entrées journal d\'audit', auditLog.length);
+  y += 6;
+
+  // ── III. REPARTITION DES RISQUES ──
+  sectionTitle('PORTEFEUILLE CLIENTS — RÉPARTITION DES RISQUES', 'III.');
+  doc.autoTable({
+    startY: y, margin: {left:M, right:M},
+    head: [['Niveau de risque AMLR6', 'Nombre de clients', '% du portefeuille', 'Fréquence de revue KYC']],
+    body: [
+      ['Critique (≥70/100)', riskLevels.critique, dossiers.length ? Math.round(riskLevels.critique/dossiers.length*100)+'%' : '0%', 'Tous les 6 mois'],
+      ['Élevé (45-69/100)', riskLevels.eleve, dossiers.length ? Math.round(riskLevels.eleve/dossiers.length*100)+'%' : '0%', 'Annuelle'],
+      ['Modéré (25-44/100)', riskLevels.modere, dossiers.length ? Math.round(riskLevels.modere/dossiers.length*100)+'%' : '0%', 'Tous les 2 ans'],
+      ['Faible (<25/100)', riskLevels.faible, dossiers.length ? Math.round(riskLevels.faible/dossiers.length*100)+'%' : '0%', 'Tous les 3 ans'],
+    ],
+    foot: [['TOTAL', dossiers.length, '100%', '']],
+    headStyles: {fillColor:[40,50,65],textColor:[255,255,255],fontStyle:'bold',fontSize:7.5,cellPadding:3.5},
+    bodyStyles: {fontSize:7.5,cellPadding:3.5},
+    footStyles: {fillColor:[50,55,65],textColor:[255,255,255],fontStyle:'bold',fontSize:7.5},
+    theme: 'striped',
+    alternateRowStyles: {fillColor:[245,246,248]},
+  });
+  y = doc.lastAutoTable.finalY + 10;
+
+  // Vigilance breakdown
+  const vigCounts = {renforcee:0,'normal-plus':0,normal:0,none:0};
+  dossiers.forEach(d => { vigCounts[d.vigilance||'none']++; });
+  doc.autoTable({
+    startY: y, margin: {left:M, right:M},
+    head: [['Niveau de vigilance', 'Nombre', 'Base légale']],
+    body: [
+      ['Renforcée', vigCounts.renforcee, 'Art. 28-33 AMLR — Mesures renforcées obligatoires'],
+      ['Normale+', vigCounts['normal-plus'], 'Art. 28 AMLR — Mesures complémentaires'],
+      ['Normale', vigCounts.normal, 'Art. 28 AMLR — Mesures standard'],
+      ['Non déterminée', vigCounts.none, '—'],
+    ],
+    headStyles: {fillColor:[40,50,65],textColor:[255,255,255],fontStyle:'bold',fontSize:7.5,cellPadding:3.5},
+    bodyStyles: {fontSize:7.5,cellPadding:3.5},
+    theme: 'striped',
+    alternateRowStyles: {fillColor:[245,246,248]},
+  });
+  y = doc.lastAutoTable.finalY + 10;
+
+  // ── IV. DETAIL DES DOSSIERS ──
+  sectionTitle('DÉTAIL DES DOSSIERS CLIENTS', 'IV.');
+  const dossierRows = dossiers.map(d => {
+    const sc = computeAMLR6Score(d);
+    return [
+      d.ref,
+      d.clientName,
+      d.clientType === 'pp' ? 'PP' : 'PM',
+      d.inScope ? 'IN' : 'OUT',
+      d.vigilance === 'renforcee' ? 'Renforcée' : d.vigilance === 'normal-plus' ? 'Normale+' : d.vigilance === 'normal' ? 'Normale' : '—',
+      sc.scorePct + '/100',
+      sc.label.replace('Risque ',''),
+      d.status === 'actif' ? 'Actif' : d.status === 'suspendu' ? 'Suspendu' : d.status === 'refuse' ? 'Refusé' : d.status
+    ];
+  });
+  doc.autoTable({
+    startY: y, margin: {left:M, right:M},
+    head: [['Réf.', 'Client', 'Type', 'Scope', 'Vigilance', 'Score', 'Risque', 'Statut']],
+    body: dossierRows,
+    headStyles: {fillColor:[40,50,65],textColor:[255,255,255],fontStyle:'bold',fontSize:6.5,cellPadding:3},
+    bodyStyles: {fontSize:6.5,cellPadding:3},
+    columnStyles: {0:{cellWidth:24},1:{cellWidth:40},2:{cellWidth:12},3:{cellWidth:12},5:{cellWidth:16,halign:'center'},6:{cellWidth:20}},
+    theme: 'striped',
+    alternateRowStyles: {fillColor:[245,246,248]},
+    didParseCell: function(data) {
+      if(data.section === 'body' && data.column.index === 7) {
+        if(data.cell.raw === 'Suspendu') data.cell.styles.textColor = [160,100,20];
+        if(data.cell.raw === 'Refusé') data.cell.styles.textColor = [180,30,30];
+      }
+    }
+  });
+  y = doc.lastAutoTable.finalY + 10;
+
+  // ── V. SCREENING ──
+  if(y > 240) { doc.addPage(); y = 30; doc.setFillColor(40,50,65);doc.rect(0,0,W,20,'F');doc.setTextColor(255,255,255);doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text('RAPPORT LAB/CFT — '+cabinetName+' — Exercice '+year,M,13); }
+  sectionTitle('SCREENING ET FILTRAGE', 'V.');
+  kv('Total screenings', screenings.length);
+  kv('Résultats négatifs', screenings.filter(s=>s.result==='negatif').length);
+  kv('Alertes détectées', alertScreenings.length);
+  kv('Listes consultées', 'UE, OFAC, ONU, UK OFSI, PPE, Adverse Media');
+  y += 4;
+
+  if(screenings.length > 0) {
+    doc.autoTable({
+      startY: y, margin: {left:M, right:M},
+      head: [['Client', 'Date', 'Listes', 'Résultat']],
+      body: screenings.slice(0,30).map(s => [
+        s.clientName || s.ref,
+        new Date(s.date).toLocaleDateString('fr-LU'),
+        (s.lists||6) + ' listes',
+        s.result === 'negatif' ? 'Négatif' : 'ALERTE'
+      ]),
+      headStyles: {fillColor:[40,50,65],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
+      bodyStyles: {fontSize:7,cellPadding:3},
+      theme: 'striped',
+      didParseCell: function(data) {
+        if(data.section==='body' && data.column.index===3 && data.cell.raw==='ALERTE') data.cell.styles.textColor=[180,30,30];
+      }
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  }
+
+  // ── VI. REVUES KYC ──
+  sectionTitle('REVUES KYC PÉRIODIQUES', 'VI.');
+  const kycReviews = DB.load('kyc_reviews', {});
+  const inScopeDossiers = dossiers.filter(d => d.status === 'actif' && d.inScope);
+  const reviewStatuses = inScopeDossiers.map(d => getKYCReviewStatus(d));
+  const overdue = reviewStatuses.filter(r => r.isOverdue);
+  const dueSoon = reviewStatuses.filter(r => r.isDueSoon);
+  const upToDate = reviewStatuses.filter(r => !r.isOverdue && !r.isDueSoon);
+
+  kv('Dossiers actifs IN SCOPE', inScopeDossiers.length);
+  kv('Revues à jour', upToDate.length);
+  kv('Revues à effectuer sous 30j', dueSoon.length);
+  kv('Revues en retard', overdue.length);
+  y += 4;
+
+  if(overdue.length > 0 || dueSoon.length > 0) {
+    doc.autoTable({
+      startY: y, margin: {left:M, right:M},
+      head: [['Client', 'Niveau risque', 'Fréquence', 'Dernière revue', 'Prochaine échéance', 'Statut']],
+      body: [...overdue, ...dueSoon].map(r => [
+        r.clientName,
+        r.levelLabel,
+        r.period,
+        r.lastReview ? new Date(r.lastReview).toLocaleDateString('fr-LU') : 'Jamais',
+        r.nextDue.toLocaleDateString('fr-LU'),
+        r.isOverdue ? 'EN RETARD' : 'À planifier'
+      ]),
+      headStyles: {fillColor:[40,50,65],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
+      bodyStyles: {fontSize:7,cellPadding:3},
+      theme: 'striped',
+      didParseCell: function(data) {
+        if(data.section==='body' && data.column.index===5 && data.cell.raw==='EN RETARD') data.cell.styles.textColor=[180,30,30];
+      }
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  }
+
+  // ── VII. ALERTES ──
+  sectionTitle('ALERTES ET INCIDENTS', 'VII.');
+  const alerts = computeAlerts();
+  kv('Alertes compliance actives', alerts.filter(a=>a.category==='compliance').length);
+  kv('Alertes facturation', alerts.filter(a=>a.category==='facturation').length);
+  kv('Alertes critiques', alerts.filter(a=>a.severity==='crit').length);
+  y += 4;
+
+  if(alerts.length > 0) {
+    doc.autoTable({
+      startY: y, margin: {left:M, right:M},
+      head: [['Sévérité', 'Alerte', 'Détail', 'Client/Réf.']],
+      body: alerts.slice(0,20).map(a => [
+        a.severity === 'crit' ? 'CRITIQUE' : a.severity === 'warn' ? 'ATTENTION' : 'INFO',
+        a.title,
+        a.sub,
+        a.ref || '—'
+      ]),
+      headStyles: {fillColor:[40,50,65],textColor:[255,255,255],fontStyle:'bold',fontSize:6.5,cellPadding:3},
+      bodyStyles: {fontSize:6.5,cellPadding:3},
+      columnStyles: {0:{cellWidth:20},1:{cellWidth:45},2:{cellWidth:65}},
+      theme: 'striped',
+      didParseCell: function(data) {
+        if(data.section==='body' && data.column.index===0) {
+          if(data.cell.raw==='CRITIQUE') data.cell.styles.textColor=[180,30,30];
+          if(data.cell.raw==='ATTENTION') data.cell.styles.textColor=[160,100,20];
+        }
+      }
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  }
+
+  // ── VIII. JOURNAL D'AUDIT ──
+  if(y > 240) { doc.addPage(); y = 30; doc.setFillColor(40,50,65);doc.rect(0,0,W,20,'F');doc.setTextColor(255,255,255);doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text('RAPPORT LAB/CFT — '+cabinetName+' — Exercice '+year,M,13); }
+  sectionTitle('JOURNAL D\'AUDIT (dernières entrées)', 'VIII.');
+  kv('Total entrées', auditLog.length);
+  y += 3;
+
+  if(auditLog.length > 0) {
+    doc.autoTable({
+      startY: y, margin: {left:M, right:M},
+      head: [['Date/Heure', 'Événement', 'Utilisateur']],
+      body: auditLog.slice(0,30).map(e => [
+        e.time || '—',
+        e.title || e.action || '—',
+        e.user || '—'
+      ]),
+      headStyles: {fillColor:[40,50,65],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
+      bodyStyles: {fontSize:7,cellPadding:3},
+      columnStyles: {0:{cellWidth:25},2:{cellWidth:30}},
+      theme: 'striped',
+      alternateRowStyles: {fillColor:[245,246,248]},
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  }
+
+  // ── IX. CONCLUSIONS ──
+  sectionTitle('CONCLUSIONS ET RECOMMANDATIONS', 'IX.');
+  doc.setFontSize(8);
+  doc.setTextColor(60,60,60);
+  const conclusions = [];
+  if(overdue.length > 0) conclusions.push('• ' + overdue.length + ' revue(s) KYC en retard — actions correctives immédiates recommandées.');
+  if(alertScreenings.length > 0) conclusions.push('• ' + alertScreenings.length + ' alerte(s) screening détectée(s) — qualification et traitement documenté requis.');
+  if(suspended.length > 0) conclusions.push('• ' + suspended.length + ' dossier(s) suspendu(s) — résolution ou clôture à planifier.');
+  if(refused.length > 0) conclusions.push('• ' + refused.length + ' mission(s) refusée(s) — évaluer la nécessité de déclaration au Bâtonnier.');
+  if(riskLevels.critique > 0) conclusions.push('• ' + riskLevels.critique + ' client(s) en risque critique — surveillance renforcée et revue semestrielle obligatoires.');
+  const inScopeNoDocs = dossiers.filter(d => d.inScope && d.status==='actif' && DB.getDocuments().filter(dc=>dc.ref===d.ref).length===0);
+  if(inScopeNoDocs.length > 0) conclusions.push('• ' + inScopeNoDocs.length + ' dossier(s) IN SCOPE sans documents KYC — collecte prioritaire.');
+  if(conclusions.length === 0) conclusions.push('• Aucun point d\'attention majeur identifié. Le dispositif LAB/CFT est conforme.');
+  conclusions.push('', 'Le présent rapport a été établi conformément à l\'Art. 45 du Règlement UE 2024/1624 (AMLR).');
+  conclusions.push('Il est destiné à un usage interne et peut être présenté à la CSSF lors d\'un contrôle.');
+  conclusions.forEach(line => {
+    if(y > 270) { doc.addPage(); y = 30; }
+    doc.text(line, M + 2, y, {maxWidth: R - M - 4});
+    y += line ? 6 : 3;
+  });
+
+  // ── FOOTER ON ALL PAGES ──
+  const totalPages = doc.internal.getNumberOfPages();
+  for(let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    if(p === 1) continue;
+    doc.setDrawColor(200,205,215);
+    doc.setLineWidth(0.2);
+    doc.line(M, 284, R, 284);
+    doc.setFontSize(6.5);
+    doc.setTextColor(160,165,175);
+    doc.setFont('helvetica','normal');
+    doc.text(cabinetName + ' · Rapport LAB/CFT confidentiel · Exercice ' + year, W/2, 288, {align:'center'});
+    doc.text('Généré par norvy — Compliance LegalTech · Page ' + (p) + '/' + totalPages, W/2, 292, {align:'center'});
+  }
+
+  doc.save('Rapport_CSSF_LAB-CFT_' + year + '_' + cabinetName.replace(/\s+/g,'_') + '.pdf');
+  showToast('Rapport CSSF généré', 'Rapport annuel LAB/CFT ' + year + ' téléchargé', 'ok', '📊');
+  DB.addAudit({type:'report', action:'Rapport annuel CSSF LAB/CFT généré — Exercice ' + year, user: session?.name || 'Système'});
+}
+
 function getUnpaidInvoices() {
   const invoices = DB.getInvoices();
   const now = new Date();
@@ -6012,6 +6533,15 @@ function generateNotifications() {
     const docs = DB.getDocuments().filter(dc => dc.ref === d.ref);
     if(d.status === 'actif' && d.inScope && docs.length === 0) {
       notifs.push({ id:'doc-'+d.ref, color:'var(--info-fg)', title:'Documents KYC manquants — ' + d.clientName, sub:'Dossier IN SCOPE sans pièce justificative', time:d.ref, action:`viewDossier('${d.ref}')` });
+    }
+    // KYC periodic review
+    if(d.status === 'actif' && d.inScope) {
+      const rv = getKYCReviewStatus(d);
+      if(rv.isOverdue) {
+        notifs.push({ id:'kyc-over-'+d.ref, color:'var(--danger-fg)', title:'Revue KYC en retard — ' + d.clientName, sub:'Échéance dépassée de ' + Math.abs(rv.daysUntilDue) + ' jour(s) · Risque ' + rv.level, time:'Action urgente', action:`viewDossier('${d.ref}')` });
+      } else if(rv.isDueSoon) {
+        notifs.push({ id:'kyc-soon-'+d.ref, color:'var(--warn-fg)', title:'Revue KYC à planifier — ' + d.clientName, sub:'Échéance dans ' + rv.daysUntilDue + ' jour(s) · Risque ' + rv.level, time:rv.nextDue.toLocaleDateString('fr-LU'), action:`viewDossier('${d.ref}')` });
+      }
     }
   });
 
