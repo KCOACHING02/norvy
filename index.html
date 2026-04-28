@@ -3,46 +3,51 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Norvy — Tableau de bord</title>
+<title>norvy — Compliance Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 /* ══ RESET ══ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --sage:#3d5c4a;--sage2:#4e7360;--sage3:#2d4438;--sage4:#1e3028;
-  --sage-pale:#eef4f0;--sage-muted:#c8d9cf;--sage-light:#7aab8e;
-  --cream:#f7f5f0;--cream2:#f0ede6;--cream3:#e8e4da;
-  --charcoal:#1a1d1b;--dark:#111412;--mid:#556059;--light:#9aada6;
-  --border:#dde5e0;--border2:#ccd6d1;--white:#ffffff;
-  --ok-bg:#dff0e6;--ok-fg:#2d6644;
-  --warn-bg:#fff8e6;--warn-fg:#9a6010;
-  --danger-bg:#fdecea;--danger-fg:#9a1010;
-  --info-bg:#eaf4fb;--info-fg:#1a6691;
+  --sage:#4a6fa5;--sage2:#5b82b8;--sage3:#3a5a8a;--sage4:#2a4570;
+  --sage-pale:#edf2f9;--sage-muted:#b8cde5;--sage-light:#7aa3d4;
+  --cream:#f5f6f8;--cream2:#eceef2;--cream3:#e2e5ea;
+  --charcoal:#1c1e21;--dark:#18191c;--mid:#5a5e66;--light:#8e939d;
+  --border:#e0e2e7;--border2:#d0d3d9;--white:#ffffff;
+  --ok-bg:#e8f5ee;--ok-fg:#1a7a42;
+  --warn-bg:#fef8ec;--warn-fg:#a06815;
+  --danger-bg:#fde8e8;--danger-fg:#b91c1c;
+  --info-bg:#ebf3fe;--info-fg:#1a5fb4;
   --gold:#c9a84c;--gold-pale:#fdf6e3;
   --radius:12px;--radius-sm:8px;
-  --shadow:0 2px 12px rgba(30,50,38,.08);
-  --shadow-md:0 6px 24px rgba(30,50,38,.12);
-  --shadow-lg:0 16px 48px rgba(30,50,38,.16);
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.12);
   --card-bg:#ffffff;
+  --accent:#4a6fa5;
+  --font:'Plus Jakarta Sans',system-ui,sans-serif;
+  --font-display:'Plus Jakarta Sans',system-ui,sans-serif;
 }
 
 /* ══ DARK MODE ══ */
 [data-theme="dark"]{
-  --cream:#1a1d1b;--cream2:#222623;--cream3:#2a2e2b;
-  --charcoal:#e8e4da;--dark:#0d0f0e;--mid:#9aada6;--light:#6b7d76;
-  --border:#2f3532;--border2:#3a403d;--white:#1e2220;
-  --card-bg:#1e2220;
-  --sage-pale:#1e3028;--sage-muted:#2d4438;
-  --ok-bg:#1a2e22;--ok-fg:#5cb87a;
-  --warn-bg:#2e2510;--warn-fg:#d4a033;
+  --cream:#151618;--cream2:#1c1e21;--cream3:#252729;
+  --charcoal:#e4e5e9;--dark:#0e0f10;--mid:#9a9ea8;--light:#6b6f78;
+  --border:#2a2c30;--border2:#353840;--white:#1a1b1e;
+  --card-bg:#1a1b1e;
+  --sage:#6b97d4;--sage2:#7da8e0;--sage3:#5580b8;--sage4:#406a9e;
+  --sage-pale:#1e2838;--sage-muted:#304560;
+  --ok-bg:#162820;--ok-fg:#5cc87e;
+  --warn-bg:#2a2210;--warn-fg:#d4a840;
   --danger-bg:#2e1515;--danger-fg:#e06060;
-  --info-bg:#152535;--info-fg:#5aafe0;
+  --info-bg:#15223a;--info-fg:#6aafe8;
   --gold-pale:#2e2a15;
-  --shadow:0 2px 12px rgba(0,0,0,.3);
-  --shadow-md:0 6px 24px rgba(0,0,0,.4);
-  --shadow-lg:0 16px 48px rgba(0,0,0,.5);
+  --accent:#6b97d4;
+  --shadow:0 1px 3px rgba(0,0,0,.3),0 2px 8px rgba(0,0,0,.2);
+  --shadow-md:0 4px 16px rgba(0,0,0,.3);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.4);
 }
 [data-theme="dark"] .card,[data-theme="dark"] .ctrl-card{background:var(--card-bg);border-color:var(--border)}
 [data-theme="dark"] input,[data-theme="dark"] select,[data-theme="dark"] textarea{background:var(--cream2);color:var(--charcoal);border-color:var(--border)}
@@ -50,9 +55,9 @@
 [data-theme="dark"] .btn-outline{border-color:var(--border);color:var(--charcoal)}
 [data-theme="dark"] .dos-row:hover{background:var(--cream2)}
 [data-theme="dark"] .pill{border:none}
-[data-theme="dark"] .ob-topbar{background:rgba(26,29,27,.93);border-color:var(--border)}
-html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
-body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charcoal);min-height:100vh}
+[data-theme="dark"] .ob-topbar{background:rgba(21,22,24,.95);border-color:var(--border)}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{font-family:var(--font);background:var(--cream);color:var(--charcoal);min-height:100vh}
 
 /* ══ VIEWS ══ */
 .view{display:none}
@@ -60,11 +65,11 @@ body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charco
 
 /* ══ SIDEBAR ══ */
 .sidebar{
-  width:248px;background:var(--dark);
+  width:248px;background:#18191c;
   position:fixed;top:0;left:0;height:100vh;z-index:100;
   transition:transform .3s cubic-bezier(.4,0,.2,1);
   display:flex;flex-direction:column;
-  border-right:1px solid rgba(255,255,255,.05);
+  border-right:1px solid rgba(255,255,255,.06);
 }
 .sidebar-logo{
   padding:26px 24px 22px;
@@ -73,14 +78,14 @@ body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charco
 }
 .logo-mark{
   width:34px;height:34px;border-radius:9px;
-  background:linear-gradient(135deg,var(--sage),var(--sage2));
+  background:linear-gradient(135deg,var(--accent),var(--sage2));
   display:flex;align-items:center;justify-content:center;
-  font-family:'DM Serif Display',serif;font-size:1rem;color:white;
-  flex-shrink:0;
+  font-family:var(--font-display);font-size:1.05rem;font-weight:800;color:white;
+  flex-shrink:0;letter-spacing:-.03em;
 }
 .logo-text-wrap{}
-.logo-name{font-family:'DM Serif Display',serif;font-size:1.3rem;color:rgba(255,255,255,.9);letter-spacing:-.02em;line-height:1}
-.logo-tagline{font-size:.6rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.22);margin-top:2px}
+.logo-name{font-family:var(--font-display);font-size:1.25rem;font-weight:800;color:rgba(255,255,255,.92);letter-spacing:-.04em;line-height:1;text-transform:lowercase}
+.logo-tagline{font-size:.58rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.22);margin-top:3px}
 .sidebar-nav{flex:1;overflow-y:auto;padding:10px 0}
 .nav-sec{padding:14px 20px 5px;font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.18)}
 .nav-item{
@@ -91,7 +96,7 @@ body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charco
   transition:all .18s;user-select:none;
 }
 .nav-item:hover{color:rgba(255,255,255,.78);background:rgba(255,255,255,.05)}
-.nav-item.active{color:white;background:rgba(61,92,74,.35);border-left-color:var(--sage-light)}
+.nav-item.active{color:white;background:rgba(74,111,165,.2);border-left-color:var(--accent)}
 .nav-icon{font-size:.9rem;width:18px;text-align:center;flex-shrink:0}
 .nav-badge-pill{
   margin-left:auto;font-size:.58rem;font-weight:700;
@@ -105,7 +110,7 @@ body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charco
 }
 .user-av{
   width:32px;height:32px;border-radius:50%;
-  background:linear-gradient(135deg,var(--sage),var(--sage2));
+  background:linear-gradient(135deg,var(--accent),var(--sage2));
   display:flex;align-items:center;justify-content:center;
   font-size:.72rem;font-weight:700;color:white;flex-shrink:0;
 }
@@ -118,7 +123,7 @@ body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charco
 
 /* ══ TOPBAR ══ */
 .topbar{
-  height:58px;background:rgba(247,245,240,.95);backdrop-filter:blur(16px);
+  height:58px;background:rgba(245,246,248,.95);backdrop-filter:blur(16px);
   border-bottom:1px solid var(--border);
   padding:0 32px;position:sticky;top:0;z-index:50;
   display:flex;align-items:center;justify-content:space-between;
@@ -144,7 +149,7 @@ body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charco
 }
 .tb-avatar{
   width:34px;height:34px;border-radius:50%;
-  background:linear-gradient(135deg,var(--sage),var(--sage2));
+  background:linear-gradient(135deg,var(--accent),var(--sage2));
   display:flex;align-items:center;justify-content:center;
   font-size:.75rem;font-weight:700;color:white;cursor:pointer;
 }
@@ -154,7 +159,7 @@ body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charco
 
 /* ══ HERO BAND ══ */
 .hero-band{
-  background:linear-gradient(135deg,var(--dark) 0%,var(--sage4) 50%,var(--sage3) 100%);
+  background:linear-gradient(135deg,#1c1e21 0%,#252830 50%,#2a3040 100%);
   border-radius:16px;padding:28px 32px;margin-bottom:24px;
   display:flex;align-items:center;justify-content:space-between;gap:20px;
   position:relative;overflow:hidden;
@@ -163,21 +168,21 @@ body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charco
 .hero-band::before{
   content:'';position:absolute;
   top:-80px;right:-60px;width:280px;height:280px;
-  border-radius:50%;background:rgba(61,92,74,.2);
+  border-radius:50%;background:rgba(74,111,165,.1);
 }
 .hero-band::after{
   content:'';position:absolute;
   bottom:-100px;right:160px;width:200px;height:200px;
-  border-radius:50%;background:rgba(61,92,74,.12);
+  border-radius:50%;background:rgba(74,111,165,.06);
 }
 .hero-left{position:relative;z-index:1}
-.hero-greeting{font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--sage-muted);margin-bottom:5px}
-.hero-title{font-family:'DM Serif Display',serif;font-size:1.65rem;color:white;letter-spacing:-.02em;margin-bottom:5px}
+.hero-greeting{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:5px}
+.hero-title{font-family:var(--font-display);font-size:1.55rem;font-weight:800;color:white;letter-spacing:-.04em;margin-bottom:5px}
 .hero-sub{font-size:.83rem;color:rgba(255,255,255,.5)}
 .hero-sub strong{color:rgba(255,255,255,.75)}
 .hero-right{display:flex;gap:10px;position:relative;z-index:1;flex-shrink:0;flex-wrap:wrap}
 .btn-hero{
-  font-family:'Figtree',sans-serif;font-size:.83rem;font-weight:600;
+  font-family:var(--font);font-size:.83rem;font-weight:600;
   padding:10px 20px;border-radius:9px;cursor:pointer;border:none;
   display:inline-flex;align-items:center;gap:7px;
   transition:all .2s;white-space:nowrap;
@@ -214,7 +219,7 @@ body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charco
 .kpi-icon-wrap.blue{background:var(--info-bg)}
 .kpi-icon-wrap.red{background:var(--danger-bg)}
 .kpi-icon-wrap.gold{background:var(--gold-pale)}
-.kpi-val{font-family:'DM Serif Display',serif;font-size:2rem;color:var(--charcoal);line-height:1;margin-bottom:4px}
+.kpi-val{font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--charcoal);line-height:1;margin-bottom:4px;letter-spacing:-.04em}
 .kpi-val.animated{animation:countUp .6s ease both}
 .kpi-footer{display:flex;align-items:center;justify-content:space-between}
 .kpi-trend{font-size:.72rem;font-weight:600;display:flex;align-items:center;gap:3px}
@@ -320,7 +325,7 @@ body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charco
 }
 .qa:hover{border-color:var(--sage);box-shadow:var(--shadow-md);transform:translateY(-2px)}
 .qa.primary{background:var(--sage);border-color:var(--sage)}
-.qa.primary:hover{background:var(--sage2);box-shadow:0 8px 24px rgba(61,92,74,.3)}
+.qa.primary:hover{background:var(--sage2);box-shadow:0 8px 24px rgba(74,111,165,.3)}
 .qa-icon{font-size:1.5rem}
 .qa-label{font-size:.78rem;font-weight:700;color:var(--mid);line-height:1.3}
 .qa.primary .qa-label{color:rgba(255,255,255,.9)}
@@ -342,11 +347,11 @@ body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charco
 .progress-pct{font-weight:700;color:var(--charcoal)}
 .metric-stats{display:flex;gap:14px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
 .mstat{text-align:center;flex:1}
-.mstat-val{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--charcoal);line-height:1;margin-bottom:2px}
+.mstat-val{font-family:var(--font-display);font-size:1.4rem;color:var(--charcoal);line-height:1;margin-bottom:2px}
 .mstat-label{font-size:.65rem;color:var(--light)}
-.factu-amount{font-family:'DM Serif Display',serif;font-size:2.2rem;color:var(--charcoal);line-height:1;margin-bottom:4px}
+.factu-amount{font-family:var(--font-display);font-size:2.2rem;color:var(--charcoal);line-height:1;margin-bottom:4px}
 .factu-sub{font-size:.75rem;color:var(--mid);margin-bottom:12px}
-.hours-display{font-family:'DM Serif Display',serif;font-size:2.2rem;color:var(--charcoal);line-height:1;margin-bottom:4px}
+.hours-display{font-family:var(--font-display);font-size:2.2rem;color:var(--charcoal);line-height:1;margin-bottom:4px}
 
 /* ══ SCREENING ALERT SECTION ══ */
 .sc-alert-item{
@@ -395,9 +400,9 @@ body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charco
 .cal-event-time{font-size:.68rem;color:var(--light)}
 
 /* ══ BUTTONS ══ */
-.btn{font-family:'Figtree',sans-serif;font-size:.84rem;font-weight:600;padding:9px 18px;border-radius:8px;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:7px}
-.btn-sage{background:var(--sage);color:white}
-.btn-sage:hover{background:var(--sage2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(61,92,74,.3)}
+.btn{font-family:var(--font);font-size:.84rem;font-weight:600;padding:9px 18px;border-radius:8px;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:7px}
+.btn-sage{background:var(--accent);color:white}
+.btn-sage:hover{background:var(--sage2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(74,111,165,.3)}
 .btn-outline{background:white;color:var(--mid);border:1.5px solid var(--border)}
 .btn-outline:hover{border-color:var(--sage-muted);color:var(--charcoal)}
 .btn-ghost{background:transparent;color:var(--mid)}
@@ -406,41 +411,27 @@ body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charco
 /* ══ MOBILE ══ */
 .mob-bar{display:none;background:var(--dark);padding:13px 18px;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;border-bottom:1px solid rgba(255,255,255,.06)}
 .mob-logo{display:flex;align-items:center;gap:8px}
-.mob-logo-mark{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,var(--sage),var(--sage2));display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:.85rem;color:white}
-.mob-logo-text{font-family:'DM Serif Display',serif;font-size:1.15rem;color:rgba(255,255,255,.85)}
+.mob-logo-mark{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--sage2));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:.85rem;font-weight:800;color:white}
+.mob-logo-text{font-family:var(--font-display);font-size:1.15rem;font-weight:800;color:rgba(255,255,255,.85);letter-spacing:-.04em;text-transform:lowercase}
 .mob-ham{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;gap:4px;padding:4px}
 .mob-ham span{width:20px;height:2px;background:rgba(255,255,255,.5);border-radius:2px}
 
 /* ══ ONBOARDING OVERRIDE ══ */
 
 
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --sage:#3d5c4a;--sage2:#4e7360;--sage3:#2d4438;
-  --sage-pale:#eef4f0;--sage-muted:#c8d9cf;
-  --cream:#f7f5f0;--cream2:#f0ede6;
-  --charcoal:#1a1d1b;--mid:#556059;--light:#9aada6;
-  --border:#dde5e0;--white:#ffffff;
-  --ok-bg:#dff0e6;--ok-fg:#2d6644;
-  --warn-bg:#fff8e6;--warn-fg:#9a6010;
-  --danger-bg:#fdecea;--danger-fg:#9a1010;
-  --info-bg:#eaf4fb;--info-fg:#1a6691;
-  --radius:12px;
-  --shadow:0 4px 24px rgba(30,50,38,.10);
-}
-html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
-body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charcoal);min-height:100vh;font-size:15px}
+/* onboarding inherits main :root variables */
+body{font-family:var(--font);background:var(--cream);color:var(--charcoal);min-height:100vh;font-size:15px}
 
 /* ── LAYOUT ── */
 .ob-sidebar{width:240px;flex-shrink:0;background:var(--charcoal);position:fixed;top:0;left:0;height:100vh;z-index:50;transition:transform .3s;display:flex;flex-direction:column}
 .sidebar-logo{padding:24px 24px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
-.logo-text{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--sage-muted);letter-spacing:-.02em}
+.logo-text{font-family:var(--font-display);font-size:1.5rem;color:var(--sage-muted);letter-spacing:-.02em}
 .logo-sub{font-size:.65rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-top:2px}
 .sidebar-nav{padding:12px 0;flex:1;overflow-y:auto}
 .nav-section{padding:8px 18px 4px;font-size:.62rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.2)}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:.83rem;font-weight:500;color:rgba(255,255,255,.45);cursor:pointer;border-left:3px solid transparent;transition:all .2s}
 .nav-item:hover{color:rgba(255,255,255,.75);background:rgba(255,255,255,.04)}
-.nav-item.active{color:var(--white);background:rgba(61,92,74,.4);border-left-color:var(--sage-muted)}
+.nav-item.active{color:var(--white);background:rgba(74,111,165,.4);border-left-color:var(--sage-muted)}
 .nav-icon{font-size:.95rem;width:18px;text-align:center;flex-shrink:0}
 .sidebar-footer{padding:16px;border-top:1px solid rgba(255,255,255,.08);font-size:.72rem;color:rgba(255,255,255,.2)}
 .ob-main{margin-left:248px;display:flex;flex-direction:column;min-height:100vh}
@@ -466,7 +457,7 @@ body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charco
 /* ── CARD ── */
 .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);animation:fadeUp .35s ease both}
 .card-step{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sage);margin-bottom:4px}
-.card-title{font-family:'DM Serif Display',serif;font-size:1.55rem;letter-spacing:-.02em;color:var(--charcoal);margin-bottom:5px}
+.card-title{font-family:var(--font-display);font-size:1.55rem;letter-spacing:-.02em;color:var(--charcoal);margin-bottom:5px}
 .card-desc{font-size:.87rem;color:var(--mid);line-height:1.6;margin-bottom:24px}
 .divider{border:none;border-top:1px solid var(--border);margin:22px 0}
 
@@ -477,7 +468,7 @@ body{font-family:'Figtree',sans-serif;background:var(--cream);color:var(--charco
 .full{grid-column:1/-1}
 label.lbl{font-size:.72rem;font-weight:700;color:var(--mid);letter-spacing:.04em;text-transform:uppercase}
 label.lbl.req::after{content:' *';color:var(--danger-fg)}
-input,select,textarea{font-family:'Figtree',sans-serif;font-size:.88rem;color:var(--charcoal);background:var(--cream);border:1.5px solid var(--border);border-radius:8px;padding:9px 13px;outline:none;transition:all .2s;width:100%}
+input,select,textarea{font-family:var(--font);font-size:.88rem;color:var(--charcoal);background:var(--cream);border:1.5px solid var(--border);border-radius:8px;padding:9px 13px;outline:none;transition:all .2s;width:100%}
 input:focus,select:focus,textarea:focus{border-color:var(--sage);background:white;box-shadow:0 0 0 3px var(--sage-pale)}
 input::placeholder,textarea::placeholder{color:var(--light)}
 select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238fa89e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
@@ -510,7 +501,7 @@ textarea{resize:vertical;min-height:75px;line-height:1.5}
 
 /* ── ALERTS ── */
 .alert{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:10px;border:1.5px solid transparent;margin-top:16px}
-.alert.ok{background:var(--ok-bg);border-color:rgba(61,92,74,.2)}
+.alert.ok{background:var(--ok-bg);border-color:rgba(74,111,165,.2)}
 .alert.warn{background:var(--warn-bg);border-color:rgba(154,96,16,.2)}
 .alert.danger{background:var(--danger-bg);border-color:rgba(154,16,16,.2)}
 .alert.info{background:var(--info-bg);border-color:rgba(41,128,185,.2)}
@@ -523,7 +514,7 @@ textarea{resize:vertical;min-height:75px;line-height:1.5}
 .alert-body{font-size:.78rem;color:var(--mid);line-height:1.55}
 .alert-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .tag{font-size:.66rem;font-weight:600;padding:2px 8px;border-radius:99px}
-.tag.g{background:rgba(61,92,74,.12);color:var(--sage)}
+.tag.g{background:rgba(74,111,165,.12);color:var(--sage)}
 .tag.o{background:rgba(154,96,16,.1);color:var(--warn-fg)}
 .tag.b{background:rgba(41,128,185,.1);color:var(--info-fg)}
 .tag.r{background:rgba(154,16,16,.1);color:var(--danger-fg)}
@@ -566,7 +557,7 @@ textarea{resize:vertical;min-height:75px;line-height:1.5}
 
 /* ── VIGILANCE BADGE ── */
 .vig-card{border-radius:10px;padding:16px;margin-top:16px}
-.vig-card.normal{background:var(--ok-bg);border:1.5px solid rgba(61,92,74,.2)}
+.vig-card.normal{background:var(--ok-bg);border:1.5px solid rgba(74,111,165,.2)}
 .vig-card.normal-plus{background:var(--warn-bg);border:1.5px solid rgba(154,96,16,.2)}
 .vig-card.renforcee{background:var(--danger-bg);border:1.5px solid rgba(154,16,16,.2)}
 .vig-title{font-size:.88rem;font-weight:700;margin-bottom:5px}
@@ -594,7 +585,7 @@ textarea{resize:vertical;min-height:75px;line-height:1.5}
 /* ── RESULT FINAL ── */
 .result-hero{text-align:center;padding:8px 0 20px}
 .result-icon{font-size:3rem;margin-bottom:12px}
-.result-title{font-family:'DM Serif Display',serif;font-size:1.8rem;letter-spacing:-.02em;color:var(--charcoal);margin-bottom:6px}
+.result-title{font-family:var(--font-display);font-size:1.8rem;letter-spacing:-.02em;color:var(--charcoal);margin-bottom:6px}
 .result-sub{font-size:.88rem;color:var(--mid);margin-bottom:20px}
 .result-ref{display:inline-block;font-size:.78rem;font-weight:700;padding:5px 14px;background:var(--sage-pale);color:var(--sage);border-radius:99px;margin-bottom:20px;letter-spacing:.04em}
 .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
@@ -609,9 +600,9 @@ textarea{resize:vertical;min-height:75px;line-height:1.5}
 
 /* ── BUTTONS ── */
 .btn-row{display:flex;align-items:center;justify-content:space-between;margin-top:28px;gap:10px}
-.btn{font-family:'Figtree',sans-serif;font-size:.85rem;font-weight:600;padding:10px 20px;border-radius:8px;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:7px}
+.btn{font-family:var(--font);font-size:.85rem;font-weight:600;padding:10px 20px;border-radius:8px;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:7px}
 .btn-primary{background:var(--sage);color:white}
-.btn-primary:hover{background:var(--sage2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(61,92,74,.3)}
+.btn-primary:hover{background:var(--sage2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(74,111,165,.3)}
 .btn-primary:disabled{background:var(--border);color:var(--light);cursor:not-allowed;transform:none;box-shadow:none}
 .btn-secondary{background:white;color:var(--mid);border:1.5px solid var(--border)}
 .btn-secondary:hover{border-color:var(--sage-muted);color:var(--charcoal)}
@@ -626,7 +617,7 @@ textarea{resize:vertical;min-height:75px;line-height:1.5}
 
 /* ── MOBILE ── */
 .ob-mob-bar{display:none;background:var(--charcoal);padding:14px 18px;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:60}
-.ob-mob-logo{font-family:'DM Serif Display',serif;font-size:1.25rem;color:var(--sage-muted)}
+.ob-mob-logo{font-family:var(--font-display);font-size:1.25rem;color:var(--sage-muted)}
 .ob-ham{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;gap:4px;padding:4px}
 .ob-ham span{width:20px;height:2px;background:rgba(255,255,255,.55);border-radius:2px}
 
@@ -643,7 +634,7 @@ textarea{resize:vertical;min-height:75px;line-height:1.5}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(61,92,74,.4)}70%{box-shadow:0 0 0 8px rgba(61,92,74,0)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(74,111,165,.4)}70%{box-shadow:0 0 0 8px rgba(74,111,165,0)}}
 @keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
 
 /* ══ RESPONSIVE ══ */
@@ -840,14 +831,14 @@ textarea{resize:vertical;min-height:75px;line-height:1.5}
 
 /* Barre de progression OAL */
 .oal-progress-band{
-  background:linear-gradient(135deg,var(--dark),var(--sage4));
+  background:linear-gradient(135deg,#1c1e21,#2a3040);
   border-radius:14px;padding:22px 28px;margin-bottom:24px;
   display:flex;align-items:center;justify-content:space-between;gap:20px;
   position:relative;overflow:hidden;
 }
-.oal-progress-band::before{content:'';position:absolute;top:-60px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(61,92,74,.2)}
+.oal-progress-band::before{content:'';position:absolute;top:-60px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(74,111,165,.2)}
 .oal-prog-left{position:relative;z-index:1}
-.oal-prog-title{font-family:'DM Serif Display',serif;font-size:1.3rem;color:white;margin-bottom:3px}
+.oal-prog-title{font-family:var(--font-display);font-size:1.3rem;color:white;margin-bottom:3px}
 .oal-prog-sub{font-size:.78rem;color:rgba(255,255,255,.5)}
 .oal-prog-right{position:relative;z-index:1;display:flex;align-items:center;gap:16px;flex-shrink:0}
 .oal-pct-circle{
@@ -860,7 +851,7 @@ textarea{resize:vertical;min-height:75px;line-height:1.5}
   width:56px;height:56px;border-radius:50%;
   background:var(--dark);
   display:flex;align-items:center;justify-content:center;
-  font-family:'DM Serif Display',serif;font-size:1rem;font-weight:700;color:white;
+  font-family:var(--font-display);font-size:1rem;font-weight:700;color:white;
 }
 .oal-prog-stats{display:flex;flex-direction:column;gap:4px}
 .oal-prog-stat{font-size:.75rem;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:6px}
@@ -884,7 +875,7 @@ textarea{resize:vertical;min-height:75px;line-height:1.5}
 .oal-nav-item.done .oal-nav-check{color:var(--ok-fg)}
 .oal-nav-check{font-size:.8rem;margin-left:auto;flex-shrink:0}
 .oal-nav-divider{height:1px;background:var(--border);margin:6px 0}
-.oal-gen-btn{margin:10px 12px 8px;width:calc(100% - 24px);padding:9px;font-family:'Figtree',sans-serif;font-size:.8rem;font-weight:600;background:var(--sage);color:white;border:none;border-radius:7px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.oal-gen-btn{margin:10px 12px 8px;width:calc(100% - 24px);padding:9px;font-family:var(--font);font-size:.8rem;font-weight:600;background:var(--sage);color:white;border:none;border-radius:7px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
 .oal-gen-btn:hover{background:var(--sage2)}
 
 /* Sections contenu */
@@ -892,7 +883,7 @@ textarea{resize:vertical;min-height:75px;line-height:1.5}
 .oal-section.active{display:block}
 .oal-sec-header{margin-bottom:20px}
 .oal-sec-num{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sage);margin-bottom:3px}
-.oal-sec-title{font-family:'DM Serif Display',serif;font-size:1.45rem;color:var(--charcoal);margin-bottom:5px}
+.oal-sec-title{font-family:var(--font-display);font-size:1.45rem;color:var(--charcoal);margin-bottom:5px}
 .oal-sec-desc{font-size:.83rem;color:var(--mid);line-height:1.6}
 
 /* Cards de questions */
@@ -906,7 +897,7 @@ textarea{resize:vertical;min-height:75px;line-height:1.5}
 .oal-q-auto{
   display:none;align-items:center;gap:7px;
   font-size:.72rem;color:var(--sage);font-weight:600;
-  background:rgba(61,92,74,.08);padding:5px 10px;border-radius:6px;
+  background:rgba(74,111,165,.08);padding:5px 10px;border-radius:6px;
   margin-bottom:8px;
 }
 .oal-input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -920,7 +911,7 @@ textarea{resize:vertical;min-height:75px;line-height:1.5}
 }
 .oal-val.auto{border-style:dashed}
 input.oal-input,select.oal-input,textarea.oal-input{
-  font-family:'Figtree',sans-serif;font-size:.88rem;color:var(--charcoal);
+  font-family:var(--font);font-size:.88rem;color:var(--charcoal);
   background:var(--cream);border:1.5px solid var(--border);border-radius:7px;
   padding:8px 12px;outline:none;width:100%;transition:all .2s;
 }
@@ -974,26 +965,26 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
 /* PDF Preview */
 .pdf-preview{
   background:white;border:2px solid var(--border);border-radius:10px;
-  padding:32px;font-family:'DM Serif Display',serif;
+  padding:32px;font-family:var(--font-display);
   box-shadow:0 8px 32px rgba(0,0,0,.08);
   max-width:680px;margin:0 auto;
 }
 .pdf-header{text-align:center;padding-bottom:20px;border-bottom:2px solid var(--charcoal);margin-bottom:24px}
 .pdf-logo{font-size:1.8rem;color:var(--sage);margin-bottom:4px}
-.pdf-title{font-size:1.1rem;font-weight:700;color:var(--charcoal);font-family:'Figtree',sans-serif;letter-spacing:.02em}
-.pdf-subtitle{font-size:.78rem;color:var(--mid);font-family:'Figtree',sans-serif;margin-top:3px}
+.pdf-title{font-size:1.1rem;font-weight:700;color:var(--charcoal);font-family:var(--font);letter-spacing:.02em}
+.pdf-subtitle{font-size:.78rem;color:var(--mid);font-family:var(--font);margin-top:3px}
 .pdf-section{margin-bottom:18px}
-.pdf-section-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sage);font-family:'Figtree',sans-serif;border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:10px}
-.pdf-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dotted var(--border);font-family:'Figtree',sans-serif}
+.pdf-section-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sage);font-family:var(--font);border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:10px}
+.pdf-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dotted var(--border);font-family:var(--font)}
 .pdf-row-label{font-size:.78rem;color:var(--mid)}
 .pdf-row-val{font-size:.78rem;font-weight:600;color:var(--charcoal)}
-.pdf-footer{text-align:center;padding-top:16px;border-top:1px solid var(--border);font-family:'Figtree',sans-serif;font-size:.72rem;color:var(--light);margin-top:20px}
+.pdf-footer{text-align:center;padding-top:16px;border-top:1px solid var(--border);font-family:var(--font);font-size:.72rem;color:var(--light);margin-top:20px}
 .pdf-stamp{
   display:inline-block;padding:6px 16px;
   border:2px solid var(--ok-fg);color:var(--ok-fg);
   border-radius:4px;font-weight:700;font-size:.78rem;
   transform:rotate(-3deg);margin:12px auto;
-  font-family:'Figtree',sans-serif;letter-spacing:.08em;
+  font-family:var(--font);letter-spacing:.08em;
 }
 
 /* Mobile OAL */
@@ -1012,27 +1003,28 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
 
 
 /* ══ LOGIN ══ */
-.login-view{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--dark);position:relative;overflow:hidden}
-.login-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(61,92,74,.35) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(61,92,74,.2) 0%,transparent 50%)}
-.login-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:40px 40px}
-.login-card{background:rgba(255,255,255,.05);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:48px 44px;width:100%;max-width:420px;position:relative;z-index:1;animation:fadeUp .6s ease}
+.login-view{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#1c1e21;position:relative;overflow:hidden}
+.login-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,rgba(74,111,165,.15) 0%,transparent 60%),radial-gradient(ellipse at 70% 80%,rgba(74,111,165,.08) 0%,transparent 50%)}
+.login-grid{position:absolute;inset:0;background:none}
+.login-card{background:rgba(255,255,255,.04);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:48px 44px;width:100%;max-width:420px;position:relative;z-index:1;animation:fadeUp .6s ease}
 .login-logo{text-align:center;margin-bottom:32px}
-.login-logo-mark{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--sage),var(--sage2));display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:1.4rem;color:white;margin:0 auto 10px;box-shadow:0 8px 24px rgba(61,92,74,.4)}
-.login-logo-name{font-family:'DM Serif Display',serif;font-size:1.8rem;color:rgba(255,255,255,.9);letter-spacing:-.02em}
-.login-logo-tag{font-size:.62rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-top:2px}
-.login-title{font-size:.92rem;font-weight:600;color:rgba(255,255,255,.6);text-align:center;margin-bottom:28px}
+.login-logo-mark{display:none}
+.login-logo-name{font-family:var(--font-display);font-size:2.4rem;font-weight:800;color:rgba(255,255,255,.95);letter-spacing:-.06em;text-transform:lowercase}
+.login-logo-tag{font-size:.62rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-top:6px}
+.login-sparkle{position:absolute;bottom:20px;right:24px;width:20px;height:20px;opacity:.3}
+.login-title{font-size:.88rem;font-weight:500;color:rgba(255,255,255,.5);text-align:center;margin-bottom:28px}
 .login-fg{display:flex;flex-direction:column;gap:5px;margin-bottom:16px}
-.login-label{font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.35)}
-.login-input{font-family:'Figtree',sans-serif;font-size:.9rem;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.12);border-radius:9px;padding:11px 14px;color:white;outline:none;transition:all .2s;width:100%}
-.login-input:focus{border-color:var(--sage-light);background:rgba(255,255,255,.1);box-shadow:0 0 0 3px rgba(61,92,74,.3)}
-.login-input::placeholder{color:rgba(255,255,255,.2)}
-.login-hint{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:rgba(61,92,74,.2);border:1px solid rgba(61,92,74,.3);border-radius:8px;margin-bottom:20px;font-size:.73rem;color:rgba(255,255,255,.45);line-height:1.5}
-.login-btn{width:100%;padding:13px;font-family:'Figtree',sans-serif;font-size:.9rem;font-weight:700;background:linear-gradient(135deg,var(--sage),var(--sage2));color:white;border:none;border-radius:9px;cursor:pointer;transition:all .25s;position:relative}
-.login-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(61,92,74,.5)}
-.login-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.login-label{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.3)}
+.login-input{font-family:var(--font);font-size:.88rem;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px;color:white;outline:none;transition:all .2s;width:100%}
+.login-input:focus{border-color:var(--accent);background:rgba(255,255,255,.08);box-shadow:0 0 0 3px rgba(74,111,165,.25)}
+.login-input::placeholder{color:rgba(255,255,255,.18)}
+.login-hint{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:rgba(74,111,165,.15);border:1px solid rgba(74,111,165,.25);border-radius:8px;margin-bottom:20px;font-size:.73rem;color:rgba(255,255,255,.45);line-height:1.5}
+.login-btn{width:100%;padding:13px;font-family:var(--font);font-size:.88rem;font-weight:700;background:#fff;color:#1c1e21;border:none;border-radius:10px;cursor:pointer;transition:all .25s;position:relative;letter-spacing:-.01em}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(0,0,0,.3)}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .login-loading{display:none;align-items:center;justify-content:center;gap:8px}
-.login-spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite}
-.login-footer{text-align:center;margin-top:20px;font-size:.7rem;color:rgba(255,255,255,.18);line-height:1.7}
+.login-spinner{width:16px;height:16px;border:2px solid rgba(0,0,0,.15);border-top-color:#1c1e21;border-radius:50%;animation:spin .7s linear infinite}
+.login-footer{text-align:center;margin-top:24px;font-size:.68rem;color:rgba(255,255,255,.15);line-height:1.7;letter-spacing:.02em}
 
 /* ══ TOASTS ══ */
 .toast-container{position:fixed;bottom:72px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;max-width:360px}
@@ -1056,14 +1048,14 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
 .sc-search-bar{display:flex;gap:12px;align-items:center;background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:14px;transition:border-color .2s,box-shadow .2s}
 .sc-search-bar:focus-within{border-color:var(--sage);box-shadow:0 0 0 3px var(--sage-pale)}
 .sc-search-icon{font-size:1.05rem;color:var(--light);flex-shrink:0}
-.sc-search-input{flex:1;border:none;outline:none;font-family:'Figtree',sans-serif;font-size:.92rem;color:var(--charcoal);background:transparent}
+.sc-search-input{flex:1;border:none;outline:none;font-family:var(--font);font-size:.92rem;color:var(--charcoal);background:transparent}
 .sc-search-input::placeholder{color:var(--light)}
-.sc-launch-btn{font-family:'Figtree',sans-serif;font-size:.83rem;font-weight:700;padding:9px 18px;background:var(--sage);color:white;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .2s;display:flex;align-items:center;gap:6px}
+.sc-launch-btn{font-family:var(--font);font-size:.83rem;font-weight:700;padding:9px 18px;background:var(--sage);color:white;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .2s;display:flex;align-items:center;gap:6px}
 .sc-launch-btn:hover{background:var(--sage2);transform:translateY(-1px)}
 .sc-launch-btn:disabled{background:var(--border);color:var(--light);cursor:not-allowed;transform:none}
 .sc-live-card{background:white;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
-.sc-live-header{padding:16px 20px;background:var(--charcoal);display:flex;align-items:center;justify-content:space-between}
-.sc-live-name{font-family:'DM Serif Display',serif;font-size:1.1rem;color:white}
+.sc-live-header{padding:16px 20px;background:#1c1e21;display:flex;align-items:center;justify-content:space-between}
+.sc-live-name{font-family:var(--font-display);font-size:1.1rem;color:white}
 .sc-live-status{font-size:.73rem;font-weight:600;padding:4px 12px;border-radius:99px}
 .sc-live-status.running{background:rgba(255,255,255,.15);color:rgba(255,255,255,.8);animation:pulse 1s infinite}
 .sc-live-status.clear{background:var(--ok-bg);color:var(--ok-fg)}
@@ -1093,10 +1085,10 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
 
 /* ══ AUDIT ══ */
 .audit-filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
-.audit-filter-btn{font-family:'Figtree',sans-serif;font-size:.76rem;font-weight:600;padding:6px 13px;border-radius:99px;cursor:pointer;border:1.5px solid var(--border);background:white;color:var(--mid);transition:all .18s}
+.audit-filter-btn{font-family:var(--font);font-size:.76rem;font-weight:600;padding:6px 13px;border-radius:99px;cursor:pointer;border:1.5px solid var(--border);background:white;color:var(--mid);transition:all .18s}
 .audit-filter-btn:hover{border-color:var(--sage-muted);color:var(--charcoal)}
 .audit-filter-btn.active{background:var(--sage);border-color:var(--sage);color:white}
-.audit-search{flex:1;min-width:160px;font-family:'Figtree',sans-serif;font-size:.82rem;padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;outline:none;transition:all .2s}
+.audit-search{flex:1;min-width:160px;font-family:var(--font);font-size:.82rem;padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;outline:none;transition:all .2s}
 .audit-search:focus{border-color:var(--sage);box-shadow:0 0 0 3px var(--sage-pale)}
 .audit-entry{display:flex;align-items:flex-start;gap:13px;padding:12px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
 .audit-entry:hover{background:var(--cream)}
@@ -1115,7 +1107,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
 /* ══ CONTRÔLE OAL ══ */
 .ctrl-modal{position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);animation:fadeIn .2s ease}
 .ctrl-modal.hidden{display:none}
-.dm-tab{padding:8px 16px;font-size:.78rem;font-weight:600;font-family:'Figtree',sans-serif;border:none;background:none;color:var(--light);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.dm-tab{padding:8px 16px;font-size:.78rem;font-weight:600;font-family:var(--font);border:none;background:none;color:var(--light);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
 .dm-tab:hover{color:var(--charcoal)}
 .dm-tab.active{color:var(--sage);border-bottom-color:var(--sage)}
 .doc-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;transition:background .15s;cursor:default}
@@ -1136,7 +1128,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
 /* ══ GLOBAL NAV BAR (bottom, always visible) ══ */
 .global-nav{
   position:fixed;bottom:0;left:0;right:0;z-index:9990;
-  background:var(--dark);border-top:1px solid rgba(255,255,255,.08);
+  background:#18191c;border-top:1px solid rgba(255,255,255,.06);
   display:flex;align-items:center;justify-content:center;gap:2px;
   padding:6px 10px;
 }
@@ -1145,7 +1137,7 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
   display:flex;flex-direction:column;align-items:center;gap:2px;
   padding:6px 10px;border-radius:8px;cursor:pointer;
   color:rgba(255,255,255,.45);font-size:.6rem;font-weight:600;
-  font-family:'Figtree',sans-serif;transition:all .2s;min-width:60px;
+  font-family:var(--font);transition:all .2s;min-width:60px;
   background:none;border:none;
 }
 .gn-item:hover,.gn-item.active{color:rgba(255,255,255,.9);background:rgba(255,255,255,.08)}
@@ -1160,7 +1152,7 @@ body{padding-bottom:62px}
 .gsearch-overlay.hidden{display:none}
 .gsearch-box{background:var(--card-bg,#fff);border-radius:16px;width:92%;max-width:600px;max-height:70vh;overflow:hidden;box-shadow:var(--shadow-lg);animation:fadeUp .2s ease;display:flex;flex-direction:column}
 .gsearch-input-wrap{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-.gsearch-input{flex:1;border:none;outline:none;font-family:'Figtree',sans-serif;font-size:1rem;color:var(--charcoal);background:transparent}
+.gsearch-input{flex:1;border:none;outline:none;font-family:var(--font);font-size:1rem;color:var(--charcoal);background:transparent}
 .gsearch-input::placeholder{color:var(--light)}
 .gsearch-results{overflow-y:auto;flex:1;padding:8px}
 .gsearch-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;transition:background .12s}
@@ -1185,11 +1177,11 @@ body{padding-bottom:62px}
 .ctrl-card{background:white;border-radius:16px;padding:28px;max-width:620px;width:92%;box-shadow:0 24px 64px rgba(0,0,0,.25);animation:fadeUp .3s ease;max-height:88vh;overflow-y:auto}
 .ctrl-header{display:flex;align-items:center;gap:13px;margin-bottom:20px}
 .ctrl-icon{font-size:1.9rem}
-.ctrl-title{font-family:'DM Serif Display',serif;font-size:1.35rem;color:var(--charcoal)}
+.ctrl-title{font-family:var(--font-display);font-size:1.35rem;color:var(--charcoal)}
 .ctrl-subtitle{font-size:.76rem;color:var(--mid);margin-top:1px}
 .ctrl-progress{background:var(--cream);border-radius:9px;padding:14px;margin-bottom:14px}
 .ctrl-prog-bar{height:8px;background:var(--border);border-radius:99px;overflow:hidden;margin:6px 0}
-.ctrl-prog-fill{height:100%;background:linear-gradient(90deg,var(--sage),var(--sage-light));border-radius:99px;transition:width .4s ease;width:0%}
+.ctrl-prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--sage-light));border-radius:99px;transition:width .4s ease;width:0%}
 .ctrl-steps{display:flex;flex-direction:column;gap:7px;margin-bottom:18px}
 .ctrl-step{display:flex;align-items:center;gap:9px;padding:9px 13px;background:var(--cream);border-radius:8px;font-size:.8rem}
 .ctrl-step.done{background:var(--ok-bg)}
@@ -1200,7 +1192,7 @@ body{padding-bottom:62px}
 .ctrl-step-status{font-size:.68rem;font-weight:600}
 .ctrl-step.done .ctrl-step-status{color:var(--ok-fg)}
 .ctrl-step.active .ctrl-step-status{color:var(--info-fg)}
-.btn-ctrl{font-family:'Figtree',sans-serif;font-size:.76rem;font-weight:700;padding:7px 14px;border-radius:8px;cursor:pointer;background:rgba(154,16,16,.08);color:var(--danger-fg);border:1.5px solid rgba(154,16,16,.18);transition:all .2s;display:inline-flex;align-items:center;gap:5px}
+.btn-ctrl{font-family:var(--font);font-size:.76rem;font-weight:700;padding:7px 14px;border-radius:8px;cursor:pointer;background:rgba(154,16,16,.08);color:var(--danger-fg);border:1.5px solid rgba(154,16,16,.18);transition:all .2s;display:inline-flex;align-items:center;gap:5px}
 .btn-ctrl:hover{background:rgba(154,16,16,.14);transform:translateY(-1px)}
 
 @media(max-width:768px){
@@ -1226,11 +1218,10 @@ body{padding-bottom:62px}
     <!-- LOGIN CARD -->
     <div class="login-card" id="login-card">
       <div class="login-logo">
-        <div class="login-logo-mark">N</div>
-        <div class="login-logo-name">Norvy</div>
-        <div class="login-logo-tag">Plateforme Compliance LegalTech · Luxembourg</div>
+        <div class="login-logo-name">norvy</div>
+        <div class="login-logo-tag">Compliance LegalTech · Luxembourg</div>
       </div>
-      <div class="login-title">Connexion à votre espace cabinet</div>
+      <div class="login-title">Connexion à votre espace</div>
       <div class="login-fg">
         <div class="login-label">Email professionnel</div>
         <input class="login-input" id="login-email" type="email" placeholder="votre@email.lu"/>
@@ -1241,7 +1232,7 @@ body{padding-bottom:62px}
       </div>
       <div id="login-error" style="display:none;padding:8px 12px;background:rgba(154,16,16,.2);border:1px solid rgba(154,16,16,.3);border-radius:8px;margin-bottom:14px;font-size:.76rem;color:#ff6b6b"></div>
       <button class="login-btn" id="login-btn" onclick="doLogin()">
-        <span id="login-btn-text">Se connecter →</span>
+        <span id="login-btn-text">Se connecter</span>
         <div class="login-loading" id="login-loading"><div class="login-spinner"></div><span>Connexion en cours...</span></div>
       </button>
       <div style="text-align:center;margin-top:16px"><span style="font-size:.78rem;color:rgba(255,255,255,.4);cursor:pointer;text-decoration:underline;text-underline-offset:2px" onclick="toggleAuthCard('register')">Pas encore de compte ? Créer un compte</span></div>
@@ -1251,11 +1242,10 @@ body{padding-bottom:62px}
     <!-- REGISTER CARD -->
     <div class="login-card" id="register-card" style="display:none">
       <div class="login-logo">
-        <div class="login-logo-mark">N</div>
-        <div class="login-logo-name">Norvy</div>
-        <div class="login-logo-tag">Plateforme Compliance LegalTech · Luxembourg</div>
+        <div class="login-logo-name">norvy</div>
+        <div class="login-logo-tag">Compliance LegalTech · Luxembourg</div>
       </div>
-      <div class="login-title">Créer votre compte cabinet</div>
+      <div class="login-title">Créer votre compte</div>
       <div class="login-fg">
         <div class="login-label">Nom complet</div>
         <input class="login-input" id="reg-name" type="text" placeholder="Ex: Maître Dupont"/>
@@ -1328,7 +1318,7 @@ body{padding-bottom:62px}
 <!-- NOTIFICATIONS PANEL -->
 <div class="notif-panel" id="notif-panel">
   <div class="notif-header">
-    <div style="font-family:'DM Serif Display',serif;font-size:1.15rem;color:var(--charcoal)">Notifications</div>
+    <div style="font-family:var(--font-display);font-size:1.15rem;color:var(--charcoal)">Notifications</div>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="btn btn-outline" style="font-size:.68rem;padding:4px 10px" onclick="markAllNotifsRead()">Tout marquer lu</button>
       <span style="cursor:pointer;font-size:1.1rem;color:var(--light)" onclick="toggleNotifPanel()">✕</span>
@@ -1341,32 +1331,32 @@ body{padding-bottom:62px}
 <div class="ctrl-modal hidden" id="hours-modal" onclick="if(event.target===this)closeHoursModal()">
   <div style="background:var(--card-bg,white);border-radius:16px;padding:28px 24px;width:100%;max-width:480px;position:relative;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)">Encoder des heures</div>
+      <div style="font-family:var(--font-display);font-size:1.3rem;color:var(--charcoal)">Encoder des heures</div>
       <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="closeHoursModal()">✕</span>
     </div>
     <div style="margin-bottom:14px">
       <label style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);display:block;margin-bottom:5px">Dossier</label>
-      <select id="hours-dossier" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.85rem;background:white"></select>
+      <select id="hours-dossier" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:.85rem;background:white"></select>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
       <div>
         <label style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);display:block;margin-bottom:5px">Heures</label>
-        <input type="number" id="hours-value" min="0.25" max="24" step="0.25" value="1" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.85rem"/>
+        <input type="number" id="hours-value" min="0.25" max="24" step="0.25" value="1" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:.85rem"/>
       </div>
       <div>
         <label style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);display:block;margin-bottom:5px">Date</label>
-        <input type="date" id="hours-date" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.85rem"/>
+        <input type="date" id="hours-date" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:.85rem"/>
       </div>
     </div>
     <div style="margin-bottom:14px">
       <label style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);display:block;margin-bottom:5px">Description</label>
-      <textarea id="hours-desc" rows="2" placeholder="Analyse documents, rédaction rapport..." style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.85rem;resize:vertical"></textarea>
+      <textarea id="hours-desc" rows="2" placeholder="Analyse documents, rédaction rapport..." style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:.85rem;resize:vertical"></textarea>
     </div>
     <div style="margin-bottom:18px">
       <label style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--light);display:block;margin-bottom:5px">Taux horaire (EUR)</label>
-      <input type="number" id="hours-rate" min="0" step="10" value="250" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.85rem"/>
+      <input type="number" id="hours-rate" min="0" step="10" value="250" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:.85rem"/>
     </div>
-    <button onclick="saveHours()" style="width:100%;padding:12px;font-family:'Figtree',sans-serif;font-size:.88rem;font-weight:700;background:linear-gradient(135deg,var(--sage),var(--sage2));color:white;border:none;border-radius:9px;cursor:pointer">Enregistrer les heures</button>
+    <button onclick="saveHours()" style="width:100%;padding:12px;font-family:var(--font);font-size:.88rem;font-weight:700;background:linear-gradient(135deg,var(--sage),var(--sage2));color:white;border:none;border-radius:9px;cursor:pointer">Enregistrer les heures</button>
     <div id="hours-history" style="margin-top:20px"></div>
   </div>
 </div>
@@ -1375,7 +1365,7 @@ body{padding-bottom:62px}
 <div class="ctrl-modal hidden" id="settings-modal" onclick="if(event.target===this)closeSettingsModal()">
   <div style="background:var(--card-bg,#fff);border-radius:16px;padding:28px 24px;width:100%;max-width:520px;position:relative;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)">Paramètres du cabinet</div>
+      <div style="font-family:var(--font-display);font-size:1.3rem;color:var(--charcoal)">Paramètres du cabinet</div>
       <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="closeSettingsModal()">✕</span>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
@@ -1414,7 +1404,7 @@ body{padding-bottom:62px}
 <div class="ctrl-modal hidden" id="dossier-modal" onclick="if(event.target===this)closeDossierModal()">
   <div style="background:white;border-radius:16px;padding:28px 24px;width:100%;max-width:720px;position:relative;animation:fadeUp .3s ease;max-height:92vh;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)" id="dm-title">Détail du dossier</div>
+      <div style="font-family:var(--font-display);font-size:1.3rem;color:var(--charcoal)" id="dm-title">Détail du dossier</div>
       <div style="display:flex;align-items:center;gap:10px">
         <button onclick="generateDossierPDF(currentDossierRef)" style="border:1px solid var(--border);background:var(--card-bg,#fff);border-radius:8px;padding:5px 12px;font-size:.72rem;font-weight:600;color:var(--sage);cursor:pointer;display:flex;align-items:center;gap:4px" title="Exporter la fiche client en PDF">📥 Fiche PDF</button>
         <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="closeDossierModal()">✕</span>
@@ -1452,14 +1442,14 @@ body{padding-bottom:62px}
       <div class="ctrl-step pending" id="cs6"><span class="ctrl-step-icon">✅</span><span class="ctrl-step-text">Rapport prêt pour l'inspecteur OAL</span><span class="ctrl-step-status">En attente</span></div>
     </div>
     <div id="ctrl-result" style="display:none;margin-bottom:16px">
-      <div style="background:var(--ok-bg);border:1px solid rgba(61,92,74,.2);border-radius:10px;padding:16px;text-align:center;margin-bottom:12px">
+      <div style="background:var(--ok-bg);border:1px solid rgba(74,111,165,.2);border-radius:10px;padding:16px;text-align:center;margin-bottom:12px">
         <div style="font-size:2rem;margin-bottom:6px">✅</div>
         <div style="font-size:.92rem;font-weight:700;color:var(--ok-fg);margin-bottom:3px">Rapport généré en 3,2 secondes</div>
         <div style="font-size:.76rem;color:var(--mid)">187 dossiers · 642 screenings · Journal complet · 0 défaillance</div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div style="background:var(--cream);border-radius:8px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--ok-fg)">0</div><div style="font-size:.68rem;color:var(--mid)">Procédures disciplinaires</div></div>
-        <div style="background:var(--cream);border-radius:8px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--ok-fg)">100%</div><div style="font-size:.68rem;color:var(--mid)">Dossiers conformes</div></div>
+        <div style="background:var(--cream);border-radius:8px;padding:12px;text-align:center"><div style="font-family:var(--font-display);font-size:1.5rem;color:var(--ok-fg)">0</div><div style="font-size:.68rem;color:var(--mid)">Procédures disciplinaires</div></div>
+        <div style="background:var(--cream);border-radius:8px;padding:12px;text-align:center"><div style="font-family:var(--font-display);font-size:1.5rem;color:var(--ok-fg)">100%</div><div style="font-size:.68rem;color:var(--mid)">Dossiers conformes</div></div>
       </div>
     </div>
     <div style="display:flex;gap:10px">
@@ -1477,8 +1467,8 @@ body{padding-bottom:62px}
   <!-- Mobile bar -->
   <div class="mob-bar">
     <div class="mob-logo">
-      <div class="mob-logo-mark">N</div>
-      <span class="mob-logo-text">Norvy</span>
+      <div class="mob-logo-mark">n</div>
+      <span class="mob-logo-text">norvy</span>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
       <div class="notif-btn" style="background:transparent;border:none"><span style="font-size:1.1rem">🔔</span><div class="notif-count">3</div></div>
@@ -1489,10 +1479,10 @@ body{padding-bottom:62px}
   <!-- Sidebar -->
   <aside class="sidebar" id="main-sb">
     <div class="sidebar-logo">
-      <div class="logo-mark">N</div>
+      <div class="logo-mark">n</div>
       <div class="logo-text-wrap">
-        <div class="logo-name">Norvy</div>
-        <div class="logo-tagline">LegalTech · Luxembourg</div>
+        <div class="logo-name">norvy</div>
+        <div class="logo-tagline">Compliance · Luxembourg</div>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1787,7 +1777,7 @@ body{padding-bottom:62px}
               </div>
               <span class="card-action" onclick="showView('screening')">Lancer tout</span>
             </div>
-            <div style="padding:16px 18px;background:var(--ok-bg);margin:12px;border-radius:9px;border:1px solid rgba(61,92,74,.15)">
+            <div style="padding:16px 18px;background:var(--ok-bg);margin:12px;border-radius:9px;border:1px solid rgba(74,111,165,.15)">
               <div style="font-size:.83rem;font-weight:700;color:var(--ok-fg);margin-bottom:3px">✅ Aucune correspondance détectée</div>
               <div style="font-size:.75rem;color:var(--mid)">128 screenings effectués ce mois · 6 listes vérifiées · 0 faux positif</div>
             </div>
@@ -1837,7 +1827,7 @@ body{padding-bottom:62px}
 ═══════════════════════════════════════════════════════ -->
 <div class="view" id="view-dossiers">
   <aside class="sidebar" id="dos-sb">
-    <div class="sidebar-logo"><div class="logo-mark">N</div><div class="logo-text-wrap"><div class="logo-name">Norvy</div><div class="logo-tagline">LegalTech · Luxembourg</div></div></div>
+    <div class="sidebar-logo"><div class="logo-mark">n</div><div class="logo-text-wrap"><div class="logo-name">norvy</div><div class="logo-tagline">Compliance · Luxembourg</div></div></div>
     <nav class="sidebar-nav">
       <div class="nav-sec">Principal</div>
       <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
@@ -1867,7 +1857,7 @@ body{padding-bottom:62px}
     <div class="ob-content" style="max-width:1200px">
       <!-- Title -->
       <div style="margin-bottom:20px">
-        <div style="font-family:'DM Serif Display',serif;font-size:1.55rem;color:var(--charcoal);margin-bottom:4px">Dossiers clients</div>
+        <div style="font-family:var(--font-display);font-size:1.55rem;color:var(--charcoal);margin-bottom:4px">Dossiers clients</div>
         <div style="font-size:.83rem;color:var(--mid)">Gestion complète de vos dossiers KYC/AML — Recherche, filtrage, export et suivi.</div>
       </div>
       <!-- Action bar -->
@@ -1879,28 +1869,28 @@ body{padding-bottom:62px}
       </div>
       <!-- Stats bar -->
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px" id="dossiers-stats">
-        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--charcoal)" id="ds-total">0</div><div style="font-size:.68rem;color:var(--mid)">Total dossiers</div></div>
-        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--ok-fg)" id="ds-actifs">0</div><div style="font-size:.68rem;color:var(--mid)">Actifs</div></div>
-        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--warn-fg)" id="ds-suspendus">0</div><div style="font-size:.68rem;color:var(--mid)">Suspendus</div></div>
-        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--sage)" id="ds-inscope">0</div><div style="font-size:.68rem;color:var(--mid)">In Scope</div></div>
-        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--light)" id="ds-outscope">0</div><div style="font-size:.68rem;color:var(--mid)">Out Scope</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:var(--font-display);font-size:1.4rem;color:var(--charcoal)" id="ds-total">0</div><div style="font-size:.68rem;color:var(--mid)">Total dossiers</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:var(--font-display);font-size:1.4rem;color:var(--ok-fg)" id="ds-actifs">0</div><div style="font-size:.68rem;color:var(--mid)">Actifs</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:var(--font-display);font-size:1.4rem;color:var(--warn-fg)" id="ds-suspendus">0</div><div style="font-size:.68rem;color:var(--mid)">Suspendus</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:var(--font-display);font-size:1.4rem;color:var(--sage)" id="ds-inscope">0</div><div style="font-size:.68rem;color:var(--mid)">In Scope</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:var(--font-display);font-size:1.4rem;color:var(--light)" id="ds-outscope">0</div><div style="font-size:.68rem;color:var(--mid)">Out Scope</div></div>
       </div>
       <!-- Filter bar -->
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
-        <input type="text" placeholder="🔍 Rechercher un client, une référence..." style="flex:1;min-width:200px;padding:9px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.84rem;outline:none;transition:all .2s" id="dossiers-search" oninput="filterDossiersList()"/>
-        <select style="padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.82rem;cursor:pointer;appearance:none;background:white url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238fa89e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\") no-repeat right 12px center" id="dossiers-status-filter" onchange="filterDossiersList()">
+        <input type="text" placeholder="🔍 Rechercher un client, une référence..." style="flex:1;min-width:200px;padding:9px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:.84rem;outline:none;transition:all .2s" id="dossiers-search" oninput="filterDossiersList()"/>
+        <select style="padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:.82rem;cursor:pointer;appearance:none;background:white url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238fa89e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\") no-repeat right 12px center" id="dossiers-status-filter" onchange="filterDossiersList()">
           <option value="all">Tous les statuts</option>
           <option value="actif">Actif</option>
           <option value="suspendu">Suspendu</option>
           <option value="refuse">Refusé</option>
           <option value="archive">Archivé</option>
         </select>
-        <select style="padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.82rem;cursor:pointer;appearance:none;background:white url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238fa89e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\") no-repeat right 12px center" id="dossiers-scope-filter" onchange="filterDossiersList()">
+        <select style="padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:.82rem;cursor:pointer;appearance:none;background:white url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238fa89e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\") no-repeat right 12px center" id="dossiers-scope-filter" onchange="filterDossiersList()">
           <option value="all">Tous les scopes</option>
           <option value="in">In Scope</option>
           <option value="out">Out Scope</option>
         </select>
-        <select style="padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'Figtree',sans-serif;font-size:.82rem;cursor:pointer;appearance:none;background:white url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238fa89e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\") no-repeat right 12px center" id="dossiers-sort" onchange="filterDossiersList()">
+        <select style="padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:.82rem;cursor:pointer;appearance:none;background:white url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238fa89e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\") no-repeat right 12px center" id="dossiers-sort" onchange="filterDossiersList()">
           <option value="date-desc">Date (récent)</option>
           <option value="date-asc">Date (ancien)</option>
           <option value="name-asc">Nom A-Z</option>
@@ -1940,7 +1930,7 @@ body{padding-bottom:62px}
 
 <!-- MOBILE BAR -->
 <div class="ob-mob-bar">
-  <span class="ob-mob-logo">Norvy</span>
+  <span class="ob-mob-logo">norvy</span>
   <button class="ob-ham" onclick="toggleSidebar()">
     <span></span><span></span><span></span>
   </button>
@@ -2329,13 +2319,13 @@ body{padding-bottom:62px}
 
   <!-- Mobile bar OAL -->
   <div class="mob-bar" style="display:none" id="oal-mob-bar">
-    <div class="mob-logo"><div class="mob-logo-mark">N</div><span class="mob-logo-text">Norvy</span></div>
+    <div class="mob-logo"><div class="mob-logo-mark">n</div><span class="mob-logo-text">norvy</span></div>
     <button class="mob-ham" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
   </div>
 
   <!-- Sidebar OAL -->
   <aside class="sidebar" id="oal-sb">
-    <div class="sidebar-logo"><div class="logo-mark">N</div><div class="logo-text-wrap"><div class="logo-name">Norvy</div><div class="logo-tagline">LegalTech · Luxembourg</div></div></div>
+    <div class="sidebar-logo"><div class="logo-mark">n</div><div class="logo-text-wrap"><div class="logo-name">norvy</div><div class="logo-tagline">Compliance · Luxembourg</div></div></div>
     <nav class="sidebar-nav">
       <div class="nav-sec">Principal</div>
       <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
@@ -2864,7 +2854,7 @@ body{padding-bottom:62px}
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--ok-bg);border-radius:8px"><span style="font-size:.82rem;font-weight:600;color:var(--charcoal)">VI. Coopération et déclarations</span><span style="font-size:.73rem;font-weight:700;color:var(--ok-fg)">✓ Complet</span></div>
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--ok-bg);border-radius:8px"><span style="font-size:.82rem;font-weight:600;color:var(--charcoal)">VII. Secteurs à risque (C142-C166)</span><span style="font-size:.73rem;font-weight:700;color:var(--ok-fg)">✓ Complet</span></div>
               </div>
-              <div style="margin-top:12px;padding:12px 14px;background:var(--ok-bg);border-radius:8px;border:1px solid rgba(61,92,74,.2);display:flex;align-items:center;gap:10px">
+              <div style="margin-top:12px;padding:12px 14px;background:var(--ok-bg);border-radius:8px;border:1px solid rgba(74,111,165,.2);display:flex;align-items:center;gap:10px">
                 <span style="font-size:1.3rem">✅</span>
                 <div><div style="font-size:.85rem;font-weight:700;color:var(--ok-fg)">Questionnaire officiel OAL 100% complet</div><div style="font-size:.73rem;color:var(--mid)">41 questions · 7 sections · Toutes les réponses sont renseignées.</div></div>
               </div>
@@ -3205,14 +3195,14 @@ function autoFillRiskFactors(){
       </div>`;
     } else {
       const source = S.clientType === 'pp' ? 'Nationalité UE ou équivalente' : 'Pays UE';
-      gafiCard.innerHTML = `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--ok-bg);border:1.5px solid rgba(61,92,74,.2);border-radius:10px">
+      gafiCard.innerHTML = `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--ok-bg);border:1.5px solid rgba(74,111,165,.2);border-radius:10px">
         <span style="font-size:1.4rem">✅</span>
         <div style="flex:1">
           <div style="font-size:.86rem;font-weight:700;color:var(--ok-fg)">Aucun pays à risque GAFI détecté</div>
           <div style="font-size:.74rem;color:var(--mid);margin-top:2px">${source} : <strong>${nat}</strong></div>
           <div style="font-size:.7rem;color:var(--light);margin-top:3px">🤖 Source : nationalité saisie à l'étape 1 · Surveillance standard</div>
         </div>
-        <span style="font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--ok-bg);color:var(--ok-fg);border:1px solid rgba(61,92,74,.2);white-space:nowrap">NON</span>
+        <span style="font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--ok-bg);color:var(--ok-fg);border:1px solid rgba(74,111,165,.2);white-space:nowrap">NON</span>
       </div>`;
     }
   }
@@ -3247,14 +3237,14 @@ function autoFillRiskFactors(){
       </div>`;
       if(ppeManual) ppeManual.style.display = 'none';
     } else {
-      ppeCard.innerHTML = `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--ok-bg);border:1.5px solid rgba(61,92,74,.2);border-radius:10px">
+      ppeCard.innerHTML = `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--ok-bg);border:1.5px solid rgba(74,111,165,.2);border-radius:10px">
         <span style="font-size:1.4rem">✅</span>
         <div style="flex:1">
           <div style="font-size:.86rem;font-weight:700;color:var(--ok-fg)">Aucune correspondance PPE détectée</div>
           <div style="font-size:.74rem;color:var(--mid);margin-top:2px">Screening PPE Database effectué — Résultat négatif</div>
           <div style="font-size:.7rem;color:var(--light);margin-top:3px">🔍 Source : Screening PPE Database · Archivé avec horodatage</div>
         </div>
-        <span style="font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--ok-bg);color:var(--ok-fg);border:1px solid rgba(61,92,74,.2);white-space:nowrap">NON-PPE</span>
+        <span style="font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--ok-bg);color:var(--ok-fg);border:1px solid rgba(74,111,165,.2);white-space:nowrap">NON-PPE</span>
       </div>`;
       if(ppeManual) ppeManual.style.display = 'none';
     }
@@ -3892,7 +3882,7 @@ function finalizeSc(name,isAlert){
   } else {
     st.className='sc-live-status clear';st.textContent='✅ Négatif';
     fd.style.display='block';
-    fd.innerHTML=`<div style="background:var(--ok-bg);border:1px solid rgba(61,92,74,.2);border-radius:9px;padding:13px;display:flex;align-items:center;gap:11px"><span style="font-size:1.4rem">✅</span><div><div style="font-size:.83rem;font-weight:700;color:var(--ok-fg)">Aucune correspondance détectée</div><div style="font-size:.73rem;color:var(--mid)">6 listes vérifiées · Archivé dans le journal d'audit</div></div></div>`;
+    fd.innerHTML=`<div style="background:var(--ok-bg);border:1px solid rgba(74,111,165,.2);border-radius:9px;padding:13px;display:flex;align-items:center;gap:11px"><span style="font-size:1.4rem">✅</span><div><div style="font-size:.83rem;font-weight:700;color:var(--ok-fg)">Aucune correspondance détectée</div><div style="font-size:.73rem;color:var(--mid)">6 listes vérifiées · Archivé dans le journal d'audit</div></div></div>`;
     showToast('✅ Screening négatif — '+name,'6 listes · Résultat archivé automatiquement','ok','✅');
     const nr=document.getElementById('sc-new-row');
     if(nr){nr.style.display='';nr.innerHTML=`<div class="sc-hist-dot" style="background:var(--ok-fg)"></div><div class="sc-hist-info"><div class="sc-hist-name">${name}</div><div class="sc-hist-detail">6 listes · À l'instant</div></div><span class="sc-hist-result" style="background:var(--ok-bg);color:var(--ok-fg)">✓ Négatif</span><span class="sc-hist-date">Maintenant</span>`;}
@@ -3972,7 +3962,7 @@ function updateAuditKPIs(){
   const kpiBoxes = document.querySelectorAll('#view-audit [style*="grid-template-columns"]');
   if(kpiBoxes.length > 0) {
     const box = kpiBoxes[0];
-    const vals = box.querySelectorAll('[style*="DM Serif Display"]');
+    const vals = box.querySelectorAll('[style*="font-display"]');
     if(vals[0]) vals[0].textContent = log.length.toLocaleString('fr-FR');
     if(vals[1]) vals[1].textContent = screenings.length.toLocaleString('fr-FR');
     if(vals[2]) vals[2].textContent = dossiers.length.toLocaleString('fr-FR');
@@ -4193,10 +4183,10 @@ function renderFinancialOverview() {
   // KPIs
   const kpis = document.getElementById('fin-kpis');
   if(kpis) kpis.innerHTML = `
-    <div style="background:var(--cream2);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--charcoal)">${totalFacture.toLocaleString('fr-FR')} €</div><div style="font-size:.6rem;color:var(--mid)">Total facturé</div></div>
-    <div style="background:var(--ok-bg);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--ok-fg)">${totalPaye.toLocaleString('fr-FR')} €</div><div style="font-size:.6rem;color:var(--ok-fg)">Encaissé</div></div>
-    <div style="background:var(--info-bg);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--info-fg)">${totalEnCours.toLocaleString('fr-FR')} €</div><div style="font-size:.6rem;color:var(--info-fg)">En cours</div></div>
-    <div style="background:${totalImpaye>0?'var(--danger-bg)':'var(--cream2)'};border-radius:8px;padding:10px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:${totalImpaye>0?'var(--danger-fg)':'var(--light)'}">${totalImpaye.toLocaleString('fr-FR')} €</div><div style="font-size:.6rem;color:${totalImpaye>0?'var(--danger-fg)':'var(--mid)'}">Impayé</div></div>`;
+    <div style="background:var(--cream2);border-radius:8px;padding:10px;text-align:center"><div style="font-family:var(--font-display);font-size:1.1rem;color:var(--charcoal)">${totalFacture.toLocaleString('fr-FR')} €</div><div style="font-size:.6rem;color:var(--mid)">Total facturé</div></div>
+    <div style="background:var(--ok-bg);border-radius:8px;padding:10px;text-align:center"><div style="font-family:var(--font-display);font-size:1.1rem;color:var(--ok-fg)">${totalPaye.toLocaleString('fr-FR')} €</div><div style="font-size:.6rem;color:var(--ok-fg)">Encaissé</div></div>
+    <div style="background:var(--info-bg);border-radius:8px;padding:10px;text-align:center"><div style="font-family:var(--font-display);font-size:1.1rem;color:var(--info-fg)">${totalEnCours.toLocaleString('fr-FR')} €</div><div style="font-size:.6rem;color:var(--info-fg)">En cours</div></div>
+    <div style="background:${totalImpaye>0?'var(--danger-bg)':'var(--cream2)'};border-radius:8px;padding:10px;text-align:center"><div style="font-family:var(--font-display);font-size:1.1rem;color:${totalImpaye>0?'var(--danger-fg)':'var(--light)'}">${totalImpaye.toLocaleString('fr-FR')} €</div><div style="font-size:.6rem;color:${totalImpaye>0?'var(--danger-fg)':'var(--mid)'}">Impayé</div></div>`;
 
   // Bar chart — invoice status
   const barCanvas = document.getElementById('fin-chart-bar');
@@ -4208,7 +4198,7 @@ function renderFinancialOverview() {
     ctx.clearRect(0,0,w,h);
 
     const statuses = [
-      {label:'Payées',count:invoices.filter(i=>i.status==='payee').length,amount:totalPaye,color:'#2d6644'},
+      {label:'Payées',count:invoices.filter(i=>i.status==='payee').length,amount:totalPaye,color:'#1a7a42'},
       {label:'Envoyées',count:invoices.filter(i=>i.status==='envoyee').length,amount:totalEnCours,color:'#1a6691'},
       {label:'Impayées',count:getUnpaidInvoices().length,amount:totalImpaye,color:'#9a1010'},
       {label:'Brouillon',count:invoices.filter(i=>i.status==='brouillon').length,amount:invoices.filter(i=>i.status==='brouillon').reduce((s,i)=>s+i.total,0),color:'#9aada6'},
@@ -4225,10 +4215,10 @@ function renderFinancialOverview() {
       ctx.roundRect(x, h - 30 - barH, barW, barH, 4);
       ctx.fill();
       ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--mid').trim() || '#556059';
-      ctx.font = '600 18px Figtree,sans-serif';
+      ctx.font = '600 18px Plus Jakarta Sans,sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(s.label, x + barW/2, h - 8);
-      ctx.font = '700 20px "DM Serif Display",serif';
+      ctx.font = '800 20px "Plus Jakarta Sans",sans-serif';
       ctx.fillStyle = s.color;
       ctx.fillText(s.amount.toLocaleString('fr-FR') + '€', x + barW/2, h - 36 - barH);
     });
@@ -4264,7 +4254,7 @@ function renderFinancialOverview() {
       const ly = cy + (r * 0.65) * Math.sin(mid);
       if(slice > 0.3) {
         ctx.fillStyle = '#fff';
-        ctx.font = '700 22px Figtree,sans-serif';
+        ctx.font = '700 22px Plus Jakarta Sans,sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(count, lx, ly);
@@ -4280,7 +4270,7 @@ function renderFinancialOverview() {
       ctx.fillStyle = colors[level];
       ctx.fillRect(lx, ly-8, 12, 12);
       ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--mid').trim() || '#556059';
-      ctx.font = '600 17px Figtree,sans-serif';
+      ctx.font = '600 17px Plus Jakarta Sans,sans-serif';
       ctx.fillText(labels[level]+' ('+count+')', lx+16, ly+2);
       lx += ctx.measureText(labels[level]+' ('+count+')').width + 30;
     }
@@ -4435,15 +4425,15 @@ function renderDossierTabContent(ref, tab) {
           <div><div style="font-size:.68rem;font-weight:700;color:${sc.color};text-transform:uppercase;letter-spacing:.06em">Score AMLR6</div><div style="font-size:.72rem;color:var(--mid);margin-top:2px">${sc.label} · Cliquer pour détail</div></div>
           <div style="display:flex;align-items:center;gap:10px">
             <div style="width:60px;background:rgba(255,255,255,.5);border-radius:4px;height:8px;overflow:hidden"><div style="height:100%;width:${sc.scorePct}%;background:${sc.color};border-radius:4px"></div></div>
-            <span style="font-family:'DM Serif Display',serif;font-size:1.5rem;color:${sc.color}">${sc.scorePct}</span>
+            <span style="font-family:var(--font-display);font-size:1.5rem;color:${sc.color}">${sc.scorePct}</span>
           </div>
         </div>`;
       })()}
       <div style="background:var(--info-bg);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
         <div><div style="font-size:.68rem;font-weight:700;color:var(--info-fg);text-transform:uppercase;letter-spacing:.06em">Heures encodées</div><div style="font-size:.72rem;color:var(--mid);margin-top:2px">${dossierHours.length} entrée(s)</div></div>
         <div style="display:flex;gap:16px;align-items:center">
-          <span style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--charcoal)">${totalH}h</span>
-          <span style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--ok-fg)">${Math.round(totalA).toLocaleString('fr-FR')} €</span>
+          <span style="font-family:var(--font-display);font-size:1.3rem;color:var(--charcoal)">${totalH}h</span>
+          <span style="font-family:var(--font-display);font-size:1.3rem;color:var(--ok-fg)">${Math.round(totalA).toLocaleString('fr-FR')} €</span>
         </div>
       </div>
       ${(()=>{
@@ -4535,7 +4525,7 @@ function renderDossierTabContent(ref, tab) {
     content.innerHTML = `
       <div>${notesHtml}</div>
       <div style="display:flex;gap:8px;margin-top:12px">
-        <input type="text" id="dm-note-input" placeholder="Ajouter une note..." style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Figtree',sans-serif;font-size:.82rem;outline:none"/>
+        <input type="text" id="dm-note-input" placeholder="Ajouter une note..." style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.82rem;outline:none"/>
         <button class="btn btn-sage" style="font-size:.78rem;padding:7px 14px" onclick="addDossierNote('${ref}')">Ajouter</button>
       </div>`;
   }
@@ -4547,8 +4537,8 @@ function showAddDocForm(ref) {
   zone.innerHTML = `<div style="background:var(--cream);border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid var(--border)">
     <div style="font-size:.78rem;font-weight:600;color:var(--charcoal);margin-bottom:10px">Enregistrer un document</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-      <input type="text" id="doc-add-name" placeholder="Nom du document" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/>
-      <select id="doc-add-type" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none;background:white">
+      <input type="text" id="doc-add-name" placeholder="Nom du document" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none"/>
+      <select id="doc-add-type" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none;background:white">
         <option value="id">Pièce d'identité</option><option value="passport">Passeport</option><option value="rcs">Extrait RCS</option><option value="statuts">Statuts</option><option value="contrat">Contrat</option><option value="facture">Facture</option><option value="rapport">Rapport</option><option value="courrier">Courrier</option><option value="autre">Autre</option>
       </select>
     </div>
@@ -4577,11 +4567,11 @@ function showAddAudienceForm(ref) {
   zone.innerHTML = `<div style="background:var(--cream);border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid var(--border)">
     <div style="font-size:.78rem;font-weight:600;color:var(--charcoal);margin-bottom:10px">Planifier une audience</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-      <input type="date" id="aud-add-date" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/>
-      <input type="time" id="aud-add-time" value="09:00" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/>
+      <input type="date" id="aud-add-date" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none"/>
+      <input type="time" id="aud-add-time" value="09:00" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none"/>
     </div>
-    <input type="text" id="aud-add-tribunal" placeholder="Tribunal (ex: Tribunal d'arrondissement Luxembourg)" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none;margin-bottom:8px"/>
-    <input type="text" id="aud-add-desc" placeholder="Description / objet de l'audience" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none;margin-bottom:8px"/>
+    <input type="text" id="aud-add-tribunal" placeholder="Tribunal (ex: Tribunal d'arrondissement Luxembourg)" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none;margin-bottom:8px"/>
+    <input type="text" id="aud-add-desc" placeholder="Description / objet de l'audience" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none;margin-bottom:8px"/>
     <div style="display:flex;gap:8px">
       <button class="btn btn-sage" style="font-size:.75rem;padding:6px 14px" onclick="addAudience('${ref}')">Planifier</button>
       <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="document.getElementById('audience-add-form-zone').innerHTML=''">Annuler</button>
@@ -4623,7 +4613,7 @@ function renderDossierInvoicesTab(ref) {
         <div style="font-size:.82rem;font-weight:600;color:var(--charcoal)">${inv.number}</div>
         <div style="font-size:.68rem;color:var(--mid)">${new Date(inv.createdAt).toLocaleDateString('fr-LU',{day:'numeric',month:'short',year:'numeric'})}${inv.dueDate?' · Éch. '+new Date(inv.dueDate).toLocaleDateString('fr-LU',{day:'numeric',month:'short'}):''}</div>
       </div>
-      <div style="font-family:'DM Serif Display',serif;font-size:1.05rem;color:var(--charcoal);margin-right:8px">${inv.total.toLocaleString('fr-FR')} €</div>
+      <div style="font-family:var(--font-display);font-size:1.05rem;color:var(--charcoal);margin-right:8px">${inv.total.toLocaleString('fr-FR')} €</div>
       <span class="doc-badge" style="background:${isLate?statusColors.impayee:sc}">${isLate?'⚠ En retard':statusLabels[inv.status]||inv.status}</span>
     </div>`;
   }).join('') : '<div style="text-align:center;padding:24px;color:var(--light);font-size:.83rem">🧾 Aucune facture pour ce dossier</div>';
@@ -4634,9 +4624,9 @@ function renderDossierInvoicesTab(ref) {
 
   content.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-      <div style="background:var(--cream);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--charcoal)">${totalFacture.toLocaleString('fr-FR')} €</div><div style="font-size:.65rem;color:var(--mid)">Total facturé</div></div>
-      <div style="background:var(--ok-bg);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--ok-fg)">${totalPaye.toLocaleString('fr-FR')} €</div><div style="font-size:.65rem;color:var(--ok-fg)">Payé</div></div>
-      <div style="background:${totalImpaye>0?'var(--danger-bg)':'var(--cream)'};border-radius:8px;padding:10px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:${totalImpaye>0?'var(--danger-fg)':'var(--light)'}">${totalImpaye.toLocaleString('fr-FR')} €</div><div style="font-size:.65rem;color:${totalImpaye>0?'var(--danger-fg)':'var(--light)'}">Impayé</div></div>
+      <div style="background:var(--cream);border-radius:8px;padding:10px;text-align:center"><div style="font-family:var(--font-display);font-size:1.1rem;color:var(--charcoal)">${totalFacture.toLocaleString('fr-FR')} €</div><div style="font-size:.65rem;color:var(--mid)">Total facturé</div></div>
+      <div style="background:var(--ok-bg);border-radius:8px;padding:10px;text-align:center"><div style="font-family:var(--font-display);font-size:1.1rem;color:var(--ok-fg)">${totalPaye.toLocaleString('fr-FR')} €</div><div style="font-size:.65rem;color:var(--ok-fg)">Payé</div></div>
+      <div style="background:${totalImpaye>0?'var(--danger-bg)':'var(--cream)'};border-radius:8px;padding:10px;text-align:center"><div style="font-family:var(--font-display);font-size:1.1rem;color:${totalImpaye>0?'var(--danger-fg)':'var(--light)'}">${totalImpaye.toLocaleString('fr-FR')} €</div><div style="font-size:.65rem;color:${totalImpaye>0?'var(--danger-fg)':'var(--light)'}">Impayé</div></div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div style="font-size:.78rem;color:var(--mid)">${invoices.length} facture(s)</div>
@@ -4657,15 +4647,15 @@ function showCreateInvoiceForm(ref) {
   zone.innerHTML = `<div style="background:var(--cream);border-radius:10px;padding:16px;margin-bottom:14px;border:1px solid var(--border)">
     <div style="font-size:.82rem;font-weight:600;color:var(--charcoal);margin-bottom:12px">Créer une facture</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">N° Facture</div><input type="text" id="inv-number" value="${nextNum}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/></div>
-      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Client</div><input type="text" id="inv-client" value="${dossier?.clientName||''}" readonly style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none;background:var(--cream2)"/></div>
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">N° Facture</div><input type="text" id="inv-number" value="${nextNum}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none"/></div>
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Client</div><input type="text" id="inv-client" value="${dossier?.clientName||''}" readonly style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none;background:var(--cream2)"/></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
-      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Montant HT (€)</div><input type="number" id="inv-amount" value="${Math.round(totalFromHours)}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/></div>
-      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">TVA (%)</div><input type="number" id="inv-tva" value="17" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/></div>
-      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Échéance</div><input type="date" id="inv-due" value="${new Date(Date.now()+30*86400000).toISOString().split('T')[0]}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/></div>
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Montant HT (€)</div><input type="number" id="inv-amount" value="${Math.round(totalFromHours)}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none"/></div>
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">TVA (%)</div><input type="number" id="inv-tva" value="17" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none"/></div>
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Échéance</div><input type="date" id="inv-due" value="${new Date(Date.now()+30*86400000).toISOString().split('T')[0]}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none"/></div>
     </div>
-    <div style="margin-bottom:10px"><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Description</div><textarea id="inv-desc" rows="2" placeholder="Honoraires pour..." style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none;resize:vertical">${hours.length>0?'Honoraires — '+hours.map(h=>h.desc).filter(Boolean).join(', '):''}</textarea></div>
+    <div style="margin-bottom:10px"><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Description</div><textarea id="inv-desc" rows="2" placeholder="Honoraires pour..." style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none;resize:vertical">${hours.length>0?'Honoraires — '+hours.map(h=>h.desc).filter(Boolean).join(', '):''}</textarea></div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-sage" style="font-size:.75rem;padding:6px 14px" onclick="createInvoice('${ref}')">Créer la facture</button>
       <button class="btn btn-outline" style="font-size:.75rem;padding:6px 14px" onclick="document.getElementById('invoice-create-form-zone').innerHTML=''">Annuler</button>
@@ -4749,7 +4739,7 @@ function viewInvoiceDetail(invoiceId) {
     </div>
     <div style="background:var(--cream);border-radius:12px;padding:18px;margin-bottom:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div><div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--charcoal)">${inv.number}</div><div style="font-size:.72rem;color:var(--mid)">Créée le ${new Date(inv.createdAt).toLocaleDateString('fr-LU',{day:'numeric',month:'long',year:'numeric'})}</div></div>
+        <div><div style="font-family:var(--font-display);font-size:1.2rem;color:var(--charcoal)">${inv.number}</div><div style="font-size:.72rem;color:var(--mid)">Créée le ${new Date(inv.createdAt).toLocaleDateString('fr-LU',{day:'numeric',month:'long',year:'numeric'})}</div></div>
         <span class="doc-badge" style="background:${isLate?statusColors.impayee:statusColors[inv.status]||statusColors.brouillon};font-size:.72rem;padding:4px 10px">${isLate?'⚠ En retard':statusLabels[inv.status]||inv.status}</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -4760,7 +4750,7 @@ function viewInvoiceDetail(invoiceId) {
       </div>
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
         <div><div style="font-size:.65rem;font-weight:700;color:var(--light);text-transform:uppercase">Total TTC</div></div>
-        <div style="font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--charcoal)">${inv.total.toLocaleString('fr-FR')} €</div>
+        <div style="font-family:var(--font-display);font-size:1.5rem;color:var(--charcoal)">${inv.total.toLocaleString('fr-FR')} €</div>
       </div>
       ${inv.dueDate?'<div style="margin-top:6px;font-size:.72rem;color:var(--mid)">Échéance : '+new Date(inv.dueDate).toLocaleDateString('fr-LU',{day:'numeric',month:'long',year:'numeric'})+'</div>':''}
       ${inv.description?'<div style="margin-top:6px;font-size:.76rem;color:var(--charcoal);background:white;padding:8px 10px;border-radius:6px">'+inv.description+'</div>':''}
@@ -4777,7 +4767,7 @@ function viewInvoiceDetail(invoiceId) {
       ${remindersHtml}
     </div>
     <div style="display:flex;gap:8px;margin-bottom:8px">
-      <select id="inv-status-sel" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.76rem;outline:none">
+      <select id="inv-status-sel" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.76rem;outline:none">
         <option value="brouillon"${inv.status==='brouillon'?' selected':''}>Brouillon</option>
         <option value="envoyee"${inv.status==='envoyee'?' selected':''}>Envoyée</option>
         <option value="payee"${inv.status==='payee'?' selected':''}>Payée</option>
@@ -4851,7 +4841,7 @@ function generateInvoicePDF(invoiceId) {
   const cabinetBank = settings.cabinetBank || 'Banque et Caisse d\'Épargne de l\'État';
 
   // Header band
-  doc.setFillColor(61, 92, 74);
+  doc.setFillColor(40, 50, 65);
   doc.rect(0, 0, W, 45, 'F');
   doc.setTextColor(255,255,255);
   doc.setFontSize(24);
@@ -4939,7 +4929,7 @@ function generateInvoicePDF(invoiceId) {
     startY: y, margin: {left:M, right:M},
     head: [['Date','Description','Durée','Taux','Montant HT']],
     body: rows,
-    headStyles: {fillColor:[61,92,74],textColor:[255,255,255],fontStyle:'bold',fontSize:8,cellPadding:4},
+    headStyles: {fillColor:[40,50,65],textColor:[255,255,255],fontStyle:'bold',fontSize:8,cellPadding:4},
     bodyStyles: {fontSize:8,cellPadding:4,textColor:[50,50,50]},
     columnStyles: {0:{cellWidth:25},1:{cellWidth:70},2:{cellWidth:20,halign:'center'},3:{cellWidth:25,halign:'right'},4:{cellWidth:30,halign:'right'}},
     theme: 'striped',
@@ -5041,7 +5031,7 @@ function generateDossierPDF(ref) {
   const now = new Date().toLocaleDateString('fr-LU', {day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'});
 
   // ── Header ──
-  doc.setFillColor(61, 92, 74);
+  doc.setFillColor(40, 50, 65);
   doc.rect(0, 0, W, 42, 'F');
   doc.setTextColor(255,255,255);
   doc.setFontSize(18);
@@ -5132,7 +5122,7 @@ function generateDossierPDF(ref) {
     head: [['Facteur de risque', 'Réf. légale', 'Poids', 'Score', '%']],
     body: score.breakdown.map(b => [b.label, b.art, b.weight, b.pts, b.pct + '%']),
     foot: [['TOTAL', '', score.maxPossible, score.totalScore, score.scorePct + '%']],
-    headStyles: {fillColor:[61,92,74],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
+    headStyles: {fillColor:[40,50,65],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
     bodyStyles: {fontSize:7,cellPadding:3,textColor:[50,50,50]},
     footStyles: {fillColor:[40,40,40],textColor:[255,255,255],fontStyle:'bold',fontSize:7},
     columnStyles: {0:{cellWidth:60},1:{cellWidth:30},2:{cellWidth:15,halign:'center'},3:{cellWidth:15,halign:'center'},4:{cellWidth:15,halign:'center'}},
@@ -5157,7 +5147,7 @@ function generateDossierPDF(ref) {
         new Date(dc.uploadedAt).toLocaleDateString('fr-LU'),
         dc.verified ? 'Vérifié' : 'En attente'
       ]),
-      headStyles: {fillColor:[61,92,74],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
+      headStyles: {fillColor:[40,50,65],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
       bodyStyles: {fontSize:7,cellPadding:3},
       columnStyles: {0:{cellWidth:70},3:{cellWidth:22}},
       theme: 'striped',
@@ -5194,7 +5184,7 @@ function generateDossierPDF(ref) {
         a.salle || '—',
         a.objet || '—'
       ]),
-      headStyles: {fillColor:[61,92,74],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
+      headStyles: {fillColor:[40,50,65],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
       bodyStyles: {fontSize:7,cellPadding:3},
       theme: 'striped',
     });
@@ -5218,7 +5208,7 @@ function generateDossierPDF(ref) {
           (h.rate||0) + ' €/h',
           (h.amount||0).toLocaleString('fr-FR') + ' €'
         ]),
-        headStyles: {fillColor:[61,92,74],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
+        headStyles: {fillColor:[40,50,65],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
         bodyStyles: {fontSize:7,cellPadding:3},
         columnStyles: {2:{halign:'center'},3:{halign:'right'},4:{halign:'right'}},
         theme: 'striped',
@@ -5239,7 +5229,7 @@ function generateDossierPDF(ref) {
           inv.total.toLocaleString('fr-FR') + ' €',
           inv.status === 'payee' ? 'Payée' : inv.status === 'envoyee' ? 'Envoyée' : inv.status === 'impayee' ? 'Impayée' : inv.status === 'brouillon' ? 'Brouillon' : inv.status
         ]),
-        headStyles: {fillColor:[61,92,74],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
+        headStyles: {fillColor:[40,50,65],textColor:[255,255,255],fontStyle:'bold',fontSize:7,cellPadding:3},
         bodyStyles: {fontSize:7,cellPadding:3},
         columnStyles: {2:{halign:'right'}},
         theme: 'striped',
@@ -5374,7 +5364,7 @@ function renderScoreDetail(dossier) {
           <div style="font-size:.65rem;color:var(--mid);margin-top:2px">Règlement UE 2024/1624 · Évaluation automatique</div>
         </div>
         <div style="text-align:right">
-          <div style="font-family:'DM Serif Display',serif;font-size:2rem;color:${gaugeColor};line-height:1">${s.scorePct}</div>
+          <div style="font-family:var(--font-display);font-size:2rem;color:${gaugeColor};line-height:1">${s.scorePct}</div>
           <div style="font-size:.6rem;color:var(--mid)">/100</div>
         </div>
       </div>
@@ -6072,10 +6062,10 @@ function renderFacturationView() {
   const totalImpaye = getUnpaidInvoices().reduce((s,i)=>s+i.total,0);
   const kpis = document.getElementById('fac-kpis');
   if(kpis) kpis.innerHTML = `
-    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--charcoal)">${allInv.length}</div><div style="font-size:.68rem;color:var(--mid)">Total factures</div></div>
-    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--charcoal)">${totalFacture.toLocaleString('fr-FR')} €</div><div style="font-size:.68rem;color:var(--mid)">Montant total</div></div>
-    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--ok-fg)">${totalPaye.toLocaleString('fr-FR')} €</div><div style="font-size:.68rem;color:var(--mid)">Encaissé</div></div>
-    <div style="background:${totalImpaye>0?'var(--danger-bg)':'white'};border:1px solid ${totalImpaye>0?'rgba(154,16,16,.2)':'var(--border)'};border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:${totalImpaye>0?'var(--danger-fg)':'var(--charcoal)'}">${totalImpaye.toLocaleString('fr-FR')} €</div><div style="font-size:.68rem;color:var(--mid)">Impayé</div></div>`;
+    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:var(--font-display);font-size:1.4rem;color:var(--charcoal)">${allInv.length}</div><div style="font-size:.68rem;color:var(--mid)">Total factures</div></div>
+    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:var(--font-display);font-size:1.4rem;color:var(--charcoal)">${totalFacture.toLocaleString('fr-FR')} €</div><div style="font-size:.68rem;color:var(--mid)">Montant total</div></div>
+    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:var(--font-display);font-size:1.4rem;color:var(--ok-fg)">${totalPaye.toLocaleString('fr-FR')} €</div><div style="font-size:.68rem;color:var(--mid)">Encaissé</div></div>
+    <div style="background:${totalImpaye>0?'var(--danger-bg)':'white'};border:1px solid ${totalImpaye>0?'rgba(154,16,16,.2)':'var(--border)'};border-radius:10px;padding:13px;text-align:center"><div style="font-family:var(--font-display);font-size:1.4rem;color:${totalImpaye>0?'var(--danger-fg)':'var(--charcoal)'}">${totalImpaye.toLocaleString('fr-FR')} €</div><div style="font-size:.68rem;color:var(--mid)">Impayé</div></div>`;
 
   // Unpaid reminders banner
   const reminders = getInvoiceReminders();
@@ -6119,7 +6109,7 @@ function renderFacturationView() {
       <div><div style="font-size:.82rem;font-weight:600;color:var(--charcoal)">${inv.number}</div><div style="font-size:.68rem;color:var(--mid)">${inv.description?.substring(0,50)||'—'}</div></div>
       <div style="font-size:.8rem;color:var(--charcoal)">${inv.client}</div>
       <div style="font-size:.75rem;color:var(--mid)">${inv.ref}</div>
-      <div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:var(--charcoal);text-align:right">${inv.total.toLocaleString('fr-FR')} €</div>
+      <div style="font-family:var(--font-display);font-size:.95rem;color:var(--charcoal);text-align:right">${inv.total.toLocaleString('fr-FR')} €</div>
       <div style="text-align:center"><span class="doc-badge" style="background:${sc}">${isLate?'⚠ Retard':statusLabels[inv.status]||inv.status}</span></div>
       <div style="font-size:.72rem;color:var(--mid);text-align:right">${new Date(inv.createdAt).toLocaleDateString('fr-LU',{day:'numeric',month:'short'})}</div>
     </div>`;
@@ -6150,9 +6140,9 @@ function renderAudiencesView() {
   // KPIs
   const kpis = document.getElementById('aud-kpis');
   if(kpis) kpis.innerHTML = `
-    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--charcoal)">${audiences.length}</div><div style="font-size:.68rem;color:var(--mid)">Total audiences</div></div>
-    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--sage)">${upcoming.length}</div><div style="font-size:.68rem;color:var(--mid)">À venir</div></div>
-    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--light)">${past.length}</div><div style="font-size:.68rem;color:var(--mid)">Passées</div></div>`;
+    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:var(--font-display);font-size:1.6rem;color:var(--charcoal)">${audiences.length}</div><div style="font-size:.68rem;color:var(--mid)">Total audiences</div></div>
+    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:var(--font-display);font-size:1.6rem;color:var(--sage)">${upcoming.length}</div><div style="font-size:.68rem;color:var(--mid)">À venir</div></div>
+    <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:var(--font-display);font-size:1.6rem;color:var(--light)">${past.length}</div><div style="font-size:.68rem;color:var(--mid)">Passées</div></div>`;
 
   const countEl = document.getElementById('aud-count');
   if(countEl) countEl.textContent = audiences.length + ' audience(s)';
@@ -6196,15 +6186,15 @@ function showGlobalAddAudienceForm() {
   zone.innerHTML = `<div style="background:white;border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px">
     <div style="font-size:.85rem;font-weight:600;color:var(--charcoal);margin-bottom:12px">Planifier une audience</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
-      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Dossier</div><select id="aud-g-ref" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none">
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Dossier</div><select id="aud-g-ref" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none">
         <option value="">— Sélectionner —</option>${dossiers.map(d=>'<option value="'+d.ref+'">'+d.ref+' — '+d.clientName+'</option>').join('')}
       </select></div>
-      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Date</div><input type="date" id="aud-g-date" value="${new Date(Date.now()+7*86400000).toISOString().split('T')[0]}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/></div>
-      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Heure</div><input type="time" id="aud-g-time" value="09:00" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/></div>
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Date</div><input type="date" id="aud-g-date" value="${new Date(Date.now()+7*86400000).toISOString().split('T')[0]}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none"/></div>
+      <div><div style="font-size:.68rem;font-weight:600;color:var(--light);margin-bottom:3px">Heure</div><input type="time" id="aud-g-time" value="09:00" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none"/></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-      <input type="text" id="aud-g-tribunal" placeholder="Tribunal" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/>
-      <input type="text" id="aud-g-desc" placeholder="Description / objet" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Figtree',sans-serif;font-size:.8rem;outline:none"/>
+      <input type="text" id="aud-g-tribunal" placeholder="Tribunal" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none"/>
+      <input type="text" id="aud-g-desc" placeholder="Description / objet" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;outline:none"/>
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-sage" style="font-size:.78rem;padding:7px 16px" onclick="addGlobalAudience()">Planifier</button>
@@ -6791,7 +6781,7 @@ window.addEventListener('load',()=>{
 ═══════════════════════════════════════════════════════ -->
 <div class="view" id="view-facturation">
   <aside class="sidebar" id="fac-sb">
-    <div class="sidebar-logo"><div class="logo-mark">N</div><div class="logo-text-wrap"><div class="logo-name">Norvy</div><div class="logo-tagline">LegalTech · Luxembourg</div></div></div>
+    <div class="sidebar-logo"><div class="logo-mark">n</div><div class="logo-text-wrap"><div class="logo-name">norvy</div><div class="logo-tagline">Compliance · Luxembourg</div></div></div>
     <nav class="sidebar-nav">
       <div class="nav-sec">Principal</div>
       <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
@@ -6816,19 +6806,19 @@ window.addEventListener('load',()=>{
     </header>
     <div class="ob-content" style="max-width:1100px">
       <div style="margin-bottom:20px">
-        <div style="font-family:'DM Serif Display',serif;font-size:1.45rem;color:var(--charcoal);margin-bottom:3px">Facturation</div>
+        <div style="font-family:var(--font-display);font-size:1.45rem;color:var(--charcoal);margin-bottom:3px">Facturation</div>
         <div style="font-size:.83rem;color:var(--mid)">Gestion des factures, suivi des paiements et relances automatiques.</div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:18px" id="fac-kpis"></div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-        <select id="fac-filter-status" onchange="renderFacturationView()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Figtree',sans-serif;font-size:.82rem;outline:none">
+        <select id="fac-filter-status" onchange="renderFacturationView()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.82rem;outline:none">
           <option value="all">Tous les statuts</option>
           <option value="brouillon">Brouillon</option>
           <option value="envoyee">Envoyée</option>
           <option value="payee">Payée</option>
           <option value="impayee">Impayée</option>
         </select>
-        <input type="text" id="fac-search" placeholder="🔍 Rechercher..." oninput="renderFacturationView()" style="flex:1;min-width:180px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Figtree',sans-serif;font-size:.82rem;outline:none"/>
+        <input type="text" id="fac-search" placeholder="🔍 Rechercher..." oninput="renderFacturationView()" style="flex:1;min-width:180px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.82rem;outline:none"/>
       </div>
       <!-- Unpaid reminders banner -->
       <div id="fac-reminders-banner"></div>
@@ -6845,7 +6835,7 @@ window.addEventListener('load',()=>{
 ═══════════════════════════════════════════════════════ -->
 <div class="view" id="view-audiences">
   <aside class="sidebar" id="aud-sb">
-    <div class="sidebar-logo"><div class="logo-mark">N</div><div class="logo-text-wrap"><div class="logo-name">Norvy</div><div class="logo-tagline">LegalTech · Luxembourg</div></div></div>
+    <div class="sidebar-logo"><div class="logo-mark">n</div><div class="logo-text-wrap"><div class="logo-name">norvy</div><div class="logo-tagline">Compliance · Luxembourg</div></div></div>
     <nav class="sidebar-nav">
       <div class="nav-sec">Principal</div>
       <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
@@ -6871,7 +6861,7 @@ window.addEventListener('load',()=>{
     <div class="ob-content" style="max-width:1000px">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
         <div>
-          <div style="font-family:'DM Serif Display',serif;font-size:1.45rem;color:var(--charcoal);margin-bottom:3px">Agenda des audiences</div>
+          <div style="font-family:var(--font-display);font-size:1.45rem;color:var(--charcoal);margin-bottom:3px">Agenda des audiences</div>
           <div style="font-size:.83rem;color:var(--mid)">Planification et suivi des audiences pour tous vos dossiers.</div>
         </div>
         <button class="btn btn-sage" onclick="showGlobalAddAudienceForm()">+ Planifier une audience</button>
@@ -6888,7 +6878,7 @@ window.addEventListener('load',()=>{
 
 <div class="view" id="view-screening">
   <aside class="sidebar" id="sc-sb">
-    <div class="sidebar-logo"><div class="logo-mark">N</div><div class="logo-text-wrap"><div class="logo-name">Norvy</div><div class="logo-tagline">LegalTech · Luxembourg</div></div></div>
+    <div class="sidebar-logo"><div class="logo-mark">n</div><div class="logo-text-wrap"><div class="logo-name">norvy</div><div class="logo-tagline">Compliance · Luxembourg</div></div></div>
     <nav class="sidebar-nav">
       <div class="nav-sec">Principal</div>
       <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
@@ -6913,7 +6903,7 @@ window.addEventListener('load',()=>{
     </header>
     <div class="ob-content" style="max-width:880px">
       <div style="margin-bottom:22px">
-        <div style="font-family:'DM Serif Display',serif;font-size:1.45rem;color:var(--charcoal);margin-bottom:3px">Screening KYC/AML — Temps réel</div>
+        <div style="font-family:var(--font-display);font-size:1.45rem;color:var(--charcoal);margin-bottom:3px">Screening KYC/AML — Temps réel</div>
         <div style="font-size:.83rem;color:var(--mid)">Vérification instantanée contre 6 listes de sanctions internationales, PPE et adverse media.</div>
       </div>
       <div class="sc-search-bar">
@@ -6943,7 +6933,7 @@ window.addEventListener('load',()=>{
 </div>
 <div class="view" id="view-audit">
   <aside class="sidebar" id="audit-sb">
-    <div class="sidebar-logo"><div class="logo-mark">N</div><div class="logo-text-wrap"><div class="logo-name">Norvy</div><div class="logo-tagline">LegalTech · Luxembourg</div></div></div>
+    <div class="sidebar-logo"><div class="logo-mark">n</div><div class="logo-text-wrap"><div class="logo-name">norvy</div><div class="logo-tagline">Compliance · Luxembourg</div></div></div>
     <nav class="sidebar-nav">
       <div class="nav-sec">Principal</div>
       <div class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">⬛</span> Tableau de bord</div>
@@ -6972,17 +6962,17 @@ window.addEventListener('load',()=>{
     </header>
     <div class="ob-content" style="max-width:980px">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap">
-        <div><div style="font-family:'DM Serif Display',serif;font-size:1.45rem;color:var(--charcoal);margin-bottom:3px">Journal d'audit compliance</div><div style="font-size:.82rem;color:var(--mid)">Toutes les actions compliance tracées · Horodatées · Immuables</div></div>
+        <div><div style="font-family:var(--font-display);font-size:1.45rem;color:var(--charcoal);margin-bottom:3px">Journal d'audit compliance</div><div style="font-size:.82rem;color:var(--mid)">Toutes les actions compliance tracées · Horodatées · Immuables</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-outline" style="font-size:.76rem;padding:7px 13px" onclick="alert('→ Export CSV')">📥 CSV</button>
           <button class="btn btn-sage" style="font-size:.76rem;padding:7px 13px" onclick="startCtrlOAL()">🏛️ Rapport OAL</button>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:18px">
-        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--charcoal)">1 842</div><div style="font-size:.68rem;color:var(--mid)">Actions tracées</div></div>
-        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--ok-fg)">642</div><div style="font-size:.68rem;color:var(--mid)">Screenings archivés</div></div>
-        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--info-fg)">312</div><div style="font-size:.68rem;color:var(--mid)">Dossiers documentés</div></div>
-        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--charcoal)">0</div><div style="font-size:.68rem;color:var(--mid)">Anomalies</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:var(--font-display);font-size:1.6rem;color:var(--charcoal)">1 842</div><div style="font-size:.68rem;color:var(--mid)">Actions tracées</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:var(--font-display);font-size:1.6rem;color:var(--ok-fg)">642</div><div style="font-size:.68rem;color:var(--mid)">Screenings archivés</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:var(--font-display);font-size:1.6rem;color:var(--info-fg)">312</div><div style="font-size:.68rem;color:var(--mid)">Dossiers documentés</div></div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center"><div style="font-family:var(--font-display);font-size:1.6rem;color:var(--charcoal)">0</div><div style="font-size:.68rem;color:var(--mid)">Anomalies</div></div>
       </div>
       <div class="audit-filters">
         <button class="audit-filter-btn active" onclick="filterAudit('all',this)">Tout</button>
