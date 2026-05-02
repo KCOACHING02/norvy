@@ -1503,6 +1503,7 @@ body{padding-bottom:62px}
           <button onclick="document.getElementById('import-file-input').click()" style="padding:10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--mid);font-weight:700;font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s">📤 Importer JSON</button>
         </div>
         <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importAllData(event)">
+        <button onclick="loadDemoData()" style="margin-top:10px;width:100%;padding:10px;border-radius:10px;border:1px dashed var(--border);background:transparent;color:var(--mid);font-weight:600;font-size:.78rem;cursor:pointer;transition:all .2s">🎭 Charger les données de démonstration</button>
       </div>
     </div>
   </div>
@@ -7121,6 +7122,19 @@ function renderCalendar() {
 // ══ DONNÉES DE DÉMONSTRATION ══
 function seedDemoData() {
   if(DB.getDossiers().length > 0) return;
+  forceSeedDemoData();
+}
+
+function loadDemoData() {
+  if(!confirm('Charger les données de démonstration ?\nCela remplacera les dossiers, factures, heures et screenings existants.')) return;
+  forceSeedDemoData();
+  closeSettingsModal();
+  initDashboardFromDB();
+  animateDashboard();
+  showToast('Données démo chargées', '6 dossiers, 4 factures, 6 saisies d\'heures, 5 audiences', 'ok', '🎭');
+}
+
+function forceSeedDemoData() {
 
   const now = new Date();
   const demoDossiers = [
