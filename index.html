@@ -1388,6 +1388,62 @@ body{padding-bottom:62px}
 </div>
 
 <!-- MODAL DÉTAIL DOSSIER -->
+<!-- MODAL COURRIER -->
+<div class="ctrl-modal hidden" id="courrier-modal" onclick="if(event.target===this)closeCourrierModal()">
+  <div style="background:var(--card-bg,#fff);border-radius:16px;padding:28px 24px;width:100%;max-width:600px;position:relative;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-family:var(--font-display);font-size:1.3rem;color:var(--charcoal)">📨 Envoi de courrier</div>
+      <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="closeCourrierModal()">✕</span>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn btn-sage" style="font-size:.78rem;flex:1" id="courrier-type-relance" onclick="setCourrierType('relance')">📬 Relance amiable</button>
+      <button class="btn btn-outline" style="font-size:.78rem;flex:1" id="courrier-type-mise" onclick="setCourrierType('mise_en_demeure')">⚠️ Mise en demeure</button>
+      <button class="btn btn-outline" style="font-size:.78rem;flex:1" id="courrier-type-ar" onclick="setCourrierType('recommande')">📮 Recommandé AR</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+      <label style="font-size:.8rem;font-weight:600;color:var(--mid)">Destinataire
+        <input id="courrier-dest" class="step-input" style="margin-top:4px" placeholder="Nom et adresse du destinataire" readonly>
+      </label>
+      <label style="font-size:.8rem;font-weight:600;color:var(--mid)">Objet
+        <input id="courrier-objet" class="step-input" style="margin-top:4px" placeholder="Objet du courrier">
+      </label>
+      <label style="font-size:.8rem;font-weight:600;color:var(--mid)">Contenu du courrier
+        <textarea id="courrier-body" class="step-input" style="margin-top:4px;min-height:180px;font-size:.82rem;line-height:1.5" placeholder="Corps du courrier..."></textarea>
+      </label>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <div style="flex:1;background:var(--cream2);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:.65rem;font-weight:700;color:var(--light);text-transform:uppercase">Mode d'envoi</div>
+        <div style="font-size:.82rem;font-weight:700;color:var(--charcoal)" id="courrier-mode">Lettre simple</div>
+      </div>
+      <div style="flex:1;background:var(--cream2);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:.65rem;font-weight:700;color:var(--light);text-transform:uppercase">Coût estimé</div>
+        <div style="font-size:.82rem;font-weight:700;color:var(--charcoal)" id="courrier-cout">1,50 €</div>
+      </div>
+      <div style="flex:1;background:var(--cream2);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:.65rem;font-weight:700;color:var(--light);text-transform:uppercase">Délai</div>
+        <div style="font-size:.82rem;font-weight:700;color:var(--charcoal)" id="courrier-delai">J+2</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="sendCourrier()" style="flex:2;padding:12px;border-radius:10px;border:none;background:var(--sage);color:var(--white);font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s">📨 Envoyer le courrier</button>
+      <button onclick="generateCourrierPDF()" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--mid);font-weight:700;font-size:.82rem;cursor:pointer;transition:all .2s">📥 PDF</button>
+    </div>
+    <div id="courrier-status" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- MODAL STRIPE -->
+<div class="ctrl-modal hidden" id="stripe-modal" onclick="if(event.target===this)closeStripeModal()">
+  <div style="background:var(--card-bg,#fff);border-radius:16px;padding:28px 24px;width:100%;max-width:480px;position:relative;animation:fadeUp .3s ease">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:8px"><span style="font-size:1.4rem">💳</span><div style="font-family:var(--font-display);font-size:1.3rem;color:var(--charcoal)">Paiement Stripe</div></div>
+      <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="closeStripeModal()">✕</span>
+    </div>
+    <div id="stripe-content"></div>
+  </div>
+</div>
+
 <div class="ctrl-modal hidden" id="settings-modal" onclick="if(event.target===this)closeSettingsModal()">
   <div style="background:var(--card-bg,#fff);border-radius:16px;padding:28px 24px;width:100%;max-width:520px;position:relative;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
@@ -1424,6 +1480,21 @@ body{padding-bottom:62px}
         </div>
       </div>
       <button onclick="saveSettingsForm()" style="margin-top:14px;width:100%;padding:12px;border-radius:10px;border:none;background:var(--sage);color:var(--white);font-weight:700;font-size:.95rem;cursor:pointer;transition:all .2s">Enregistrer les paramètres</button>
+      <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:.9rem;font-weight:700;color:var(--charcoal);margin-bottom:10px">Intégrations externes</div>
+        <div style="font-size:.73rem;color:var(--mid);margin-bottom:12px">Connectez vos services pour le paiement en ligne, la recherche d'entreprise et l'envoi de courrier. <span style="color:var(--warn-fg);font-weight:600">Mode démo : les intégrations sont simulées.</span></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <label style="font-size:.8rem;font-weight:600;color:var(--mid)">Clé publique Stripe <span style="font-size:.65rem;font-weight:400;color:var(--light)">(paiement en ligne)</span>
+            <input id="set-stripe-key" class="step-input" style="margin-top:4px;font-family:monospace;font-size:.75rem" placeholder="pk_test_51...">
+          </label>
+          <label style="font-size:.8rem;font-weight:600;color:var(--mid)">Clé API Pappers <span style="font-size:.65rem;font-weight:400;color:var(--light)">(recherche entreprise)</span>
+            <input id="set-pappers-key" class="step-input" style="margin-top:4px;font-family:monospace;font-size:.75rem" placeholder="votre_cle_pappers">
+          </label>
+          <label style="font-size:.8rem;font-weight:600;color:var(--mid)">Clé API Courrier <span style="font-size:.65rem;font-weight:400;color:var(--light)">(envoi postal Maileva)</span>
+            <input id="set-courrier-key" class="step-input" style="margin-top:4px;font-family:monospace;font-size:.75rem" placeholder="votre_cle_maileva">
+          </label>
+        </div>
+      </div>
       <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
         <div style="font-size:.9rem;font-weight:700;color:var(--charcoal);margin-bottom:10px">Sauvegarde des données</div>
         <div style="font-size:.73rem;color:var(--mid);margin-bottom:12px">Exportez toutes vos données (dossiers, factures, heures, screenings, audit) dans un fichier JSON, ou importez une sauvegarde précédente.</div>
@@ -2063,6 +2134,18 @@ body{padding-bottom:62px}
 
         <!-- PM fields -->
         <div id="f-pm" style="display:none">
+          <div style="background:var(--info-bg);border:1px solid rgba(74,111,165,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span style="font-size:1.1rem">🔍</span>
+              <div style="font-size:.82rem;font-weight:700;color:var(--charcoal)">Recherche Pappers</div>
+              <span style="font-size:.62rem;padding:2px 8px;border-radius:99px;background:var(--sage);color:#fff;font-weight:700">API</span>
+            </div>
+            <div style="display:flex;gap:8px">
+              <input id="pappers-search" class="step-input" style="flex:1;margin:0;font-size:.82rem" placeholder="Nom d'entreprise ou n° RCS..." oninput="clearPappersResults()">
+              <button onclick="searchPappers()" class="btn btn-sage" style="font-size:.78rem;padding:8px 16px;white-space:nowrap">Rechercher</button>
+            </div>
+            <div id="pappers-results" style="margin-top:8px"></div>
+          </div>
           <div class="grid2">
             <div class="fg full"><label class="lbl req">Dénomination sociale</label><input id="pm-den" placeholder="ACME Holdings S.A." oninput="v1()"/></div>
             <div class="fg"><label class="lbl req">Forme juridique</label>
@@ -4483,9 +4566,15 @@ function renderRecouvrementTab() {
             <div style="font-size:.8rem;font-weight:600;color:var(--charcoal)">${inv.client || 'Client'} <span style="color:var(--light);font-weight:400">· ${inv.number}</span></div>
             <div style="font-size:.65rem;color:var(--mid)">Échéance : ${inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('fr-LU') : 'Non définie'} · ${days > 0 ? days + ' jours de retard' : 'À échéance'}</div>
           </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-family:var(--font-display);font-size:.95rem;font-weight:700;color:var(--danger-fg)">${inv.total.toLocaleString('fr-FR')} €</div>
-            <span class="rec-badge" style="background:var(--${severity}-bg);color:var(--${severity}-fg)">${sevLabel}</span>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <div style="text-align:right">
+              <div style="font-family:var(--font-display);font-size:.95rem;font-weight:700;color:var(--danger-fg)">${inv.total.toLocaleString('fr-FR')} €</div>
+              <span class="rec-badge" style="background:var(--${severity}-bg);color:var(--${severity}-fg)">${sevLabel}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <button class="btn btn-outline" style="font-size:.58rem;padding:3px 8px;border-color:#635bff;color:#635bff;white-space:nowrap" onclick="event.stopPropagation();generateStripePaymentLink('${inv.id}')">💳 Stripe</button>
+              <button class="btn btn-outline" style="font-size:.58rem;padding:3px 8px;white-space:nowrap" onclick="event.stopPropagation();openCourrierModal('${inv.id}')">📨 Courrier</button>
+            </div>
           </div>
         </div>`;
       }).join('');
@@ -5346,9 +5435,11 @@ function viewInvoiceDetail(invoiceId) {
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
       <a href="${mailtoLink}" class="btn btn-sage" style="font-size:.75rem;padding:7px 14px;text-decoration:none" onclick="markInvoiceSent('${inv.id}')">📧 Envoyer par email</a>
+      <button class="btn btn-outline" style="font-size:.75rem;padding:7px 14px;border-color:#635bff;color:#635bff" onclick="generateStripePaymentLink('${inv.id}')">💳 Lien Stripe</button>
       <button class="btn btn-outline" style="font-size:.75rem;padding:7px 14px" onclick="changeInvoiceStatus('${inv.id}','payee')">✅ Marquer payée</button>
       <button class="btn btn-outline" style="font-size:.75rem;padding:7px 14px" onclick="changeInvoiceStatus('${inv.id}','impayee')">🚫 Marquer impayée</button>
       <button class="btn btn-outline" style="font-size:.75rem;padding:7px 14px" onclick="sendInvoiceReminder('${inv.id}')">📬 Relance</button>
+      <button class="btn btn-outline" style="font-size:.75rem;padding:7px 14px" onclick="openCourrierModal('${inv.id}')">📨 Courrier</button>
       <button class="btn btn-outline" style="font-size:.75rem;padding:7px 14px" onclick="generateInvoicePDF('${inv.id}')">📥 PDF</button>
     </div>
     <div style="margin-bottom:8px">
@@ -6405,6 +6496,9 @@ function openSettingsModal() {
   document.getElementById('set-cabinet-iban').value = s.cabinetIBAN || '';
   document.getElementById('set-cabinet-bic').value = s.cabinetBIC || '';
   document.getElementById('set-cabinet-bank').value = s.cabinetBank || '';
+  document.getElementById('set-stripe-key').value = s.stripeKey || '';
+  document.getElementById('set-pappers-key').value = s.pappersKey || '';
+  document.getElementById('set-courrier-key').value = s.courrierKey || '';
   document.getElementById('settings-modal').classList.remove('hidden');
 }
 function closeSettingsModal() {
@@ -6419,11 +6513,270 @@ function saveSettingsForm() {
   s.cabinetIBAN = document.getElementById('set-cabinet-iban').value.trim();
   s.cabinetBIC = document.getElementById('set-cabinet-bic').value.trim();
   s.cabinetBank = document.getElementById('set-cabinet-bank').value.trim();
+  s.stripeKey = document.getElementById('set-stripe-key').value.trim();
+  s.pappersKey = document.getElementById('set-pappers-key').value.trim();
+  s.courrierKey = document.getElementById('set-courrier-key').value.trim();
   DB.saveSettings(s);
   closeSettingsModal();
   showToast('Paramètres enregistrés', 'Les informations du cabinet ont été mises à jour', 'ok', '✅');
   DB.addAudit({type:'settings', action:'Paramètres cabinet mis à jour', user: DB.getSession()?.name || 'Système'});
 }
+
+// ══ STRIPE (SIMULATION) ══
+function generateStripePaymentLink(invoiceId) {
+  const inv = DB.getInvoices().find(i => i.id === invoiceId);
+  if(!inv) return;
+  const fakeId = 'cs_live_' + Math.random().toString(36).substring(2, 15);
+  const fakeLink = 'https://checkout.stripe.com/pay/' + fakeId;
+
+  const stripeLinks = DB.load('stripe_links', {});
+  stripeLinks[invoiceId] = { link: fakeLink, created: new Date().toISOString(), status: 'pending', amount: inv.total };
+  DB.save('stripe_links', stripeLinks);
+
+  const content = document.getElementById('stripe-content');
+  content.innerHTML = `
+    <div style="background:#f6f5ff;border:1px solid #e0deff;border-radius:10px;padding:16px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:32px;height:32px;background:#635bff;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.8rem">S</div>
+        <div><div style="font-size:.82rem;font-weight:700;color:#1a1a2e">Stripe Checkout</div><div style="font-size:.65rem;color:#635bff">Mode simulation</div></div>
+      </div>
+      <div style="font-size:.75rem;color:#4a4a6a;margin-bottom:8px">Facture <strong>${inv.number}</strong> · ${inv.client} · <strong>${inv.total.toLocaleString('fr-FR')} €</strong></div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:.72rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Lien de paiement</div>
+      <div style="display:flex;gap:8px">
+        <input readonly value="${fakeLink}" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-family:monospace;font-size:.72rem;color:var(--charcoal);background:var(--cream)">
+        <button onclick="navigator.clipboard.writeText('${fakeLink}');this.textContent='✓ Copié';setTimeout(()=>this.textContent='Copier',1500)" class="btn btn-sage" style="font-size:.75rem;padding:8px 14px;white-space:nowrap">Copier</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button onclick="simulateStripePayment('${invoiceId}')" style="flex:1;padding:10px;border-radius:10px;border:none;background:#635bff;color:#fff;font-weight:700;font-size:.82rem;cursor:pointer">⚡ Simuler le paiement</button>
+      <button onclick="sendStripeLink('${invoiceId}')" style="flex:1;padding:10px;border-radius:10px;border:1px solid #635bff;background:transparent;color:#635bff;font-weight:700;font-size:.82rem;cursor:pointer">📧 Envoyer au client</button>
+    </div>
+    <div id="stripe-status"></div>`;
+  document.getElementById('stripe-modal').classList.remove('hidden');
+  DB.addAudit({type:'stripe', action:'Lien Stripe créé — ' + inv.number + ' (' + inv.total.toLocaleString('fr-FR') + ' €)', user: DB.getSession()?.name});
+}
+
+function simulateStripePayment(invoiceId) {
+  const statusEl = document.getElementById('stripe-status');
+  statusEl.innerHTML = '<div style="padding:12px;background:var(--info-bg);border-radius:8px;font-size:.78rem;color:var(--info-fg);text-align:center"><span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Traitement du paiement en cours...</div>';
+  setTimeout(() => {
+    changeInvoiceStatus(invoiceId, 'payee');
+    const stripeLinks = DB.load('stripe_links', {});
+    if(stripeLinks[invoiceId]) { stripeLinks[invoiceId].status = 'paid'; stripeLinks[invoiceId].paidAt = new Date().toISOString(); DB.save('stripe_links', stripeLinks); }
+    const inv = DB.getInvoices().find(i => i.id === invoiceId);
+    statusEl.innerHTML = `<div style="padding:14px;background:var(--ok-bg);border-radius:8px;text-align:center">
+      <div style="font-size:1.5rem;margin-bottom:4px">✅</div>
+      <div style="font-size:.85rem;font-weight:700;color:var(--ok-fg)">Paiement reçu !</div>
+      <div style="font-size:.72rem;color:var(--mid);margin-top:4px">${inv?.total?.toLocaleString('fr-FR')||'0'} € · ${new Date().toLocaleString('fr-LU')}</div>
+    </div>`;
+    DB.addAudit({type:'stripe', action:'Paiement Stripe reçu — ' + (inv?.number||invoiceId), user:'Stripe Webhook'});
+    showToast('Paiement Stripe reçu', (inv?.number||'Facture') + ' — ' + (inv?.total?.toLocaleString('fr-FR')||'0') + ' €', 'ok', '💳');
+    updateDashboardKPIs();
+  }, 2500);
+}
+
+function sendStripeLink(invoiceId) {
+  const inv = DB.getInvoices().find(i => i.id === invoiceId);
+  if(!inv) return;
+  const stripeLinks = DB.load('stripe_links', {});
+  const link = stripeLinks[invoiceId]?.link || '';
+  showToast('Lien envoyé', 'Lien de paiement Stripe envoyé à ' + inv.client, 'ok', '📧');
+  DB.addAudit({type:'stripe', action:'Lien Stripe envoyé par email — ' + inv.number, user: DB.getSession()?.name});
+}
+
+function closeStripeModal() { document.getElementById('stripe-modal').classList.add('hidden'); }
+
+// ══ PAPPERS (SIMULATION) ══
+const PAPPERS_FAKE_DB = [
+  {name:'ACME Holdings S.A.',rcs:'B198432',forme:'SA (Société Anonyme)',pays:'Luxembourg',siege:'5 Boulevard Royal, L-2449 Luxembourg',representant:'Jean MARTIN — Administrateur délégué',capital:'125 000 €',activite:'Holding de participations financières',date_creation:'12/03/2015',dirigeants:['Jean MARTIN (Administrateur délégué)','Marie DUBOIS (Administratrice)']},
+  {name:'Atlas Consulting SARL',rcs:'B201456',forme:'SARL',pays:'Luxembourg',siege:'12 Rue du Fort Bourbon, L-1249 Luxembourg',representant:'Pierre WEBER — Gérant',capital:'25 000 €',activite:'Conseil en gestion et stratégie',date_creation:'05/09/2018',dirigeants:['Pierre WEBER (Gérant)']},
+  {name:'Nordic Investment SCSp',rcs:'B215789',forme:'SCSp',pays:'Luxembourg',siege:'1 Place de Metz, L-1930 Luxembourg',representant:'Erik JOHANSSON — General Partner',capital:'500 000 €',activite:'Fonds d\'investissement alternatif',date_creation:'22/01/2020',dirigeants:['Erik JOHANSSON (General Partner)','Société de Gestion NordicFund SA (GP)']},
+  {name:'Dupont & Associés SA',rcs:'B187654',forme:'SA (Société Anonyme)',pays:'Luxembourg',siege:'28 Avenue de la Liberté, L-1930 Luxembourg',representant:'Claire DUPONT — Présidente du CA',capital:'50 000 €',activite:'Cabinet d\'avocats',date_creation:'15/06/2012',dirigeants:['Claire DUPONT (Présidente)','Thomas KLEIN (Associé)']},
+  {name:'Europa Real Estate SOPARFI',rcs:'B223001',forme:'SOPARFI',pays:'Luxembourg',siege:'3 Boulevard Prince Henri, L-1724 Luxembourg',representant:'Karl SCHMIDT — Director',capital:'1 000 000 €',activite:'Société de participations financières — immobilier',date_creation:'30/11/2021',dirigeants:['Karl SCHMIDT (Director)','Hans MÜLLER (Director)']},
+  {name:'Fiduciaire du Grand-Duché SARL',rcs:'B176543',forme:'SARL',pays:'Luxembourg',siege:'45 Route d\'Arlon, L-1140 Luxembourg',representant:'Luc HOFFMANN — Gérant',capital:'12 500 €',activite:'Services fiduciaires et domiciliation',date_creation:'08/04/2010',dirigeants:['Luc HOFFMANN (Gérant)','Anne REUTER (Gérante)']},
+];
+
+function searchPappers() {
+  const query = document.getElementById('pappers-search').value.trim().toLowerCase();
+  const results = document.getElementById('pappers-results');
+  if(!query) { results.innerHTML = '<div style="font-size:.72rem;color:var(--warn-fg);padding:4px 0">Saisissez un nom ou numéro RCS</div>'; return; }
+
+  results.innerHTML = '<div style="font-size:.75rem;color:var(--info-fg);padding:6px 0"><span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Recherche Pappers en cours...</div>';
+
+  setTimeout(() => {
+    const matches = PAPPERS_FAKE_DB.filter(e => e.name.toLowerCase().includes(query) || e.rcs.toLowerCase().includes(query));
+    if(matches.length === 0) {
+      results.innerHTML = '<div style="font-size:.75rem;color:var(--mid);padding:6px 0">Aucun résultat pour "' + query + '"</div>';
+      return;
+    }
+    results.innerHTML = matches.map(e => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-top:6px;cursor:pointer;transition:all .15s" onclick="applyPappersResult(this)" onmouseover="this.style.borderColor='var(--sage)'" onmouseout="this.style.borderColor='var(--border)'"
+        data-name="${e.name}" data-rcs="${e.rcs}" data-forme="${e.forme}" data-pays="${e.pays}" data-siege="${e.siege}" data-rep="${e.representant}" data-capital="${e.capital}" data-activite="${e.activite}" data-date="${e.date_creation}" data-dirigeants="${e.dirigeants.join(' | ')}">
+        <div style="width:32px;height:32px;background:var(--sage-pale);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--sage);flex-shrink:0">${e.name.substring(0,2).toUpperCase()}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.78rem;font-weight:700;color:var(--charcoal)">${e.name}</div>
+          <div style="font-size:.62rem;color:var(--light)">${e.rcs} · ${e.forme} · ${e.pays} · ${e.activite}</div>
+        </div>
+        <span style="font-size:.6rem;padding:2px 8px;border-radius:99px;background:var(--ok-bg);color:var(--ok-fg);font-weight:700">Sélectionner</span>
+      </div>
+    `).join('');
+  }, 800);
+}
+
+function applyPappersResult(el) {
+  document.getElementById('pm-den').value = el.dataset.name;
+  const formeSelect = document.getElementById('pm-for');
+  for(let i = 0; i < formeSelect.options.length; i++) {
+    if(formeSelect.options[i].text === el.dataset.forme) { formeSelect.selectedIndex = i; break; }
+  }
+  document.getElementById('pm-rcs').value = el.dataset.rcs;
+  const paysSelect = document.getElementById('pm-pay');
+  for(let i = 0; i < paysSelect.options.length; i++) {
+    if(paysSelect.options[i].text === el.dataset.pays) { paysSelect.selectedIndex = i; break; }
+  }
+  document.getElementById('pm-sie').value = el.dataset.siege;
+  document.getElementById('pm-rep').value = el.dataset.rep;
+
+  document.getElementById('pappers-results').innerHTML = `
+    <div style="padding:8px 10px;background:var(--ok-bg);border-radius:8px;margin-top:6px;display:flex;align-items:center;gap:8px">
+      <span>✅</span>
+      <div style="font-size:.75rem;font-weight:600;color:var(--ok-fg)">Données importées depuis Pappers — ${el.dataset.name}</div>
+    </div>
+    <div style="margin-top:6px;font-size:.65rem;color:var(--light)">Capital : ${el.dataset.capital} · Création : ${el.dataset.date} · Dirigeants : ${el.dataset.dirigeants}</div>`;
+
+  v1();
+  DB.addAudit({type:'pappers', action:'Recherche Pappers — ' + el.dataset.name + ' (' + el.dataset.rcs + ')', user: DB.getSession()?.name});
+  showToast('Pappers', 'Données de ' + el.dataset.name + ' importées automatiquement', 'ok', '🔍');
+}
+
+function clearPappersResults() { document.getElementById('pappers-results').innerHTML = ''; }
+
+// ══ COURRIER EN LIGNE (SIMULATION) ══
+let currentCourrierInvoiceId = null;
+let currentCourrierType = 'relance';
+
+function openCourrierModal(invoiceId) {
+  currentCourrierInvoiceId = invoiceId;
+  const inv = DB.getInvoices().find(i => i.id === invoiceId);
+  if(!inv) return;
+  const session = DB.getSession();
+  const settings = DB.getSettings();
+  const cabinetName = settings.cabinetName || session?.cabinet || 'Cabinet';
+
+  document.getElementById('courrier-dest').value = inv.client + (inv.clientAddress ? '\n' + inv.clientAddress : '');
+  setCourrierType('relance');
+  document.getElementById('courrier-status').innerHTML = '';
+  document.getElementById('courrier-modal').classList.remove('hidden');
+}
+
+function setCourrierType(type) {
+  currentCourrierType = type;
+  const inv = DB.getInvoices().find(i => i.id === currentCourrierInvoiceId);
+  if(!inv) return;
+  const session = DB.getSession();
+  const settings = DB.getSettings();
+  const cabinetName = settings.cabinetName || session?.cabinet || 'Cabinet';
+  const days = inv.dueDate ? Math.max(0, Math.floor((new Date() - new Date(inv.dueDate)) / 86400000)) : 0;
+
+  document.querySelectorAll('#courrier-modal .btn').forEach(b => { b.classList.remove('btn-sage'); b.classList.add('btn-outline'); });
+  document.getElementById('courrier-type-' + (type === 'mise_en_demeure' ? 'mise' : type === 'recommande' ? 'ar' : 'relance')).classList.remove('btn-outline');
+  document.getElementById('courrier-type-' + (type === 'mise_en_demeure' ? 'mise' : type === 'recommande' ? 'ar' : 'relance')).classList.add('btn-sage');
+
+  const templates = {
+    relance: {
+      objet: 'Relance amiable — Facture ' + inv.number,
+      body: 'Madame, Monsieur,\n\nSauf erreur de notre part, nous constatons que votre facture n° ' + inv.number + ' d\'un montant de ' + inv.total.toLocaleString('fr-FR') + ' € TTC, émise le ' + (inv.date ? new Date(inv.date).toLocaleDateString('fr-LU') : 'N/A') + ', demeure impayée à ce jour' + (days > 0 ? ' (' + days + ' jours de retard)' : '') + '.\n\nNous vous saurions gré de bien vouloir procéder au règlement de cette somme dans les meilleurs délais.\n\nDans l\'hypothèse où ce règlement aurait été effectué entre-temps, nous vous prions de ne pas tenir compte de la présente.\n\nNous restons à votre disposition pour tout renseignement complémentaire.\n\nVeuillez agréer, Madame, Monsieur, l\'expression de nos salutations distinguées.\n\n' + (session?.name || 'Le Cabinet') + '\n' + cabinetName,
+      mode: 'Lettre simple', cout: '1,50 €', delai: 'J+2'
+    },
+    mise_en_demeure: {
+      objet: 'MISE EN DEMEURE — Facture ' + inv.number,
+      body: 'Madame, Monsieur,\n\nPar la présente, et conformément aux dispositions de l\'article 1153 du Code civil, nous vous mettons en demeure de procéder au paiement de la somme de ' + inv.total.toLocaleString('fr-FR') + ' € TTC au titre de la facture n° ' + inv.number + (days > 0 ? ', impayée depuis ' + days + ' jours' : '') + '.\n\nÀ défaut de règlement intégral dans un délai de HUIT (8) jours à compter de la réception de la présente, nous nous réserverons le droit de saisir les juridictions compétentes et de réclamer les intérêts de retard conformément à la loi, ainsi que l\'indemnité forfaitaire de recouvrement de 40 euros prévue par les textes en vigueur.\n\nNous vous invitons à régulariser votre situation dans les plus brefs délais afin d\'éviter toute procédure contentieuse.\n\nVeuillez agréer, Madame, Monsieur, l\'expression de nos salutations distinguées.\n\n' + (session?.name || 'Le Cabinet') + '\n' + cabinetName,
+      mode: 'Lettre recommandée', cout: '5,80 €', delai: 'J+3'
+    },
+    recommande: {
+      objet: 'Recommandé AR — Recouvrement Facture ' + inv.number,
+      body: 'Madame, Monsieur,\n\nMalgré nos précédentes relances restées sans effet, nous constatons que votre facture n° ' + inv.number + ' d\'un montant de ' + inv.total.toLocaleString('fr-FR') + ' € TTC demeure impayée.\n\nPar le présent courrier recommandé avec accusé de réception, nous vous enjoignons de procéder au règlement intégral de cette somme sous HUIT (8) jours.\n\nPassé ce délai, et sans réponse de votre part, nous transmettrons le dossier à notre conseil pour engager les poursuites judiciaires appropriées. Les frais de recouvrement, intérêts de retard et dommages et intérêts seront à votre charge.\n\nDans l\'attente de votre règlement,\n\nVeuillez agréer, Madame, Monsieur, l\'expression de nos salutations distinguées.\n\n' + (session?.name || 'Le Cabinet') + '\n' + cabinetName,
+      mode: 'Recommandé AR', cout: '7,90 €', delai: 'J+4'
+    }
+  };
+
+  const tpl = templates[type];
+  document.getElementById('courrier-objet').value = tpl.objet;
+  document.getElementById('courrier-body').value = tpl.body;
+  document.getElementById('courrier-mode').textContent = tpl.mode;
+  document.getElementById('courrier-cout').textContent = tpl.cout;
+  document.getElementById('courrier-delai').textContent = tpl.delai;
+}
+
+function sendCourrier() {
+  const statusEl = document.getElementById('courrier-status');
+  const inv = DB.getInvoices().find(i => i.id === currentCourrierInvoiceId);
+
+  statusEl.innerHTML = '<div style="padding:12px;background:var(--info-bg);border-radius:8px;font-size:.78rem;color:var(--info-fg);text-align:center"><span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Envoi du courrier en cours via Maileva...</div>';
+
+  setTimeout(() => {
+    const trackingId = 'MV-' + Date.now().toString(36).toUpperCase();
+    const courriers = DB.load('courriers', []);
+    courriers.push({
+      id: trackingId,
+      invoiceId: currentCourrierInvoiceId,
+      type: currentCourrierType,
+      dest: document.getElementById('courrier-dest').value,
+      objet: document.getElementById('courrier-objet').value,
+      date: new Date().toISOString(),
+      status: 'sent'
+    });
+    DB.save('courriers', courriers);
+
+    statusEl.innerHTML = `<div style="padding:14px;background:var(--ok-bg);border-radius:8px;text-align:center">
+      <div style="font-size:1.5rem;margin-bottom:4px">✅</div>
+      <div style="font-size:.85rem;font-weight:700;color:var(--ok-fg)">Courrier envoyé avec succès</div>
+      <div style="font-size:.72rem;color:var(--mid);margin-top:4px">N° suivi : ${trackingId} · ${document.getElementById('courrier-mode').textContent} · Réception estimée : ${document.getElementById('courrier-delai').textContent}</div>
+    </div>`;
+
+    DB.addAudit({type:'courrier', action: currentCourrierType.replace('_',' ') + ' envoyé — ' + (inv?.number||'') + ' · ' + trackingId, user: DB.getSession()?.name});
+    showToast('Courrier envoyé', (inv?.number||'Facture') + ' — ' + document.getElementById('courrier-mode').textContent + ' · N° ' + trackingId, 'ok', '📨');
+  }, 2000);
+}
+
+function generateCourrierPDF() {
+  if(typeof window.jspdf === 'undefined') { showToast('PDF non disponible','jsPDF non chargé','warn','⚠️'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const settings = DB.getSettings();
+  const session = DB.getSession();
+  const cabinetName = settings.cabinetName || session?.cabinet || 'Cabinet';
+  const inv = DB.getInvoices().find(i => i.id === currentCourrierInvoiceId);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(40,50,65);
+  doc.text(cabinetName, 20, 25);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,100,100);
+  if(settings.cabinetAddress) doc.text(settings.cabinetAddress, 20, 32, {maxWidth:80});
+
+  doc.setFontSize(8); doc.text('Luxembourg, le ' + new Date().toLocaleDateString('fr-LU',{day:'numeric',month:'long',year:'numeric'}), 130, 25);
+
+  const dest = document.getElementById('courrier-dest').value;
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(30,30,30);
+  doc.text(dest, 130, 45, {maxWidth:60});
+
+  const objet = document.getElementById('courrier-objet').value;
+  doc.setFont('helvetica','bold'); doc.setFontSize(10);
+  doc.text('Objet : ' + objet, 20, 75);
+
+  doc.setDrawColor(200,200,200); doc.line(20, 80, 190, 80);
+
+  const body = document.getElementById('courrier-body').value;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(50,50,50);
+  const lines = doc.splitTextToSize(body, 170);
+  doc.text(lines, 20, 90);
+
+  doc.save('courrier-' + (inv?.number||'document') + '-' + currentCourrierType + '.pdf');
+  showToast('PDF généré', 'Courrier téléchargé', 'ok', '📥');
+}
+
+function closeCourrierModal() { document.getElementById('courrier-modal').classList.add('hidden'); }
 
 // ══ EXPORT / IMPORT ══
 function exportAllData() {
