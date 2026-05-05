@@ -1711,43 +1711,28 @@ body{padding-bottom:62px}
       <!-- ═══ TAB 1: DOSSIERS ═══ -->
       <div class="dash-tab-content active" id="dtab-dossiers">
 
-        <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr)">
           <div class="kpi" onclick="showView('dossiers')">
             <div class="kpi-header"><span class="kpi-label">Dossiers actifs</span><div class="kpi-icon-wrap green">📁</div></div>
             <div class="kpi-val animated" id="kpi-dossiers">0</div>
             <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-dossiers-trend"></span><span class="kpi-sub" id="kpi-dossiers-sub">0 in scope</span></div>
-          </div>
-          <div class="kpi" onclick="showView('dossiers')">
-            <div class="kpi-header"><span class="kpi-label">In scope LCB</span><div class="kpi-icon-wrap orange">🛡️</div></div>
-            <div class="kpi-val animated" id="kpi-inscope">0</div>
-            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-inscope-trend"></span><span class="kpi-sub" id="kpi-inscope-sub"></span></div>
           </div>
           <div class="kpi" onclick="openHoursModal()">
             <div class="kpi-header"><span class="kpi-label">Heures ce mois</span><div class="kpi-icon-wrap blue">⏱️</div></div>
             <div class="kpi-val animated" id="kpi-heures">0</div>
             <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-heures-trend"></span><span class="kpi-sub" id="kpi-heures-sub">ce mois</span></div>
           </div>
-          <div class="kpi" onclick="showView('audiences')">
-            <div class="kpi-header"><span class="kpi-label">Audiences</span><div class="kpi-icon-wrap blue">📅</div></div>
-            <div class="kpi-val animated" id="kpi-audiences">0</div>
-            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-audiences-trend"></span><span class="kpi-sub" id="kpi-audiences-sub">à venir</span></div>
-          </div>
         </div>
 
-        <div class="qa-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:18px">
+        <div class="qa-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:18px">
           <div class="qa primary" onclick="showView('onboarding')"><span class="qa-icon">📂</span><div class="qa-label">Nouveau dossier</div><div class="qa-sublabel">Onboarding KYC</div></div>
           <div class="qa" onclick="openHoursModal()"><span class="qa-icon">⏱️</span><div class="qa-label">Encoder des heures</div><div class="qa-sublabel">Time tracking</div></div>
-          <div class="qa" onclick="showView('screening')"><span class="qa-icon">🔍</span><div class="qa-label">Screening KYC</div><div class="qa-sublabel">Sanctions & PPE</div></div>
-          <div class="qa" onclick="showView('audiences')"><span class="qa-icon">📅</span><div class="qa-label">Agenda</div><div class="qa-sublabel">Audiences & RDV</div></div>
         </div>
 
         <div class="card" style="margin-bottom:18px">
           <div class="card-head">
             <div class="card-head-left"><span class="card-head-icon">📁</span><span class="card-title">Dossiers récents</span><span class="card-count" id="card-dossiers-count">0 actifs</span></div>
-            <div style="display:flex;align-items:center;gap:10px">
-              <button class="btn btn-sage" onclick="showView('onboarding')" style="font-size:.75rem;padding:6px 14px">+ Nouveau</button>
-              <span class="card-action" onclick="showView('dossiers')">Voir tout</span>
-            </div>
+            <span class="card-action" onclick="showView('dossiers')">Voir tout</span>
           </div>
           <div class="dos-head">
             <div class="dos-head-cell">Client</div><div class="dos-head-cell">Mission</div><div class="dos-head-cell">Scope</div>
@@ -1846,6 +1831,11 @@ body{padding-bottom:62px}
       <div class="dash-tab-content" id="dtab-compliance">
 
         <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+          <div class="kpi" onclick="showView('dossiers')">
+            <div class="kpi-header"><span class="kpi-label">In scope LCB</span><div class="kpi-icon-wrap orange">🛡️</div></div>
+            <div class="kpi-val animated" id="kpi-inscope">0</div>
+            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-inscope-trend"></span><span class="kpi-sub" id="kpi-inscope-sub"></span></div>
+          </div>
           <div class="kpi" onclick="showView('audit')">
             <div class="kpi-header"><span class="kpi-label">Alertes ouvertes</span><div class="kpi-icon-wrap red">⚠️</div></div>
             <div class="kpi-val animated" style="color:var(--warn-fg)" id="kpi-alertes">0</div>
@@ -1856,16 +1846,18 @@ body{padding-bottom:62px}
             <div class="kpi-val animated" id="kpi-screening">0</div>
             <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-screening-trend">0% négatifs</span><span class="kpi-sub" id="kpi-screening-sub">0 alerte</span></div>
           </div>
-          <div class="kpi" onclick="showAllKYCReviews()">
-            <div class="kpi-header"><span class="kpi-label">Revues KYC</span><div class="kpi-icon-wrap orange">🔄</div></div>
-            <div class="kpi-val animated" id="kpi-kyc-due">0</div>
-            <div class="kpi-footer"><span class="kpi-trend neutral" id="kpi-kyc-due-trend"></span><span class="kpi-sub" id="kpi-kyc-due-sub"></span></div>
-          </div>
           <div class="kpi" onclick="showView('oal')">
             <div class="kpi-header"><span class="kpi-label">OAL</span><div class="kpi-icon-wrap green">📋</div></div>
             <div class="kpi-val animated" id="mc-oal-pct-kpi">0%</div>
             <div class="kpi-footer"><span class="kpi-trend neutral">Progression</span><span class="kpi-sub">questionnaire</span></div>
           </div>
+        </div>
+
+        <div class="qa-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:18px">
+          <div class="qa primary" onclick="showView('screening')"><span class="qa-icon">🔍</span><div class="qa-label">Screening KYC</div><div class="qa-sublabel">Sanctions & PPE</div></div>
+          <div class="qa" onclick="showAllKYCReviews()"><span class="qa-icon">🔄</span><div class="qa-label">Revues KYC</div><div class="qa-sublabel" id="kpi-kyc-due-btn">0 à planifier</div></div>
+          <div class="qa" onclick="showView('oal')"><span class="qa-icon">📋</span><div class="qa-label">Questionnaire OAL</div><div class="qa-sublabel">Rapport annuel</div></div>
+          <div class="qa" onclick="generateRapportCSSF()"><span class="qa-icon">📊</span><div class="qa-label">Rapport CSSF</div><div class="qa-sublabel">Générer PDF</div></div>
         </div>
 
         <div class="main-grid">
@@ -5038,6 +5030,7 @@ function updateDashboardKPIs() {
     el('kpi-kyc-due-trend').className = 'kpi-trend ' + (kycOverdue.length > 0 ? 'warn' : 'up');
   }
   if(el('kpi-kyc-due-sub')) el('kpi-kyc-due-sub').textContent = 'à planifier';
+  if(el('kpi-kyc-due-btn')) el('kpi-kyc-due-btn').textContent = kycAction.length + ' à planifier';
   if(el('mc-oal-pct-kpi')) el('mc-oal-pct-kpi').textContent = oalPct + '%';
 
   // ── Tab badges
