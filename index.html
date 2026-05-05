@@ -238,8 +238,8 @@ body{font-family:var(--font);background:var(--cream);color:var(--charcoal);min-h
 .dash-tab:hover{color:var(--charcoal);background:rgba(255,255,255,.5)}
 .dash-tab.active{background:var(--white);color:var(--charcoal);box-shadow:0 1px 4px rgba(0,0,0,.08);font-weight:700}
 .dash-tab .tab-badge{font-size:.6rem;font-weight:700;padding:1px 6px;border-radius:99px;background:var(--danger-bg);color:var(--danger-fg);line-height:1.4}
-.dash-tab-content{display:none;animation:fadeUp .25s ease both}
-.dash-tab-content.active{display:block}
+.dash-tab-content{display:none;opacity:0;transform:translateY(8px)}
+.dash-tab-content.active{display:block;animation:tabFadeIn .3s ease forwards}
 [data-theme="dark"] .dash-tabs{background:var(--dark);border-color:var(--border)}
 [data-theme="dark"] .dash-tab.active{background:var(--charcoal)}
 .fin-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px}
@@ -1070,6 +1070,42 @@ textarea.oal-input{min-height:70px;resize:vertical;line-height:1.5}
 @keyframes slideInRight{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
 @keyframes slideOutRight{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(50px)}}
 
+/* ══ FAB (Floating Action Button) ══ */
+.fab-wrap{position:fixed;bottom:72px;right:20px;z-index:9992;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none}
+.fab-wrap.hidden{display:none}
+.fab-menu{display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:all;opacity:0;transform:translateY(10px) scale(.95);transition:all .25s cubic-bezier(.34,1.56,.64,1);visibility:hidden}
+.fab-wrap.open .fab-menu{opacity:1;transform:translateY(0) scale(1);visibility:visible}
+.fab-menu-item{display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:10px 14px;box-shadow:var(--shadow-md);cursor:pointer;transition:all .15s;white-space:nowrap}
+.fab-menu-item:hover{transform:translateX(-4px);box-shadow:var(--shadow-lg);border-color:var(--sage-muted)}
+.fab-menu-label{font-size:.78rem;font-weight:600;color:var(--charcoal)}
+.fab-menu-icon{font-size:1rem;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fab-menu-icon.blue{background:var(--sage-pale);color:var(--sage)}
+.fab-menu-icon.green{background:var(--ok-bg);color:var(--ok-fg)}
+.fab-menu-icon.gold{background:var(--warn-bg);color:var(--warn-fg)}
+.fab-btn{width:52px;height:52px;border-radius:16px;border:none;background:var(--sage);color:#fff;font-size:1.4rem;cursor:pointer;pointer-events:all;box-shadow:0 4px 16px rgba(74,111,165,.35);transition:all .25s;display:flex;align-items:center;justify-content:center;line-height:1}
+.fab-btn:hover{transform:scale(1.06);box-shadow:0 6px 24px rgba(74,111,165,.45)}
+.fab-wrap.open .fab-btn{background:var(--charcoal);transform:rotate(45deg)}
+[data-theme="dark"] .fab-btn{box-shadow:0 4px 16px rgba(0,0,0,.4)}
+[data-theme="dark"] .fab-wrap.open .fab-btn{background:var(--mid)}
+
+/* ══ DASH TAB TRANSITIONS ══ */
+@keyframes tabFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ QUICK CREATE MODE ══ */
+.qc-toggle{display:flex;gap:4px;background:var(--cream2);border-radius:10px;padding:3px;margin-bottom:16px;border:1px solid var(--border)}
+.qc-toggle-btn{flex:1;padding:8px 14px;border-radius:7px;border:none;background:transparent;font-family:var(--font);font-size:.78rem;font-weight:600;color:var(--mid);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px}
+.qc-toggle-btn.active{background:var(--white);color:var(--charcoal);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.qc-form{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:24px;animation:fadeUp .3s ease both}
+.qc-form .fg{margin-bottom:14px}
+.qc-form .lbl{font-size:.78rem;font-weight:600;color:var(--charcoal);margin-bottom:5px;display:block}
+.qc-form input,.qc-form select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:.84rem;color:var(--charcoal);background:var(--white);transition:border-color .15s}
+.qc-form input:focus,.qc-form select:focus{outline:none;border-color:var(--sage)}
+.qc-form .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ══ SUCCESS PULSE ══ */
+@keyframes successPulse{0%{box-shadow:0 0 0 0 rgba(26,122,66,.3)}70%{box-shadow:0 0 0 12px rgba(26,122,66,0)}100%{box-shadow:0 0 0 0 rgba(26,122,66,0)}}
+.btn-success-pulse{animation:successPulse 1.2s ease 1}
+
 /* ══ SCREENING ══ */
 .sc-search-bar{display:flex;gap:12px;align-items:center;background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:14px;transition:border-color .2s,box-shadow .2s}
 .sc-search-bar:focus-within{border-color:var(--sage);box-shadow:0 0 0 3px var(--sage-pale)}
@@ -1317,6 +1353,16 @@ body{padding-bottom:62px}
   <button class="gn-item" onclick="showView('audiences')" data-view="audiences"><span class="gn-icon">📅</span><span class="gn-label">Audiences</span></button>
   <button class="gn-item" onclick="showView('screening')" data-view="screening"><span class="gn-icon">🔍</span><span class="gn-label">Screening</span></button>
   <button class="gn-item" onclick="showView('audit')" data-view="audit"><span class="gn-icon">📊</span><span class="gn-label">Audit</span></button>
+</div>
+
+<!-- FAB (Floating Action Button) -->
+<div class="fab-wrap hidden" id="fab-wrap">
+  <div class="fab-menu" id="fab-menu">
+    <div class="fab-menu-item" onclick="closeFab();showView('onboarding')"><span class="fab-menu-label">Nouveau dossier</span><span class="fab-menu-icon blue">📁</span></div>
+    <div class="fab-menu-item" onclick="closeFab();openHoursModal()"><span class="fab-menu-label">Encoder des heures</span><span class="fab-menu-icon green">⏱</span></div>
+    <div class="fab-menu-item" onclick="closeFab();showView('screening')"><span class="fab-menu-label">Screening KYC</span><span class="fab-menu-icon gold">🔍</span></div>
+  </div>
+  <button class="fab-btn" id="fab-btn" onclick="toggleFab()" title="Actions rapides">+</button>
 </div>
 
 <!-- QUICK ACTIONS (top-right) -->
@@ -2067,8 +2113,53 @@ body{padding-bottom:62px}
 
   <div class="ob-content">
 
+    <!-- MODE TOGGLE: Quick Create / Full Wizard -->
+    <div class="qc-toggle" id="qc-toggle">
+      <button class="qc-toggle-btn active" id="qc-mode-full" onclick="setOnboardingMode('full')">📋 Assistant complet (7 étapes)</button>
+      <button class="qc-toggle-btn" id="qc-mode-quick" onclick="setOnboardingMode('quick')">⚡ Création rapide</button>
+    </div>
+
+    <!-- QUICK CREATE FORM -->
+    <div class="qc-form" id="qc-form" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+        <div style="font-size:1.4rem">⚡</div>
+        <div>
+          <div style="font-size:1rem;font-weight:700;color:var(--charcoal)">Création rapide</div>
+          <div style="font-size:.75rem;color:var(--mid)">Créez un dossier en quelques secondes. Vous pourrez compléter les détails plus tard.</div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="fg"><label class="lbl">Nom du client *</label><input id="qc-client" placeholder="Ex: MARTIN Jean-Pierre ou ACME SA" oninput="validateQuickCreate()"/></div>
+        <div class="fg"><label class="lbl">Type de client *</label>
+          <select id="qc-type" onchange="validateQuickCreate()">
+            <option value="">Sélectionner...</option>
+            <option value="pp">Personne physique</option>
+            <option value="pm">Personne morale</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label class="lbl">Mission principale *</label>
+        <select id="qc-mission" onchange="validateQuickCreate()">
+          <option value="">Sélectionner...</option>
+          <option value="immobilier">Transaction immobilière</option>
+          <option value="societe">Constitution de société</option>
+          <option value="fonds">Gestion de fonds</option>
+          <option value="fiscal">Conseil fiscal</option>
+          <option value="trust">Fiducie / trust</option>
+          <option value="banque">Gestion de compte</option>
+          <option value="judiciaire">Représentation judiciaire</option>
+          <option value="conseil">Conseil juridique pur</option>
+        </select>
+      </div>
+      <div class="fg"><label class="lbl">Notes (optionnel)</label><input id="qc-notes" placeholder="Observations, contexte..."/></div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="btn btn-primary" id="qc-submit" onclick="submitQuickCreate()" disabled style="flex:1">Créer le dossier →</button>
+        <button class="btn btn-ghost" onclick="setOnboardingMode('full')">Assistant complet</button>
+      </div>
+    </div>
+
     <!-- PROGRESS -->
-    <div class="progress-wrap">
+    <div class="progress-wrap" id="full-wizard-wrap">
       <div class="progress-track" id="pt">
         <div class="p-step"><div class="p-dot active" id="d1"><span>1</span></div><div class="p-label">Client</div></div>
         <div class="p-connector" id="c1"></div>
@@ -2403,8 +2494,8 @@ body{padding-bottom:62px}
         <div class="summary-grid" id="r-grid"></div>
         <div class="next-box" id="r-next"></div>
 
-        <div class="btn-row" style="margin-top:22px;justify-content:center;flex-wrap:wrap;gap:10px">
-          <button class="btn btn-success" onclick="showView('dashboard')">← Tableau de bord</button>
+        <div class="btn-row" style="margin-top:22px;justify-content:center;flex-wrap:wrap;gap:10px" id="r-actions">
+          <button class="btn btn-success btn-success-pulse" id="r-view-btn" onclick="viewCreatedDossier()">👁 Voir le dossier</button>
           <button class="btn btn-primary" onclick="showView('screening')">🔍 Screening KYC</button>
           <button class="btn btn-secondary" onclick="showView('oal')">📋 Questionnaire OAL</button>
           <button class="btn btn-ghost" onclick="resetAll()">+ Nouveau dossier</button>
@@ -3076,17 +3167,26 @@ function showView(name){
   document.querySelectorAll('.nav-item,.db-ni').forEach(n=>n.classList.remove('active','on'));
   if(name==='dashboard'){
     document.querySelectorAll('[onclick*="dashboard"]').forEach(n=>n.classList.add('active'));
+    restoreLastDashTab();
     animateDashboard();
   }
   if(name==='onboarding'){
     resetAll();
+    setOnboardingMode('full');
   }
   if(name==='oal'){
     initOAL();
     showOALSection(1);
-    // Afficher la mob-bar OAL sur mobile
     const oalMob = document.getElementById('oal-mob-bar');
     if(oalMob) oalMob.style.display='';
+  }
+
+  // Show/hide FAB
+  const fab = document.getElementById('fab-wrap');
+  if(fab) {
+    const showFab = name !== 'login' && name !== 'onboarding';
+    fab.classList.toggle('hidden', !showFab);
+    fab.classList.remove('open');
   }
 }
 
@@ -3758,6 +3858,19 @@ function renderStep7(){
   document.getElementById('r-next').innerHTML=`<div class="next-box-title">Prochaines étapes</div>${
     nextItems.map((t,i)=>`<div class="next-item"><div class="next-num">${i+1}</div><span>${t}</span></div>`).join('')
   }`;
+
+  // Store ref for "Voir le dossier" button
+  window._lastCreatedRef = ref;
+
+  // Success toast
+  showToast('Dossier créé avec succès', ref + ' — ' + clientName, 'ok', '✅');
+}
+
+function viewCreatedDossier() {
+  const ref = window._lastCreatedRef;
+  if(!ref) return;
+  showView('dashboard');
+  setTimeout(() => viewDossier(ref), 400);
 }
 
 // ── RESET ────────────────────────────────────────────────────────────────
@@ -4407,19 +4520,119 @@ function showAllKYCReviews() {
 }
 
 // ══ DASHBOARD TAB SWITCHING ══
-let currentDashTab = 'dossiers';
+let currentDashTab = localStorage.getItem('norvy_lastDashTab') || 'dossiers';
 function switchDashTab(tab) {
   currentDashTab = tab;
+  localStorage.setItem('norvy_lastDashTab', tab);
   document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.dash-tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.dash-tab-content').forEach(c => {
+    c.classList.remove('active');
+    c.style.animation = 'none';
+  });
   document.querySelector(`.dash-tab[onclick*="${tab}"]`)?.classList.add('active');
   const content = document.getElementById('dtab-' + tab);
-  if(content) content.classList.add('active');
+  if(content) {
+    content.classList.add('active');
+    content.style.animation = 'none';
+    content.offsetHeight;
+    content.style.animation = 'tabFadeIn .3s ease forwards';
+  }
   if(tab === 'finance') { renderFinancialOverview(); renderFinancialBreakdowns(); }
   if(tab === 'compliance') { renderComplianceRiskChart(); }
   if(tab === 'recouvrement') { renderRecouvrementTab(); }
   updateDashboardKPIs();
   animateDashboard();
+}
+function restoreLastDashTab() {
+  const saved = localStorage.getItem('norvy_lastDashTab');
+  if(saved && document.getElementById('dtab-' + saved)) switchDashTab(saved);
+}
+
+// ══ FAB (Floating Action Button) ══
+function toggleFab() {
+  document.getElementById('fab-wrap')?.classList.toggle('open');
+}
+function closeFab() {
+  document.getElementById('fab-wrap')?.classList.remove('open');
+}
+document.addEventListener('click', e => {
+  const fw = document.getElementById('fab-wrap');
+  if(fw && fw.classList.contains('open') && !fw.contains(e.target)) fw.classList.remove('open');
+});
+
+// ══ QUICK CREATE MODE ══
+let onboardingMode = 'full';
+function setOnboardingMode(mode) {
+  onboardingMode = mode;
+  document.getElementById('qc-mode-full')?.classList.toggle('active', mode === 'full');
+  document.getElementById('qc-mode-quick')?.classList.toggle('active', mode === 'quick');
+  document.getElementById('qc-form').style.display = mode === 'quick' ? 'block' : 'none';
+  document.getElementById('full-wizard-wrap').style.display = mode === 'quick' ? 'none' : '';
+  document.querySelectorAll('.sp').forEach(s => s.style.display = mode === 'quick' ? 'none' : '');
+  if(mode === 'full') {
+    document.querySelectorAll('.sp').forEach(s => s.style.display = '');
+  }
+}
+function validateQuickCreate() {
+  const ok = !!(document.getElementById('qc-client')?.value.trim()) &&
+             !!(document.getElementById('qc-type')?.value) &&
+             !!(document.getElementById('qc-mission')?.value);
+  document.getElementById('qc-submit').disabled = !ok;
+}
+function submitQuickCreate() {
+  const clientName = document.getElementById('qc-client').value.trim();
+  const clientType = document.getElementById('qc-type').value;
+  const mission = document.getElementById('qc-mission').value;
+  const notes = document.getElementById('qc-notes')?.value.trim() || '';
+  if(!clientName || !clientType || !mission) return;
+
+  const ref = DB.nextRef();
+  const inScope = ['immobilier','societe','fonds','fiscal','trust','banque'].includes(mission);
+  const missionLabel = {
+    immobilier:'Transaction immobilière',societe:'Constitution de société',
+    fonds:'Gestion de fonds',fiscal:'Conseil fiscal',
+    trust:'Fiducie / trust',banque:'Gestion de compte',
+    judiciaire:'Représentation judiciaire',conseil:'Conseil juridique pur'
+  }[mission] || mission;
+
+  const dossier = {
+    ref, clientType, clientName,
+    nom: clientType === 'pp' ? clientName.split(' ')[0] : '',
+    prenom: clientType === 'pp' ? clientName.split(' ').slice(1).join(' ') : '',
+    denomination: clientType === 'pm' ? clientName : '',
+    missions: [mission], missionLabels: [missionLabel], missionLabel,
+    inScope, vigilance: inScope ? 'normal' : null,
+    gafi: null, ppe: null, dist: null,
+    screeningResult: 'non-effectue', screeningDone: false,
+    decision: 'accepter', status: 'actif',
+    notes,
+    createdAt: new Date().toISOString(),
+    createdBy: DB.getSession()?.userId || null,
+    quickCreate: true
+  };
+  const dossiers = DB.getDossiers();
+  dossiers.unshift(dossier);
+  DB.saveDossiers(dossiers);
+
+  DB.addAudit({
+    type: 'dossier', dot: 'var(--sage)',
+    title: '📁 Dossier créé (rapide) — ' + clientName,
+    detail: ref + ' · ' + (clientType === 'pp' ? 'PP' : 'PM') + ' · ' + missionLabel + ' · ' + (inScope ? 'IN SCOPE' : 'OUT OF SCOPE'),
+    tags: [{ t: inScope ? 'IN SCOPE' : 'OUT OF SCOPE', c: inScope ? 'g' : 'o' }, { t:'Rapide', c:'b' }]
+  });
+
+  document.getElementById('qc-client').value = '';
+  document.getElementById('qc-type').value = '';
+  document.getElementById('qc-mission').value = '';
+  document.getElementById('qc-notes').value = '';
+  document.getElementById('qc-submit').disabled = true;
+
+  showToast('Dossier créé', ref + ' — ' + clientName, 'ok', '✅');
+
+  setTimeout(() => {
+    showView('dashboard');
+    setTimeout(() => viewDossier(ref), 400);
+  }, 800);
 }
 
 function renderFinancialBreakdowns() {
@@ -7647,6 +7860,7 @@ window.showView=function(name){
     renderDossiersList();
   }
   if(name==='dashboard'){
+    restoreLastDashTab();
     animateDashboard();
     initDashboardFromDB();
     renderCalendar();
@@ -7665,8 +7879,11 @@ window.showView=function(name){
       if(f){let v=0;const s=factuTotal/62;const ti=setInterval(()=>{v=Math.min(v+s,factuTotal);f.textContent=Math.round(v).toLocaleString('fr-FR')+' €';if(v>=factuTotal)clearInterval(ti);},16);}
     },250);
   }
-  if(name==='onboarding')resetAll();
+  if(name==='onboarding'){resetAll();setOnboardingMode('full');}
   if(name==='oal'){initOAL();showOALSection(1);}
+  // FAB visibility
+  const fab = document.getElementById('fab-wrap');
+  if(fab) { fab.classList.toggle('hidden', name === 'login' || name === 'onboarding'); fab.classList.remove('open'); }
   if(name==='audit'){
     setTimeout(()=>{
       renderAuditFeed();
