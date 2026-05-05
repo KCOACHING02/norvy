@@ -2188,15 +2188,35 @@ body{padding-bottom:62px}
 
         <div class="fg" style="margin-bottom:18px">
           <label class="lbl req">Type de client</label>
-          <div class="cc-grid">
+          <div class="cc-grid" style="grid-template-columns:1fr 1fr 1fr">
             <div class="cc sel" id="ct-pp" onclick="setClientType('pp')">
               <span class="cc-icon">👤</span>
-              <div class="cc-body"><div class="cc-title">Personne physique</div><div class="cc-desc">Particulier, indépendant, dirigeant personnel</div></div>
+              <div class="cc-body"><div class="cc-title">Personne physique</div><div class="cc-desc">Particulier, indépendant — risque standard</div></div>
+              <div class="cc-dot"></div>
+            </div>
+            <div class="cc" id="ct-pp-ppe" onclick="setClientType('pp-ppe')">
+              <span class="cc-icon">🔴</span>
+              <div class="cc-body"><div class="cc-title">PP — PPE potentielle</div><div class="cc-desc">Personne politiquement exposée ou proche</div></div>
               <div class="cc-dot"></div>
             </div>
             <div class="cc" id="ct-pm" onclick="setClientType('pm')">
               <span class="cc-icon">🏢</span>
-              <div class="cc-body"><div class="cc-title">Personne morale</div><div class="cc-desc">Société, fondation, fiducie, trust, association</div></div>
+              <div class="cc-body"><div class="cc-title">PM simple</div><div class="cc-desc">Actionnariat transparent, structure claire</div></div>
+              <div class="cc-dot"></div>
+            </div>
+            <div class="cc" id="ct-pm-complex" onclick="setClientType('pm-complex')">
+              <span class="cc-icon">🏗️</span>
+              <div class="cc-body"><div class="cc-title">PM complexe</div><div class="cc-desc">Multi-niveaux, entités hors UE</div></div>
+              <div class="cc-dot"></div>
+            </div>
+            <div class="cc" id="ct-trust" onclick="setClientType('trust')">
+              <span class="cc-icon">🔒</span>
+              <div class="cc-body"><div class="cc-title">Fiducie / Trust</div><div class="cc-desc">Risque très élevé automatique</div></div>
+              <div class="cc-dot"></div>
+            </div>
+            <div class="cc" id="ct-crypto" onclick="setClientType('crypto')">
+              <span class="cc-icon">₿</span>
+              <div class="cc-body"><div class="cc-title">Crypto-actifs</div><div class="cc-desc">Seuil ≥ 1 000 € — AMLR</div></div>
               <div class="cc-dot"></div>
             </div>
           </div>
@@ -2267,6 +2287,36 @@ body{padding-bottom:62px}
           </div>
           <div class="note" style="margin-top:14px">
             <span>ℹ️</span><span>L'identification des bénéficiaires effectifs (UBO ≥ 25%) sera demandée à l'étape Documents si la mission est qualifiée <strong>In Scope</strong>.</span>
+          </div>
+        </div>
+
+        <!-- Trust / Fiducie fields -->
+        <div id="f-trust" style="display:none">
+          <div class="note" style="margin-bottom:14px;background:var(--danger-bg);border-color:var(--danger-fg)"><span>🔒</span><span><strong>Risque TRÈS ÉLEVÉ automatique.</strong> Fiducie, trust et fondation nécessitent une autorisation managing partner et des documents renforcés.</span></div>
+          <div class="grid2">
+            <div class="fg full"><label class="lbl req">Nom du trust / fiducie</label><input id="tr-nom" placeholder="Family Trust XYZ" oninput="v1()"/></div>
+            <div class="fg"><label class="lbl req">Type de structure</label>
+              <select id="tr-type" onchange="v1()"><option value="">Sélectionner...</option><option>Trust discrétionnaire</option><option>Trust fixe</option><option>Fiducie-gestion</option><option>Fiducie-sûreté</option><option>Fondation</option><option>Stiftung</option></select>
+            </div>
+            <div class="fg"><label class="lbl req">Juridiction</label>
+              <select id="tr-jur" onchange="v1()"><option value="">Sélectionner...</option><option>Luxembourg</option><option>Liechtenstein</option><option>Jersey</option><option>Guernesey</option><option>Îles Caïmans</option><option>BVI</option><option>Suisse</option><option>Autre UE</option><option>Autre hors UE</option></select>
+            </div>
+            <div class="fg full"><label class="lbl req">Constituant (Settlor)</label><input id="tr-settlor" placeholder="Prénom NOM du constituant" oninput="v1()"/></div>
+            <div class="fg full"><label class="lbl">Trustee</label><input id="tr-trustee" placeholder="Nom du trustee (personne physique ou morale)"/></div>
+            <div class="fg full"><label class="lbl">Protecteur (si applicable)</label><input id="tr-protector" placeholder="Nom du protecteur"/></div>
+          </div>
+        </div>
+
+        <!-- Crypto fields -->
+        <div id="f-crypto" style="display:none">
+          <div class="note" style="margin-bottom:14px;background:var(--warn-bg);border-color:var(--warn-fg)"><span>₿</span><span><strong>Seuil d'assujettissement : ≥ 1 000 €.</strong> Opérations crypto-actifs soumises à vigilance renforcée AMLR.</span></div>
+          <div class="grid2">
+            <div class="fg full"><label class="lbl req">Nom du client</label><input id="cr-nom" placeholder="Prénom NOM ou dénomination" oninput="v1()"/></div>
+            <div class="fg"><label class="lbl req">Type d'opération</label>
+              <select id="cr-type" onchange="v1()"><option value="">Sélectionner...</option><option>Achat/vente crypto</option><option>Échange crypto-crypto</option><option>Transfert wallet</option><option>ICO/STO</option><option>DeFi</option><option>Staking</option></select>
+            </div>
+            <div class="fg"><label class="lbl req">Montant estimé (€)</label><input type="number" id="cr-montant" placeholder="10000" oninput="v1()"/></div>
+            <div class="fg full"><label class="lbl req">Wallet address</label><input id="cr-wallet" placeholder="0x... ou bc1..." oninput="v1()"/></div>
           </div>
         </div>
 
@@ -2364,6 +2414,49 @@ body{padding-bottom:62px}
             <div id="dist-auto-card" style="margin-top:4px"></div>
           </div>
 
+        </div>
+
+        <div class="divider"></div>
+        <div style="font-size:.85rem;font-weight:700;color:var(--charcoal);margin-bottom:14px">📊 Critères de scoring complémentaires</div>
+
+        <div class="grid2" style="margin-bottom:14px">
+          <div class="fg">
+            <label class="lbl">Structure capitalistique</label>
+            <select id="risk-structure" onchange="S.riskStructure=parseInt(this.value);renderVig()">
+              <option value="5">Personne physique — pas de structure (5)</option>
+              <option value="15" selected>Société transparente &lt; 4 niveaux (15)</option>
+              <option value="35">Société transparente 4-6 niveaux (35)</option>
+              <option value="55">Multi-niveaux avec entités hors UE OCDE (55)</option>
+              <option value="75">Entités dans juridictions offshore (75)</option>
+              <option value="85">Porteurs de parts non identifiables (85)</option>
+              <option value="100">Structure opaque — UBO impossible (100)</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="lbl">Origine des fonds</label>
+            <select id="risk-fonds" onchange="S.riskFonds=parseInt(this.value);renderVig()">
+              <option value="10">Revenus professionnels documentés (10)</option>
+              <option value="15">Patrimoine familial documenté (15)</option>
+              <option value="20">Cession d'actifs documentée (20)</option>
+              <option value="25" selected>Revenus d'investissement documentés (25)</option>
+              <option value="50">Revenus internationaux partiellement documentés (50)</option>
+              <option value="70">Origine déclarée mais non justifiable (70)</option>
+              <option value="100">Origine inconnue ou refus (100)</option>
+            </select>
+          </div>
+          <div class="fg full">
+            <label class="lbl">Historique relationnel</label>
+            <select id="risk-historique" onchange="S.riskHistorique=parseInt(this.value);renderVig()">
+              <option value="5">Client connu &gt; 3 ans sans incident (5)</option>
+              <option value="15">Client connu 1-3 ans sans incident (15)</option>
+              <option value="20">Nouveau client référé par client existant (20)</option>
+              <option value="35" selected>Nouveau client prospect entrant (35)</option>
+              <option value="55">Client introduit par intermédiaire non identifié (55)</option>
+              <option value="65">Client avec alerte AML antérieure résolue (65)</option>
+              <option value="85">Client avec DS transmise (85)</option>
+              <option value="90">Client refusant de fournir des documents (90)</option>
+            </select>
+          </div>
         </div>
 
         <div id="vig-res"></div>
@@ -3254,7 +3347,8 @@ const S = {
   clientType:'pp', missions:[],
   gafi:null, ppe:null, dist:null,
   decision:null, docsChecked:new Set(),
-  screeningDone:false
+  screeningDone:false,
+  riskStructure:15, riskFonds:25, riskHistorique:35
 };
 
 const IN_SCOPE  = ['immobilier','societe','fonds','fiscal','trust','banque'];
@@ -3268,10 +3362,75 @@ const MISSION_LABELS = {
 
 function isInScope(){ return S.missions.some(m=>IN_SCOPE.includes(m)) }
 
+function calcRiskScore(){
+  if(!isInScope()) return {score:0, level:'none', label:'Hors périmètre'};
+  const t = S.clientType;
+
+  // Critère 1 — Nationalité (25%)
+  const nat = document.getElementById('pp-nat')?.value || document.getElementById('pm-pay')?.value || document.getElementById('tr-jur')?.value || '';
+  let noteNat = 30;
+  if(['Luxembourgeoise','Française','Belge','Allemande','Italienne','Espagnole','Portugaise','Autre UE','Luxembourg','France','Belgique','Pays-Bas','Allemagne'].includes(nat)) noteNat = 10;
+  else if(['Britannique','Suisse'].includes(nat)) noteNat = 20;
+  else if(nat.includes('standard') || nat === 'Hors UE') noteNat = 55;
+  else if(nat.includes('GAFI') || nat.includes('risque')) noteNat = 75;
+  else if(['Îles Caïmans','BVI','Jersey','Guernesey'].includes(nat)) noteNat = 70;
+  if(S.gafi === 'oui') noteNat = 100;
+
+  // Critère 2 — Type client (20%)
+  let noteClient = 20;
+  if(t === 'pp') noteClient = 10;
+  else if(t === 'pp-ppe') noteClient = 100;
+  else if(t === 'pm') noteClient = 20;
+  else if(t === 'pm-complex') noteClient = 65;
+  else if(t === 'trust') noteClient = 85;
+  else if(t === 'crypto') noteClient = 70;
+  if(S.ppe === 'oui') noteClient = 100;
+
+  // Critère 3 — Type opération (20%)
+  const opMap = {conseil:5, judiciaire:10, societe:20, immobilier:25, fiscal:30, fonds:60, trust:85, banque:45, crypto:80};
+  let noteOp = Math.max(...S.missions.map(m => opMap[m] || 30));
+  if(t === 'crypto') noteOp = Math.max(noteOp, 80);
+  if(t === 'trust') noteOp = Math.max(noteOp, 85);
+
+  // Critère 4 — Structure capitalistique (15%)
+  let noteStruct = S.riskStructure || 15;
+  if(t === 'pp' || t === 'pp-ppe' || t === 'crypto') noteStruct = 5;
+  else if(t === 'trust') noteStruct = Math.max(noteStruct, 75);
+  else if(t === 'pm-complex') noteStruct = Math.max(noteStruct, 55);
+
+  // Critère 5 — Origine des fonds (10%)
+  let noteFonds = S.riskFonds || 25;
+
+  // Critère 6 — Historique (10%)
+  let noteHist = S.riskHistorique || 35;
+
+  let score = Math.round(
+    (noteNat * 0.25) + (noteClient * 0.20) + (noteOp * 0.20) +
+    (noteStruct * 0.15) + (noteFonds * 0.10) + (noteHist * 0.10)
+  );
+
+  // Overrides
+  if(S.ppe === 'oui' || t === 'pp-ppe') score = Math.max(score, 81);
+  if(S.gafi === 'oui') score = Math.max(score, 81);
+  if(t === 'trust') score = Math.max(score, 70);
+
+  score = Math.min(100, Math.max(0, score));
+
+  let level, label, period, validator;
+  if(score <= 30) { level='faible'; label='FAIBLE'; period='3 ans'; validator='Avocat responsable'; }
+  else if(score <= 60) { level='standard'; label='STANDARD'; period='Annuelle'; validator='Avocat responsable'; }
+  else if(score <= 80) { level='eleve'; label='ÉLEVÉ'; period='12 mois'; validator='Associé senior'; }
+  else { level='tres-eleve'; label='TRÈS ÉLEVÉ'; period='6 mois'; validator='Managing partner'; }
+
+  return {score, level, label, period, validator, noteNat, noteClient, noteOp, noteStruct, noteFonds, noteHist};
+}
+
 function vigilanceLevel(){
   if(!isInScope()) return null;
-  if(S.ppe==='oui'||S.gafi==='oui'||S.missions.includes('trust')) return 'renforcee';
-  if(S.dist==='oui') return 'normal-plus';
+  const r = calcRiskScore();
+  if(r.level === 'tres-eleve') return 'renforcee';
+  if(r.level === 'eleve') return 'renforcee';
+  if(r.level === 'standard') return 'normal-plus';
   return 'normal';
 }
 
@@ -3305,27 +3464,45 @@ function go(n){
 // ── STEP 1 ───────────────────────────────────────────────────────────────
 function setClientType(t){
   S.clientType=t;
-  document.getElementById('ct-pp').classList.toggle('sel',t==='pp');
-  document.getElementById('ct-pm').classList.toggle('sel',t==='pm');
-  document.getElementById('f-pp').style.display=t==='pp'?'block':'none';
-  document.getElementById('f-pm').style.display=t==='pm'?'block':'none';
+  const types = ['pp','pp-ppe','pm','pm-complex','trust','crypto'];
+  types.forEach(k => {
+    const el = document.getElementById('ct-'+k);
+    if(el) el.classList.toggle('sel', t===k);
+  });
+  const isPP = t==='pp' || t==='pp-ppe';
+  const isPM = t==='pm' || t==='pm-complex';
+  document.getElementById('f-pp').style.display = isPP ? 'block' : 'none';
+  document.getElementById('f-pm').style.display = isPM ? 'block' : 'none';
+  document.getElementById('f-trust').style.display = t==='trust' ? 'block' : 'none';
+  document.getElementById('f-crypto').style.display = t==='crypto' ? 'block' : 'none';
   v1();
 }
 function v1(){
   let ok=false;
-  if(S.clientType==='pp'){
+  const t = S.clientType;
+  if(t==='pp' || t==='pp-ppe'){
     ok=!!document.getElementById('pp-nom')?.value.trim()&&
        !!document.getElementById('pp-pre')?.value.trim()&&
        !!document.getElementById('pp-dob')?.value&&
        !!document.getElementById('pp-nat')?.value&&
        !!document.getElementById('pp-adr')?.value.trim();
-  } else {
+  } else if(t==='pm' || t==='pm-complex') {
     ok=!!document.getElementById('pm-den')?.value.trim()&&
        !!document.getElementById('pm-for')?.value&&
        !!document.getElementById('pm-rcs')?.value.trim()&&
        !!document.getElementById('pm-pay')?.value&&
        !!document.getElementById('pm-sie')?.value.trim()&&
        !!document.getElementById('pm-rep')?.value.trim();
+  } else if(t==='trust') {
+    ok=!!document.getElementById('tr-nom')?.value.trim()&&
+       !!document.getElementById('tr-type')?.value&&
+       !!document.getElementById('tr-jur')?.value&&
+       !!document.getElementById('tr-settlor')?.value.trim();
+  } else if(t==='crypto') {
+    ok=!!document.getElementById('cr-nom')?.value.trim()&&
+       !!document.getElementById('cr-type')?.value&&
+       !!document.getElementById('cr-montant')?.value&&
+       !!document.getElementById('cr-wallet')?.value.trim();
   }
   document.getElementById('b1').disabled=!ok;
 }
@@ -3525,63 +3702,140 @@ function renderStep3(){
 }
 function renderVig(){
   const vr=document.getElementById('vig-res');
-  const lv=vigilanceLevel();
-  if(!lv){vr.innerHTML='';return;}
-  const cfg={
-    normal:{cls:'normal',icon:'🟢',title:'Vigilance NORMALE',desc:'Aucun facteur de risque élevé détecté. Standard applicable.',actions:['Documents KYC standard','Screening semestriel','Revue KYC tous les 3 ans']},
-    'normal-plus':{cls:'normal-plus',icon:'🟡',title:'Vigilance NORMALE — renforcée (distance)',desc:'Relation entièrement à distance. Vérifications complémentaires requises.',actions:['Document d\'identité supplémentaire requis','Vérification par tiers de confiance','Source des fonds recommandée','Screening semestriel']},
-    renforcee:{cls:'renforcee',icon:'🔴',title:'Vigilance RENFORCÉE',desc:'Facteur de risque élevé détecté (PPE / pays GAFI / trust). Mesures renforcées obligatoires.',actions:['Source des fonds OBLIGATOIRE','Approbation de la direction du cabinet','Screening mensuel','Revue KYC annuelle','Documentation de la justification économique']}
+  if(!isInScope()){vr.innerHTML='';return;}
+  const r = calcRiskScore();
+
+  const colorMap = {faible:'var(--ok-fg)',standard:'var(--info-fg)',eleve:'var(--warn-fg)','tres-eleve':'var(--danger-fg)'};
+  const bgMap = {faible:'var(--ok-bg)',standard:'var(--info-bg)',eleve:'var(--warn-bg)','tres-eleve':'var(--danger-bg)'};
+  const iconMap = {faible:'🟢',standard:'🔵',eleve:'🟡','tres-eleve':'🔴'};
+
+  const actions = {
+    faible:['Documents KYC standard','Screening semestriel','Revue KYC tous les 3 ans'],
+    standard:['Documents KYC complets','Screening trimestriel','Revue KYC annuelle'],
+    eleve:['Source des fonds OBLIGATOIRE','Validation associé senior','Screening mensuel','Revue tous les 12 mois'],
+    'tres-eleve':['Source des fonds et patrimoine OBLIGATOIRE','Validation managing partner','Screening continu','Revue tous les 6 mois','Rapport d\'analyse de risque']
   };
-  const c=cfg[lv];
-  vr.innerHTML=`<div class="vig-card ${c.cls}"><div class="vig-title">${c.icon} ${c.title}</div><div class="vig-desc">${c.desc}</div><div class="vig-actions">${c.actions.map(a=>`<div class="vig-action">${a}</div>`).join('')}</div></div>`;
+
+  const barColor = colorMap[r.level];
+  const criteriaHTML = [
+    {label:'Nationalité/Résidence',note:r.noteNat,poids:'25%'},
+    {label:'Type de client',note:r.noteClient,poids:'20%'},
+    {label:'Type d\'opération',note:r.noteOp,poids:'20%'},
+    {label:'Structure capitalistique',note:r.noteStruct,poids:'15%'},
+    {label:'Origine des fonds',note:r.noteFonds,poids:'10%'},
+    {label:'Historique relationnel',note:r.noteHist,poids:'10%'}
+  ].map(c => {
+    const col = c.note <= 30 ? 'var(--ok-fg)' : c.note <= 60 ? 'var(--warn-fg)' : 'var(--danger-fg)';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0">
+      <div style="flex:1;font-size:.72rem;color:var(--mid)">${c.label} <span style="color:var(--light)">(${c.poids})</span></div>
+      <div style="width:80px;height:6px;background:var(--cream3);border-radius:3px;overflow:hidden"><div style="width:${c.note}%;height:100%;background:${col};border-radius:3px"></div></div>
+      <div style="font-size:.72rem;font-weight:700;color:${col};min-width:28px;text-align:right">${c.note}</div>
+    </div>`;
+  }).join('');
+
+  vr.innerHTML=`
+    <div class="vig-card" style="border-left:4px solid ${barColor};background:${bgMap[r.level]}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="vig-title" style="color:${barColor}">${iconMap[r.level]} Risque ${r.label}</div>
+        <div style="font-family:var(--font-display);font-size:1.6rem;font-weight:800;color:${barColor}">${r.score}<span style="font-size:.7rem;font-weight:600">/100</span></div>
+      </div>
+      <div style="width:100%;height:8px;background:rgba(0,0,0,.08);border-radius:4px;margin-bottom:10px;overflow:hidden"><div style="width:${r.score}%;height:100%;background:${barColor};border-radius:4px;transition:width .4s"></div></div>
+      <div style="margin-bottom:10px">${criteriaHTML}</div>
+      <div style="font-size:.72rem;color:var(--mid);margin-bottom:6px"><strong>Revue :</strong> ${r.period} · <strong>Validation :</strong> ${r.validator}</div>
+      <div class="vig-actions">${(actions[r.level]||[]).map(a=>`<div class="vig-action">${a}</div>`).join('')}</div>
+    </div>`;
 }
 
 // ── STEP 4 ───────────────────────────────────────────────────────────────
 function renderStep4(){
   const lv=vigilanceLevel();
-  const isPP=S.clientType==='pp';
-  const isTrust=S.missions.includes('trust');
-  const isRenforcee=lv==='renforcee';
+  const t=S.clientType;
+  const r=calcRiskScore();
+  const isEleve = r.level === 'eleve' || r.level === 'tres-eleve';
   const el=document.getElementById('doc-list');
 
   let docs=[];
   if(isInScope()){
-    if(isPP){
+    if(t==='pp') {
       docs=[
-        {id:'pi',t:"Pièce d'identité en cours de validité",s:"Passeport ou carte d'identité nationale",req:true},
-        {id:'jd',t:"Justificatif de domicile (< 3 mois)",s:"Facture ou relevé bancaire",req:true},
-        {id:'rf',t:"Déclaration résidence fiscale",s:"Formulaire Norvy ou déclaration libre",req:lv!=='normal'||false,opt:lv==='normal'},
-        {id:'jp',t:"Justificatif de profession / revenus",s:"Contrat, bilan, fiche de paie",req:isRenforcee,opt:!isRenforcee},
-        {id:'sf',t:"Source des fonds liés à la mission",s:"Relevés bancaires, acte de donation, héritage...",req:isRenforcee,opt:!isRenforcee},
-        {id:'pp',t:"Questionnaire PPE",s:"Formulaire Norvy — obligatoire si doute ou PPE identifié",req:S.ppe==='oui',opt:S.ppe!=='oui'},
+        {id:'pi',t:"Pièce d'identité valide (CNI ou passeport)",s:"En cours de validité",req:true},
+        {id:'jd',t:"Justificatif de domicile < 3 mois",s:"Facture énergie, relevé bancaire, attestation",req:true},
+        {id:'decl-ra',t:"Déclaration nature et objet de la relation d'affaires",s:"Formulaire Norvy",req:true},
+        {id:'decl-ppe',t:"Déclaration absence de statut PPE",s:"Formulaire Norvy",req:true},
+        {id:'sf',t:"Justificatif d'origine des fonds",s:"SI opération > 15 000 €",req:isEleve,opt:!isEleve},
       ];
-    } else {
+    } else if(t==='pp-ppe') {
       docs=[
-        {id:'rcs',t:"Extrait RCS (< 3 mois)",s:"Registre de Commerce et des Sociétés ou équivalent étranger",req:true},
-        {id:'sta',t:"Statuts coordonnés",s:"Version consolidée avec toutes modifications",req:true},
-        {id:'pv',t:"Pouvoirs du signataire",s:"PV AG, délégation, ou mention dans les statuts",req:true},
-        {id:'id-rep',t:"Pièce d'identité du représentant légal",s:"Passeport ou carte d'identité",req:true},
-        {id:'rbe',t:"Extrait RBE (Registre Bénéficiaires Effectifs)",s:"Pour toute société luxembourgeoise",req:true},
-        {id:'id-ubo',t:"Pièce d'identité de chaque UBO (≥ 25%)",s:"Même exigences que personne physique",req:true},
-        {id:'schema',t:"Schéma de la structure d'actionnariat",s:"Si structure en cascade ou multi-niveaux",req:isRenforcee||isTrust,opt:!isRenforcee&&!isTrust},
-        {id:'cpte',t:"Comptes annuels (2 derniers exercices)",s:"Comptes certifiés ou déposés au RCS",req:isRenforcee,opt:!isRenforcee},
-        {id:'sf-pm',t:"Source des fonds / origine du capital",s:"Historique bancaire, investisseurs, origine apports",req:isRenforcee,opt:!isRenforcee},
+        {id:'pi',t:"Pièce d'identité valide",s:"Passeport ou CNI",req:true},
+        {id:'jd',t:"Justificatif de domicile < 3 mois",s:"Facture, relevé bancaire",req:true},
+        {id:'decl-ra',t:"Déclaration nature et objet de la relation d'affaires",s:"Formulaire Norvy",req:true},
+        {id:'sf',t:"Justificatif origine des fonds 12 derniers mois",s:"Relevés bancaires complets",req:true},
+        {id:'patri',t:"Justificatif source de patrimoine",s:"Déclarations fiscales, actes notariés",req:true},
+        {id:'decl-ppe',t:"Déclaration PPE détaillée — fonctions et dates",s:"Formulaire Norvy spécifique PPE",req:true},
+        {id:'auth-sr',t:"Autorisation écrite associé senior",s:"Signature obligatoire",req:true},
+        {id:'adv-media',t:"Rapport adverse media",s:"ComplyAdvantage ou équivalent",req:true},
       ];
-    }
-    if(isTrust){
-      docs.push({id:'trust-b',t:"Identification complète des bénéficiaires du trust",s:"Y compris bénéficiaires discrétionnaires",req:true});
-      docs.push({id:'trust-j',t:"Justification économique de la structure",s:"Mémorandum interne ou déclaration écrite obligatoire",req:true});
+    } else if(t==='pm') {
+      docs=[
+        {id:'rcs',t:"Extrait Kbis / RCS < 3 mois",s:"À l'entrée en relation uniquement",req:true},
+        {id:'sta',t:"Statuts à jour de la société",s:"Version consolidée",req:true},
+        {id:'dir',t:"Liste des dirigeants et représentants légaux",s:"Avec pièces d'identité",req:true},
+        {id:'id-dir',t:"Pièce d'identité de chaque dirigeant",s:"Passeport ou CNI",req:true},
+        {id:'ubo',t:"Identification des UBO ≥ 25% (seuil AMLD6)",s:"Bénéficiaires effectifs",req:true},
+        {id:'id-ubo',t:"Pièce d'identité de chaque UBO ≥ 25%",s:"Passeport ou CNI",req:true},
+        {id:'decl-ra',t:"Déclaration nature et objet de la relation d'affaires",s:"Formulaire Norvy",req:true},
+        {id:'rbe',t:"Vérification registre UBO national",s:"INPI / RCS / BCE",req:true},
+      ];
+    } else if(t==='pm-complex') {
+      docs=[
+        {id:'rcs',t:"Extrait Kbis / RCS < 3 mois",s:"À l'entrée en relation",req:true},
+        {id:'sta',t:"Statuts à jour",s:"Version consolidée",req:true},
+        {id:'dir',t:"Liste des dirigeants",s:"Avec pièces d'identité",req:true},
+        {id:'id-dir',t:"Pièce d'identité de chaque dirigeant",s:"Passeport ou CNI",req:true},
+        {id:'ubo',t:"Identification des UBO ≥ 25%",s:"Bénéficiaires effectifs",req:true},
+        {id:'id-ubo',t:"Pièce d'identité de chaque UBO ≥ 25%",s:"Passeport ou CNI",req:true},
+        {id:'organi',t:"Organigramme complet jusqu'au UBO personne physique",s:"Structure capitalistique complète",req:true},
+        {id:'docs-inter',t:"Documents constitutifs de chaque entité intermédiaire",s:"Statuts, extraits RCS",req:true},
+        {id:'activ',t:"Justificatif d'activité économique réelle",s:"Bilan, compte de résultat, contrats",req:true},
+        {id:'sf-grp',t:"Déclaration d'origine des fonds au niveau du groupe",s:"Historique bancaire groupe",req:true},
+        {id:'ubo-jur',t:"Vérification registres UBO dans chaque juridiction",s:"Système BORIS",req:true},
+        {id:'fisc',t:"Attestation fiscale de résidence de chaque entité",s:"Certificats fiscaux",req:true},
+        {id:'auth-mp',t:"Autorisation écrite managing partner",s:"Signature obligatoire",req:true},
+        {id:'rapport',t:"Rapport d'analyse de risque par l'avocat responsable",s:"Document interne obligatoire",req:true},
+      ];
+    } else if(t==='trust') {
+      docs=[
+        {id:'acte',t:"Acte constitutif du trust/fiducie avec modifications",s:"Document complet",req:true},
+        {id:'id-set',t:"Pièce d'identité du constituant (Settlor)",s:"Passeport ou CNI",req:true},
+        {id:'jd-set',t:"Justificatif de domicile du constituant",s:"< 3 mois",req:true},
+        {id:'id-trust',t:"Identification complète du Trustee",s:"Si PM : documents complets personne morale",req:true},
+        {id:'benef',t:"Identification de tous les bénéficiaires nommés",s:"Avec pièces d'identité",req:true},
+        {id:'benef-class',t:"Identification des bénéficiaires par classe",s:"Si non nommés individuellement",req:true},
+        {id:'protec',t:"Identification du protecteur",s:"Si applicable",req:false,opt:true},
+        {id:'lettre',t:"Lettre d'intentions du constituant",s:"Document original",req:true},
+        {id:'patri-tr',t:"Déclaration d'origine du patrimoine transféré",s:"Justifiée par documents probants",req:true},
+        {id:'rapport-tr',t:"Rapport d'analyse de risque signé associé senior",s:"Obligatoire — risque très élevé",req:true},
+        {id:'auth-mp',t:"Autorisation écrite managing partner",s:"Signature obligatoire",req:true},
+      ];
+    } else if(t==='crypto') {
+      docs=[
+        {id:'pi',t:"Pièce d'identité du client",s:"Passeport ou CNI",req:true},
+        {id:'wallet',t:"Wallet address (adresse du portefeuille)",s:"Adresse blockchain complète",req:true},
+        {id:'prop-wallet',t:"Justificatif de propriété du wallet",s:"Screenshot signé, message on-chain",req:true},
+        {id:'hist-tx',t:"Historique transactions blockchain 6 derniers mois",s:"Export ou explorer blockchain",req:true},
+        {id:'orig-crypto',t:"Déclaration d'origine des crypto-actifs",s:"Source d'acquisition",req:true},
+        {id:'verif-wallet',t:"Vérification wallet non auto-hébergé",s:"Ou justification si auto-hébergé",req:true},
+        {id:'trace',t:"Rapport de traçabilité blockchain",s:"Chainalysis ou équivalent — SI montant ≥ 15 000 €",req:parseInt(document.getElementById('cr-montant')?.value||0) >= 15000,opt:parseInt(document.getElementById('cr-montant')?.value||0) < 15000},
+      ];
     }
   } else {
-    // Out of scope - screening uniquement
     docs=[
       {id:'id-sc',t:"Identification minimale pour le screening",s:"Nom complet et date de naissance / dénomination et pays",req:true},
     ];
   }
 
-  el.innerHTML=`<div style="font-size:.82rem;font-weight:700;color:var(--charcoal);margin-bottom:10px">
-    ${isInScope()?`Documents requis — Vigilance ${vigilanceLevel()==='renforcee'?'🔴 Renforcée':vigilanceLevel()==='normal-plus'?'🟡 Normale+':`🟢 Normale`}`:'Documents pour screening (mission hors champ AML)'}
-  </div>
+  const riskLabel = isInScope() ? (() => { const rs = calcRiskScore(); const icons = {faible:'🟢',standard:'🔵',eleve:'🟡','tres-eleve':'🔴'}; return `Documents requis — Risque ${icons[rs.level]||''} ${rs.label} (${rs.score}/100) — ${t.toUpperCase()}`; })() : 'Documents pour screening (mission hors champ AML)';
+  el.innerHTML=`<div style="font-size:.82rem;font-weight:700;color:var(--charcoal);margin-bottom:10px">${riskLabel}</div>
   <div class="checklist">${docs.map(d=>`
     <div class="cl-item ${S.docsChecked.has(d.id)?'checked':d.req?'':''}  " id="cl-${d.id}" onclick="toggleDoc('${d.id}',${d.req})">
       <div class="cl-box">${S.docsChecked.has(d.id)?'✓':d.req&&!S.docsChecked.has(d.id)?'!':''}</div>
@@ -3746,24 +4000,34 @@ function renderStep7(){
   const lv=vigilanceLevel();
 
   // ── Save dossier to DB ──
-  const isPPsave = S.clientType === 'pp';
-  const clientName = isPPsave
-    ? ((document.getElementById('pp-nom')?.value||'').toUpperCase() + ' ' + (document.getElementById('pp-pre')?.value||'')).trim()
-    : (document.getElementById('pm-den')?.value||'').trim();
+  const t = S.clientType;
+  const isPPsave = t === 'pp' || t === 'pp-ppe';
+  const isPMsave = t === 'pm' || t === 'pm-complex';
+  let clientName;
+  if(isPPsave) clientName = ((document.getElementById('pp-nom')?.value||'').toUpperCase() + ' ' + (document.getElementById('pp-pre')?.value||'')).trim();
+  else if(isPMsave) clientName = (document.getElementById('pm-den')?.value||'').trim();
+  else if(t === 'trust') clientName = (document.getElementById('tr-nom')?.value||'').trim();
+  else if(t === 'crypto') clientName = (document.getElementById('cr-nom')?.value||'').trim();
+  else clientName = '';
   const missionLabels = S.missions.map(m => MISSION_LABELS[m] || m);
   const statusMap = { accepter:'actif', suspendre:'suspendu', refuser:'refuse', declaration:'actif' };
+  const risk = calcRiskScore();
   const dossier = {
     ref,
-    clientType: S.clientType,
+    clientType: t,
     clientName: clientName || 'Client sans nom',
     nom: isPPsave ? (document.getElementById('pp-nom')?.value||'') : '',
     prenom: isPPsave ? (document.getElementById('pp-pre')?.value||'') : '',
-    denomination: !isPPsave ? (document.getElementById('pm-den')?.value||'') : '',
+    denomination: isPMsave ? (document.getElementById('pm-den')?.value||'') : t === 'trust' ? (document.getElementById('tr-nom')?.value||'') : t === 'crypto' ? (document.getElementById('cr-nom')?.value||'') : '',
     missions: [...S.missions],
     missionLabels,
     missionLabel: missionLabels[0] || '',
     inScope: isInScope(),
     vigilance: lv,
+    riskScore: risk.score,
+    riskLevel: risk.level,
+    riskLabel: risk.label,
+    reviewPeriod: risk.period,
     gafi: S.gafi,
     ppe: S.ppe,
     dist: S.dist,
@@ -3783,7 +4047,7 @@ function renderStep7(){
     type: 'dossier',
     dot: 'var(--sage)',
     title: '📁 Dossier créé — ' + clientName,
-    detail: ref + ' · ' + (isPPsave ? 'Personne physique' : 'Personne morale') + ' · ' + (missionLabels[0]||'') + ' · ' + (isInScope() ? 'IN SCOPE' : 'OUT OF SCOPE'),
+    detail: ref + ' · ' + ({'pp':'PP standard','pp-ppe':'PP — PPE','pm':'PM simple','pm-complex':'PM complexe','trust':'Trust / Fiducie','crypto':'Crypto-actifs'}[t]||t) + ' · ' + (missionLabels[0]||'') + ' · ' + (isInScope() ? 'IN SCOPE' : 'OUT OF SCOPE') + ' · Score ' + risk.score + '/100',
     tags: [
       { t: isInScope() ? 'IN SCOPE' : 'OUT OF SCOPE', c: isInScope() ? 'g' : 'o' },
       ...(lv === 'renforcee' ? [{t:'Renforcée',c:'r'}] : lv === 'normal-plus' ? [{t:'Normale+',c:'o'}] : lv === 'normal' ? [{t:'Normale',c:'g'}] : []),
@@ -3812,17 +4076,15 @@ function renderStep7(){
   document.getElementById('r-sub').textContent=subs[dec]||'';
   document.getElementById('r-ref').textContent='Réf. '+ref+' · '+today;
 
-  const isPP=S.clientType==='pp';
-  const nom=isPP
-    ?(document.getElementById('pp-pre')?.value||'')+' '+(document.getElementById('pp-nom')?.value||'')
-    :(document.getElementById('pm-den')?.value||'');
-  const lvLabel=lv==='renforcee'?'🔴 Renforcée':lv==='normal-plus'?'🟡 Normale+':lv==='normal'?'🟢 Normale':'N/A';
+  const typeLabels={'pp':'👤 PP standard','pp-ppe':'🔴 PP — PPE','pm':'🏢 PM simple','pm-complex':'🏗️ PM complexe','trust':'🔒 Trust / Fiducie','crypto':'₿ Crypto-actifs'};
+  const riskIcons={'faible':'🟢','standard':'🔵','eleve':'🟡','tres-eleve':'🔴'};
 
   document.getElementById('r-grid').innerHTML=`
-    <div class="sum-card"><div class="sum-label">Client</div><div class="sum-val">${nom.trim()||'—'}</div></div>
-    <div class="sum-card"><div class="sum-label">Type</div><div class="sum-val">${isPP?'👤 Personne physique':'🏢 Personne morale'}</div></div>
+    <div class="sum-card"><div class="sum-label">Client</div><div class="sum-val">${clientName||'—'}</div></div>
+    <div class="sum-card"><div class="sum-label">Type</div><div class="sum-val">${typeLabels[t]||t}</div></div>
     <div class="sum-card"><div class="sum-label">Qualification AML</div><div class="sum-val">${isInScope()?'✅ IN SCOPE':'⚡ OUT OF SCOPE'}</div></div>
-    <div class="sum-card"><div class="sum-label">Vigilance</div><div class="sum-val">${lvLabel}</div></div>
+    <div class="sum-card"><div class="sum-label">Score de risque</div><div class="sum-val">${riskIcons[risk.level]||''} ${risk.score}/100 — ${risk.label}</div></div>
+    <div class="sum-card"><div class="sum-label">Revue</div><div class="sum-val">🔄 ${risk.period}</div></div>
     <div class="sum-card"><div class="sum-label">Screening</div><div class="sum-val">✓ Négatif · 6 listes</div></div>
     <div class="sum-card"><div class="sum-label">Décision</div><div class="sum-val">${icons[dec]||''} ${(dec||'').charAt(0).toUpperCase()+(dec||'').slice(1)}</div></div>`;
 
@@ -3881,10 +4143,17 @@ function viewCreatedDossier() {
 
 // ── RESET ────────────────────────────────────────────────────────────────
 function resetAll(){
-  Object.assign(S,{clientType:'pp',missions:[],gafi:null,ppe:null,dist:null,decision:null,docsChecked:new Set(),screeningDone:false});
+  Object.assign(S,{clientType:'pp',missions:[],gafi:null,ppe:null,dist:null,decision:null,docsChecked:new Set(),screeningDone:false,riskStructure:15,riskFonds:25,riskHistorique:35});
   document.querySelectorAll('.mc').forEach(c=>{c.classList.remove('sel');c.querySelector('.mc-check').textContent='';});
-  document.querySelectorAll('#ct-pp,#ct-pm,#g-non,#g-oui,#p-non,#p-oui,#dist-non,#dist-oui,#dec-acc,#dec-sus,#dec-ref,#dec-ds').forEach(c=>c.classList.remove('sel'));
+  document.querySelectorAll('#ct-pp,#ct-pp-ppe,#ct-pm,#ct-pm-complex,#ct-trust,#ct-crypto,#g-non,#g-oui,#p-non,#p-oui,#dist-non,#dist-oui,#dec-acc,#dec-sus,#dec-ref,#dec-ds').forEach(c=>c&&c.classList.remove('sel'));
   document.getElementById('ct-pp').classList.add('sel');
+  ['f-pp','f-pm','f-trust','f-crypto'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.display = id === 'f-pp' ? 'block' : 'none';
+  });
+  const rs = document.getElementById('risk-structure'); if(rs) rs.value = '15';
+  const rf = document.getElementById('risk-fonds'); if(rf) rf.value = '25';
+  const rh = document.getElementById('risk-historique'); if(rh) rh.value = '35';
   document.getElementById('b2').disabled=true;
   go(1);v1();
 }
