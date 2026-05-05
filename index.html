@@ -6836,10 +6836,17 @@ async function searchPappers() {
   try {
     const apiKey = getPappersKey();
     let url;
+    let isDirectLookup = false;
     if(pappersMode === 'fr') {
       url = `https://api.pappers.fr/v2/recherche?api_token=${encodeURIComponent(apiKey)}&q=${encodeURIComponent(query)}&par_page=5`;
     } else {
-      url = `https://api.pappers.in/v1/recherche?api_token=${encodeURIComponent(apiKey)}&q=${encodeURIComponent(query)}&country_code=LU&par_page=5`;
+      const isRCS = /^[Bb]\d{4,7}$/.test(query.replace(/\s/g, ''));
+      if(isRCS) {
+        url = `https://api.pappers.in/v1/company?api_token=${encodeURIComponent(apiKey)}&country_code=LU&company_number=${encodeURIComponent(query.replace(/\s/g, '').toUpperCase())}&fields=officers`;
+        isDirectLookup = true;
+      } else {
+        url = `https://api.pappers.in/v1/recherche?api_token=${encodeURIComponent(apiKey)}&q=${encodeURIComponent(query)}&country_code=LU&par_page=5`;
+      }
     }
 
     const resp = await fetch(url);
@@ -6853,7 +6860,12 @@ async function searchPappers() {
       return;
     }
     const data = await resp.json();
-    const entreprises = data.resultats || data.results || [];
+    let entreprises;
+    if(isDirectLookup) {
+      entreprises = data && data.denomination ? [data] : [];
+    } else {
+      entreprises = data.resultats || data.results || [];
+    }
 
     if(entreprises.length === 0) {
       results.innerHTML = '<div style="font-size:.75rem;color:var(--mid);padding:6px 0">Aucun résultat pour "' + query + '" ' + (pappersMode === 'lu' ? '(Luxembourg)' : '(France)') + '</div>';
@@ -6878,8 +6890,10 @@ async function searchPappers() {
         nom = e.denomination || e.nom_entreprise || e.name || '';
         identifiant = e.company_number || e.numero_rcs || e.siren || '';
         forme = e.forme_juridique || e.legal_form || '';
-        siege = e.siege || e.registered_address || (e.address ? (e.address.street || '') + ', ' + (e.address.postal_code || '') + ' ' + (e.address.city || '') : '') || '';
-        if(typeof siege === 'object') siege = (siege.adresse_ligne_1 || siege.street || '') + ', ' + (siege.code_postal || siege.postal_code || '') + ' ' + (siege.ville || siege.city || '');
+        const siegeObj = e.siege || e.registered_address || e.address || null;
+        if(typeof siegeObj === 'string') { siege = siegeObj; }
+        else if(siegeObj) { siege = (siegeObj.adresse_ligne_1 || siegeObj.street || '') + ', ' + (siegeObj.code_postal || siegeObj.postal_code || '') + ' ' + (siegeObj.ville || siegeObj.city || ''); }
+        else { siege = ''; }
         dirigeant = (e.representants && e.representants[0]) ? (e.representants[0].nom_complet || e.representants[0].name || '') + ' — ' + (e.representants[0].qualite || e.representants[0].role || '') : (e.directors && e.directors[0]) ? e.directors[0].name + ' — ' + (e.directors[0].role || '') : '';
         capital = e.capital_formate || e.share_capital || (e.capital ? e.capital.toLocaleString('fr-FR') + ' €' : '');
         activite = e.objet_social || e.activity || e.nace_code || '';
