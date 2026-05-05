@@ -2232,8 +2232,12 @@ body{padding-bottom:62px}
               <div style="font-size:.82rem;font-weight:700;color:var(--charcoal)">Recherche Pappers</div>
               <span style="font-size:.62rem;padding:2px 8px;border-radius:99px;background:var(--sage);color:#fff;font-weight:700">API</span>
             </div>
+            <div style="display:flex;gap:4px;margin-bottom:8px">
+              <button id="pappers-mode-lu" class="btn btn-sage" style="font-size:.68rem;padding:5px 10px;border-radius:6px" onclick="setPappersMode('lu')">🇱🇺 Luxembourg</button>
+              <button id="pappers-mode-fr" class="btn btn-outline" style="font-size:.68rem;padding:5px 10px;border-radius:6px" onclick="setPappersMode('fr')">🇫🇷 France</button>
+            </div>
             <div style="display:flex;gap:8px">
-              <input id="pappers-search" class="step-input" style="flex:1;margin:0;font-size:.82rem" placeholder="Nom d'entreprise ou n° SIREN..." oninput="clearPappersResults()">
+              <input id="pappers-search" class="step-input" style="flex:1;margin:0;font-size:.82rem" placeholder="Nom d'entreprise ou n° RCS..." oninput="clearPappersResults()">
               <button onclick="searchPappers()" class="btn btn-sage" style="font-size:.78rem;padding:8px 16px;white-space:nowrap">Rechercher</button>
             </div>
             <div id="pappers-results" style="margin-top:8px"></div>
@@ -6803,59 +6807,93 @@ function sendStripeLink(invoiceId) {
 function closeStripeModal() { document.getElementById('stripe-modal').classList.add('hidden'); }
 
 // ══ PAPPERS (SIMULATION) ══
-const PAPPERS_API_BASE = 'https://api.pappers.fr/v2';
 const PAPPERS_API_KEY = '2d4f1539fbab01fec31b8f0965b44c8d359f87e4cb0b508e';
+let pappersMode = 'lu';
 
 function getPappersKey() {
   const settings = DB.load('settings', {});
   return settings.pappersKey || PAPPERS_API_KEY;
 }
 
+function setPappersMode(mode) {
+  pappersMode = mode;
+  document.getElementById('pappers-mode-lu').className = mode === 'lu' ? 'btn btn-sage' : 'btn btn-outline';
+  document.getElementById('pappers-mode-fr').className = mode === 'fr' ? 'btn btn-sage' : 'btn btn-outline';
+  document.getElementById('pappers-mode-lu').style.cssText = 'font-size:.68rem;padding:5px 10px;border-radius:6px';
+  document.getElementById('pappers-mode-fr').style.cssText = 'font-size:.68rem;padding:5px 10px;border-radius:6px';
+  const input = document.getElementById('pappers-search');
+  input.placeholder = mode === 'lu' ? "Nom d'entreprise ou n° RCS (B123456)..." : "Nom d'entreprise ou n° SIREN...";
+  clearPappersResults();
+}
+
 async function searchPappers() {
   const query = document.getElementById('pappers-search').value.trim();
   const results = document.getElementById('pappers-results');
-  if(!query) { results.innerHTML = '<div style="font-size:.72rem;color:var(--warn-fg);padding:4px 0">Saisissez un nom ou numéro RCS/SIREN</div>'; return; }
+  if(!query) { results.innerHTML = '<div style="font-size:.72rem;color:var(--warn-fg);padding:4px 0">Saisissez un nom ou numéro ' + (pappersMode === 'lu' ? 'RCS' : 'SIREN') + '</div>'; return; }
 
-  results.innerHTML = '<div style="font-size:.75rem;color:var(--info-fg);padding:6px 0"><span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Recherche Pappers en cours...</div>';
+  results.innerHTML = '<div style="font-size:.75rem;color:var(--info-fg);padding:6px 0"><span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Recherche Pappers ' + (pappersMode === 'lu' ? '🇱🇺' : '🇫🇷') + ' en cours...</div>';
 
   try {
     const apiKey = getPappersKey();
-    const url = `${PAPPERS_API_BASE}/recherche?api_token=${encodeURIComponent(apiKey)}&q=${encodeURIComponent(query)}&par_page=5`;
+    let url;
+    if(pappersMode === 'fr') {
+      url = `https://api.pappers.fr/v2/recherche?api_token=${encodeURIComponent(apiKey)}&q=${encodeURIComponent(query)}&par_page=5`;
+    } else {
+      url = `https://api.pappers.in/v1/recherche?api_token=${encodeURIComponent(apiKey)}&q=${encodeURIComponent(query)}&country_code=LU&par_page=5`;
+    }
+
     const resp = await fetch(url);
     if(!resp.ok) {
       const errData = await resp.json().catch(() => ({}));
       if(resp.status === 401 || resp.status === 403) {
-        results.innerHTML = '<div style="font-size:.75rem;color:var(--danger-fg);padding:6px 0">❌ Clé API Pappers invalide. Vérifiez dans Paramètres.</div>';
+        results.innerHTML = '<div style="font-size:.75rem;color:var(--danger-fg);padding:6px 0">❌ Clé API Pappers invalide ou non autorisée pour ' + (pappersMode === 'lu' ? 'Pappers International' : 'Pappers France') + '. Vérifiez dans Paramètres.</div>';
       } else {
-        results.innerHTML = `<div style="font-size:.75rem;color:var(--danger-fg);padding:6px 0">❌ Erreur API Pappers (${resp.status}) : ${errData.message || 'Erreur inconnue'}</div>`;
+        results.innerHTML = `<div style="font-size:.75rem;color:var(--danger-fg);padding:6px 0">❌ Erreur API (${resp.status}) : ${errData.message || 'Erreur inconnue'}</div>`;
       }
       return;
     }
     const data = await resp.json();
-    const entreprises = data.resultats || [];
+    const entreprises = data.resultats || data.results || [];
 
     if(entreprises.length === 0) {
-      results.innerHTML = '<div style="font-size:.75rem;color:var(--mid);padding:6px 0">Aucun résultat pour "' + query + '"</div>';
+      results.innerHTML = '<div style="font-size:.75rem;color:var(--mid);padding:6px 0">Aucun résultat pour "' + query + '" ' + (pappersMode === 'lu' ? '(Luxembourg)' : '(France)') + '</div>';
       return;
     }
 
     results.innerHTML = entreprises.map(e => {
-      const nom = e.nom_entreprise || e.denomination || '';
-      const siren = e.siren || '';
-      const forme = e.forme_juridique || '';
-      const siege = e.siege ? (e.siege.adresse_ligne_1 || '') + (e.siege.code_postal ? ', ' + e.siege.code_postal + ' ' + (e.siege.ville || '') : '') : '';
-      const dirigeant = (e.representants && e.representants[0]) ? (e.representants[0].nom_complet || e.representants[0].nom + ' ' + (e.representants[0].prenom || '')) + ' — ' + (e.representants[0].qualite || '') : '';
-      const capital = e.capital_formate || (e.capital ? e.capital.toLocaleString('fr-FR') + ' €' : '');
-      const activite = e.objet_social || e.domaine_activite || '';
-      const dateCreation = e.date_creation || '';
-      const dirigeants = (e.representants || []).map(r => (r.nom_complet || (r.prenom + ' ' + r.nom)) + ' (' + (r.qualite || '') + ')').join(' | ');
+      let nom, identifiant, forme, siege, dirigeant, capital, activite, dateCreation, dirigeants, pays;
+
+      if(pappersMode === 'fr') {
+        nom = e.nom_entreprise || e.denomination || '';
+        identifiant = e.siren || '';
+        forme = e.forme_juridique || '';
+        siege = e.siege ? (e.siege.adresse_ligne_1 || '') + (e.siege.code_postal ? ', ' + e.siege.code_postal + ' ' + (e.siege.ville || '') : '') : '';
+        dirigeant = (e.representants && e.representants[0]) ? (e.representants[0].nom_complet || e.representants[0].nom + ' ' + (e.representants[0].prenom || '')) + ' — ' + (e.representants[0].qualite || '') : '';
+        capital = e.capital_formate || (e.capital ? e.capital.toLocaleString('fr-FR') + ' €' : '');
+        activite = e.objet_social || e.domaine_activite || e.libelle_code_naf || '';
+        dateCreation = e.date_creation || '';
+        dirigeants = (e.representants || []).map(r => (r.nom_complet || (r.prenom + ' ' + r.nom)) + ' (' + (r.qualite || '') + ')').join(' | ');
+        pays = 'France';
+      } else {
+        nom = e.denomination || e.nom_entreprise || e.name || '';
+        identifiant = e.company_number || e.numero_rcs || e.siren || '';
+        forme = e.forme_juridique || e.legal_form || '';
+        siege = e.siege || e.registered_address || (e.address ? (e.address.street || '') + ', ' + (e.address.postal_code || '') + ' ' + (e.address.city || '') : '') || '';
+        if(typeof siege === 'object') siege = (siege.adresse_ligne_1 || siege.street || '') + ', ' + (siege.code_postal || siege.postal_code || '') + ' ' + (siege.ville || siege.city || '');
+        dirigeant = (e.representants && e.representants[0]) ? (e.representants[0].nom_complet || e.representants[0].name || '') + ' — ' + (e.representants[0].qualite || e.representants[0].role || '') : (e.directors && e.directors[0]) ? e.directors[0].name + ' — ' + (e.directors[0].role || '') : '';
+        capital = e.capital_formate || e.share_capital || (e.capital ? e.capital.toLocaleString('fr-FR') + ' €' : '');
+        activite = e.objet_social || e.activity || e.nace_code || '';
+        dateCreation = e.date_creation || e.incorporation_date || '';
+        dirigeants = (e.representants || e.directors || []).map(r => (r.nom_complet || r.name || '') + ' (' + (r.qualite || r.role || '') + ')').join(' | ');
+        pays = 'Luxembourg';
+      }
 
       return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-top:6px;cursor:pointer;transition:all .15s" onclick="applyPappersResult(this)" onmouseover="this.style.borderColor='var(--sage)'" onmouseout="this.style.borderColor='var(--border)'"
-        data-name="${nom}" data-rcs="${siren}" data-forme="${forme}" data-pays="France" data-siege="${siege}" data-rep="${dirigeant}" data-capital="${capital}" data-activite="${activite}" data-date="${dateCreation}" data-dirigeants="${dirigeants}">
+        data-name="${nom}" data-rcs="${identifiant}" data-forme="${forme}" data-pays="${pays}" data-siege="${siege}" data-rep="${dirigeant}" data-capital="${capital}" data-activite="${activite}" data-date="${dateCreation}" data-dirigeants="${dirigeants}">
         <div style="width:32px;height:32px;background:var(--sage-pale);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--sage);flex-shrink:0">${nom.substring(0,2).toUpperCase()}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:.78rem;font-weight:700;color:var(--charcoal)">${nom}</div>
-          <div style="font-size:.62rem;color:var(--light)">${siren} · ${forme} · ${activite || 'N/A'}</div>
+          <div style="font-size:.62rem;color:var(--light)">${identifiant} · ${forme} · ${pays} · ${activite || 'N/A'}</div>
         </div>
         <span style="font-size:.6rem;padding:2px 8px;border-radius:99px;background:var(--ok-bg);color:var(--ok-fg);font-weight:700">Sélectionner</span>
       </div>`;
