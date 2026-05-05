@@ -2233,7 +2233,7 @@ body{padding-bottom:62px}
               <span style="font-size:.62rem;padding:2px 8px;border-radius:99px;background:var(--sage);color:#fff;font-weight:700">API</span>
             </div>
             <div style="display:flex;gap:8px">
-              <input id="pappers-search" class="step-input" style="flex:1;margin:0;font-size:.82rem" placeholder="Nom d'entreprise ou n° RCS..." oninput="clearPappersResults()">
+              <input id="pappers-search" class="step-input" style="flex:1;margin:0;font-size:.82rem" placeholder="Nom d'entreprise ou n° SIREN..." oninput="clearPappersResults()">
               <button onclick="searchPappers()" class="btn btn-sage" style="font-size:.78rem;padding:8px 16px;white-space:nowrap">Rechercher</button>
             </div>
             <div id="pappers-results" style="margin-top:8px"></div>
@@ -6711,7 +6711,7 @@ function openSettingsModal() {
   document.getElementById('set-cabinet-bic').value = s.cabinetBIC || '';
   document.getElementById('set-cabinet-bank').value = s.cabinetBank || '';
   document.getElementById('set-stripe-key').value = s.stripeKey || '';
-  document.getElementById('set-pappers-key').value = s.pappersKey || '';
+  document.getElementById('set-pappers-key').value = s.pappersKey || PAPPERS_API_KEY;
   document.getElementById('set-courrier-key').value = s.courrierKey || '';
   document.getElementById('settings-modal').classList.remove('hidden');
 }
@@ -6803,65 +6803,109 @@ function sendStripeLink(invoiceId) {
 function closeStripeModal() { document.getElementById('stripe-modal').classList.add('hidden'); }
 
 // ══ PAPPERS (SIMULATION) ══
-const PAPPERS_FAKE_DB = [
-  {name:'ACME Holdings S.A.',rcs:'B198432',forme:'SA (Société Anonyme)',pays:'Luxembourg',siege:'5 Boulevard Royal, L-2449 Luxembourg',representant:'Jean MARTIN — Administrateur délégué',capital:'125 000 €',activite:'Holding de participations financières',date_creation:'12/03/2015',dirigeants:['Jean MARTIN (Administrateur délégué)','Marie DUBOIS (Administratrice)']},
-  {name:'Atlas Consulting SARL',rcs:'B201456',forme:'SARL',pays:'Luxembourg',siege:'12 Rue du Fort Bourbon, L-1249 Luxembourg',representant:'Pierre WEBER — Gérant',capital:'25 000 €',activite:'Conseil en gestion et stratégie',date_creation:'05/09/2018',dirigeants:['Pierre WEBER (Gérant)']},
-  {name:'Nordic Investment SCSp',rcs:'B215789',forme:'SCSp',pays:'Luxembourg',siege:'1 Place de Metz, L-1930 Luxembourg',representant:'Erik JOHANSSON — General Partner',capital:'500 000 €',activite:'Fonds d\'investissement alternatif',date_creation:'22/01/2020',dirigeants:['Erik JOHANSSON (General Partner)','Société de Gestion NordicFund SA (GP)']},
-  {name:'Dupont & Associés SA',rcs:'B187654',forme:'SA (Société Anonyme)',pays:'Luxembourg',siege:'28 Avenue de la Liberté, L-1930 Luxembourg',representant:'Claire DUPONT — Présidente du CA',capital:'50 000 €',activite:'Cabinet d\'avocats',date_creation:'15/06/2012',dirigeants:['Claire DUPONT (Présidente)','Thomas KLEIN (Associé)']},
-  {name:'Europa Real Estate SOPARFI',rcs:'B223001',forme:'SOPARFI',pays:'Luxembourg',siege:'3 Boulevard Prince Henri, L-1724 Luxembourg',representant:'Karl SCHMIDT — Director',capital:'1 000 000 €',activite:'Société de participations financières — immobilier',date_creation:'30/11/2021',dirigeants:['Karl SCHMIDT (Director)','Hans MÜLLER (Director)']},
-  {name:'Fiduciaire du Grand-Duché SARL',rcs:'B176543',forme:'SARL',pays:'Luxembourg',siege:'45 Route d\'Arlon, L-1140 Luxembourg',representant:'Luc HOFFMANN — Gérant',capital:'12 500 €',activite:'Services fiduciaires et domiciliation',date_creation:'08/04/2010',dirigeants:['Luc HOFFMANN (Gérant)','Anne REUTER (Gérante)']},
-];
+const PAPPERS_API_BASE = 'https://api.pappers.fr/v2';
+const PAPPERS_API_KEY = '2d4f1539fbab01fec31b8f0965b44c8d359f87e4cb0b508e';
 
-function searchPappers() {
-  const query = document.getElementById('pappers-search').value.trim().toLowerCase();
+function getPappersKey() {
+  const settings = DB.load('settings', {});
+  return settings.pappersKey || PAPPERS_API_KEY;
+}
+
+async function searchPappers() {
+  const query = document.getElementById('pappers-search').value.trim();
   const results = document.getElementById('pappers-results');
-  if(!query) { results.innerHTML = '<div style="font-size:.72rem;color:var(--warn-fg);padding:4px 0">Saisissez un nom ou numéro RCS</div>'; return; }
+  if(!query) { results.innerHTML = '<div style="font-size:.72rem;color:var(--warn-fg);padding:4px 0">Saisissez un nom ou numéro RCS/SIREN</div>'; return; }
 
   results.innerHTML = '<div style="font-size:.75rem;color:var(--info-fg);padding:6px 0"><span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Recherche Pappers en cours...</div>';
 
-  setTimeout(() => {
-    const matches = PAPPERS_FAKE_DB.filter(e => e.name.toLowerCase().includes(query) || e.rcs.toLowerCase().includes(query));
-    if(matches.length === 0) {
+  try {
+    const apiKey = getPappersKey();
+    const url = `${PAPPERS_API_BASE}/recherche?api_token=${encodeURIComponent(apiKey)}&q=${encodeURIComponent(query)}&par_page=5`;
+    const resp = await fetch(url);
+    if(!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      if(resp.status === 401 || resp.status === 403) {
+        results.innerHTML = '<div style="font-size:.75rem;color:var(--danger-fg);padding:6px 0">❌ Clé API Pappers invalide. Vérifiez dans Paramètres.</div>';
+      } else {
+        results.innerHTML = `<div style="font-size:.75rem;color:var(--danger-fg);padding:6px 0">❌ Erreur API Pappers (${resp.status}) : ${errData.message || 'Erreur inconnue'}</div>`;
+      }
+      return;
+    }
+    const data = await resp.json();
+    const entreprises = data.resultats || [];
+
+    if(entreprises.length === 0) {
       results.innerHTML = '<div style="font-size:.75rem;color:var(--mid);padding:6px 0">Aucun résultat pour "' + query + '"</div>';
       return;
     }
-    results.innerHTML = matches.map(e => `
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-top:6px;cursor:pointer;transition:all .15s" onclick="applyPappersResult(this)" onmouseover="this.style.borderColor='var(--sage)'" onmouseout="this.style.borderColor='var(--border)'"
-        data-name="${e.name}" data-rcs="${e.rcs}" data-forme="${e.forme}" data-pays="${e.pays}" data-siege="${e.siege}" data-rep="${e.representant}" data-capital="${e.capital}" data-activite="${e.activite}" data-date="${e.date_creation}" data-dirigeants="${e.dirigeants.join(' | ')}">
-        <div style="width:32px;height:32px;background:var(--sage-pale);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--sage);flex-shrink:0">${e.name.substring(0,2).toUpperCase()}</div>
+
+    results.innerHTML = entreprises.map(e => {
+      const nom = e.nom_entreprise || e.denomination || '';
+      const siren = e.siren || '';
+      const forme = e.forme_juridique || '';
+      const siege = e.siege ? (e.siege.adresse_ligne_1 || '') + (e.siege.code_postal ? ', ' + e.siege.code_postal + ' ' + (e.siege.ville || '') : '') : '';
+      const dirigeant = (e.representants && e.representants[0]) ? (e.representants[0].nom_complet || e.representants[0].nom + ' ' + (e.representants[0].prenom || '')) + ' — ' + (e.representants[0].qualite || '') : '';
+      const capital = e.capital_formate || (e.capital ? e.capital.toLocaleString('fr-FR') + ' €' : '');
+      const activite = e.objet_social || e.domaine_activite || '';
+      const dateCreation = e.date_creation || '';
+      const dirigeants = (e.representants || []).map(r => (r.nom_complet || (r.prenom + ' ' + r.nom)) + ' (' + (r.qualite || '') + ')').join(' | ');
+
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-top:6px;cursor:pointer;transition:all .15s" onclick="applyPappersResult(this)" onmouseover="this.style.borderColor='var(--sage)'" onmouseout="this.style.borderColor='var(--border)'"
+        data-name="${nom}" data-rcs="${siren}" data-forme="${forme}" data-pays="France" data-siege="${siege}" data-rep="${dirigeant}" data-capital="${capital}" data-activite="${activite}" data-date="${dateCreation}" data-dirigeants="${dirigeants}">
+        <div style="width:32px;height:32px;background:var(--sage-pale);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--sage);flex-shrink:0">${nom.substring(0,2).toUpperCase()}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:.78rem;font-weight:700;color:var(--charcoal)">${e.name}</div>
-          <div style="font-size:.62rem;color:var(--light)">${e.rcs} · ${e.forme} · ${e.pays} · ${e.activite}</div>
+          <div style="font-size:.78rem;font-weight:700;color:var(--charcoal)">${nom}</div>
+          <div style="font-size:.62rem;color:var(--light)">${siren} · ${forme} · ${activite || 'N/A'}</div>
         </div>
         <span style="font-size:.6rem;padding:2px 8px;border-radius:99px;background:var(--ok-bg);color:var(--ok-fg);font-weight:700">Sélectionner</span>
-      </div>
-    `).join('');
-  }, 800);
+      </div>`;
+    }).join('');
+  } catch(err) {
+    results.innerHTML = `<div style="font-size:.75rem;color:var(--danger-fg);padding:6px 0">❌ Erreur réseau : ${err.message}. Vérifiez votre connexion.</div>`;
+  }
 }
 
 function applyPappersResult(el) {
-  document.getElementById('pm-den').value = el.dataset.name;
+  document.getElementById('pm-den').value = el.dataset.name || '';
   const formeSelect = document.getElementById('pm-for');
+  const formeApi = (el.dataset.forme || '').toLowerCase();
+  let matched = false;
   for(let i = 0; i < formeSelect.options.length; i++) {
-    if(formeSelect.options[i].text === el.dataset.forme) { formeSelect.selectedIndex = i; break; }
+    const optText = formeSelect.options[i].text.toLowerCase();
+    if(optText.includes('sa') && (formeApi.includes('sa ') || formeApi.includes('société anonyme'))) { formeSelect.selectedIndex = i; matched = true; break; }
+    if(optText.includes('sarl') && formeApi.includes('sarl')) { formeSelect.selectedIndex = i; matched = true; break; }
+    if(optText.includes('scsp') && formeApi.includes('scsp')) { formeSelect.selectedIndex = i; matched = true; break; }
+    if(optText.includes('soparfi') && formeApi.includes('soparfi')) { formeSelect.selectedIndex = i; matched = true; break; }
+    if(optText.includes('sas') && formeApi.includes('sas')) { formeSelect.selectedIndex = i; matched = true; break; }
   }
-  document.getElementById('pm-rcs').value = el.dataset.rcs;
+  if(!matched && formeApi) {
+    for(let i = 0; i < formeSelect.options.length; i++) {
+      if(formeSelect.options[i].text.toLowerCase().includes(formeApi.substring(0, 4))) { formeSelect.selectedIndex = i; break; }
+    }
+  }
+  document.getElementById('pm-rcs').value = el.dataset.rcs || '';
   const paysSelect = document.getElementById('pm-pay');
+  const paysData = (el.dataset.pays || '').toLowerCase();
   for(let i = 0; i < paysSelect.options.length; i++) {
-    if(paysSelect.options[i].text === el.dataset.pays) { paysSelect.selectedIndex = i; break; }
+    if(paysSelect.options[i].text.toLowerCase().includes(paysData.substring(0, 4))) { paysSelect.selectedIndex = i; break; }
   }
-  document.getElementById('pm-sie').value = el.dataset.siege;
-  document.getElementById('pm-rep').value = el.dataset.rep;
+  document.getElementById('pm-sie').value = el.dataset.siege || '';
+  document.getElementById('pm-rep').value = el.dataset.rep || '';
 
   document.getElementById('pappers-results').innerHTML = `
     <div style="padding:8px 10px;background:var(--ok-bg);border-radius:8px;margin-top:6px;display:flex;align-items:center;gap:8px">
       <span>✅</span>
       <div style="font-size:.75rem;font-weight:600;color:var(--ok-fg)">Données importées depuis Pappers — ${el.dataset.name}</div>
     </div>
-    <div style="margin-top:6px;font-size:.65rem;color:var(--light)">Capital : ${el.dataset.capital} · Création : ${el.dataset.date} · Dirigeants : ${el.dataset.dirigeants}</div>`;
+    <div style="margin-top:6px;font-size:.65rem;color:var(--light)">Capital : ${el.dataset.capital || 'N/A'} · Création : ${el.dataset.date || 'N/A'} · Dirigeants : ${el.dataset.dirigeants || 'N/A'}</div>`;
 
   v1();
-  DB.addAudit({type:'pappers', action:'Recherche Pappers — ' + el.dataset.name + ' (' + el.dataset.rcs + ')', user: DB.getSession()?.name});
+  DB.addAudit({
+    type:'pappers', dot:'var(--info-fg)',
+    title:'🔍 Recherche Pappers — ' + el.dataset.name,
+    detail: 'SIREN ' + el.dataset.rcs + ' · ' + el.dataset.forme + ' · ' + (el.dataset.siege || ''),
+    tags:[{t:'Pappers API',c:'b'},{t:el.dataset.forme||'',c:'g'}]
+  });
   showToast('Pappers', 'Données de ' + el.dataset.name + ' importées automatiquement', 'ok', '🔍');
 }
 
