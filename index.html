@@ -1751,11 +1751,21 @@ body{padding-bottom:62px}
             <div id="cal-event-list-dynamic"></div>
           </div>
           <div class="card">
-            <div class="card-head"><div class="card-head-left"><span class="card-head-icon">⏱️</span><span class="card-title">Heures encodées</span></div><span class="card-action" onclick="openHoursModal()">Encoder</span></div>
+            <div class="card-head"><div class="card-head-left"><span class="card-head-icon">⏱️</span><span class="card-title">Activité du mois</span></div><span class="card-action" onclick="openHoursModal()">Encoder</span></div>
             <div style="padding:16px 18px">
-              <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
-                <div style="font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--charcoal)" id="mc-hours-val">0 h</div>
-                <span style="font-size:.75rem;color:var(--mid)" id="mc-hours-sub"></span>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px">
+                <div style="text-align:center;padding:12px;background:var(--info-bg);border-radius:10px">
+                  <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--info-fg)" id="mc-hours-val2">0</div>
+                  <div style="font-size:.68rem;color:var(--mid);margin-top:2px">Heures encodées</div>
+                </div>
+                <div style="text-align:center;padding:12px;background:var(--ok-bg);border-radius:10px">
+                  <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--ok-fg)" id="mc-ca-facture">0 €</div>
+                  <div style="font-size:.68rem;color:var(--mid);margin-top:2px">CA facturé</div>
+                </div>
+                <div style="text-align:center;padding:12px;background:var(--warn-bg);border-radius:10px">
+                  <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--warn-fg)" id="mc-ca-facturable">0 €</div>
+                  <div style="font-size:.68rem;color:var(--mid);margin-top:2px">CA facturable</div>
+                </div>
               </div>
               <div class="progress-bar" style="margin-bottom:8px"><div class="progress-fill blue" id="hours-bar" style="width:0%"></div></div>
               <div class="progress-label"><span id="mc-hours-fact">Facturables : 0h</span><span class="progress-pct" id="mc-hours-pct">0%</span></div>
@@ -4870,6 +4880,16 @@ function updateDashboardKPIs() {
   if(el('kpi-heures')) el('kpi-heures').textContent = Math.round(totalH);
   if(el('kpi-heures-trend')) el('kpi-heures-trend').textContent = factH + 'h facturables';
   if(el('kpi-heures-sub')) el('kpi-heures-sub').textContent = 'ce mois';
+
+  // ── Card Activité du mois (heures + CA)
+  if(el('mc-hours-val2')) el('mc-hours-val2').textContent = Math.round(totalH);
+  const settings = DB.load('settings', {});
+  const tauxH = parseFloat(settings.tauxHoraire) || 250;
+  const caFacturable = Math.round(factH * tauxH);
+  const monthPaye = invoices.filter(i => i.status === 'payee' && isThisMonth(i)).reduce((s, i) => s + i.total, 0);
+  const monthFacture = invoices.filter(i => isThisMonth(i)).reduce((s, i) => s + i.total, 0);
+  if(el('mc-ca-facture')) el('mc-ca-facture').textContent = monthFacture.toLocaleString('fr-FR') + ' €';
+  if(el('mc-ca-facturable')) el('mc-ca-facturable').textContent = caFacturable.toLocaleString('fr-FR') + ' €';
 
   // ── KPI: Facturation
   const monthInv = invoices.filter(i => isThisMonth(i));
