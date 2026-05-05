@@ -2246,8 +2246,8 @@ body{padding-bottom:62px}
           </div>
         </div>
 
-        <!-- PM fields -->
-        <div id="f-pm" style="display:none">
+        <!-- Pappers search (visible for PM, PM-complex, Trust, Crypto) -->
+        <div id="f-pappers" style="display:none">
           <div style="background:var(--info-bg);border:1px solid rgba(74,111,165,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
               <span style="font-size:1.1rem">🔍</span>
@@ -2264,6 +2264,10 @@ body{padding-bottom:62px}
             </div>
             <div id="pappers-results" style="margin-top:8px"></div>
           </div>
+        </div>
+
+        <!-- PM fields -->
+        <div id="f-pm" style="display:none">
           <div class="grid2">
             <div class="fg full"><label class="lbl req">Dénomination sociale</label><input id="pm-den" placeholder="ACME Holdings S.A." oninput="v1()"/></div>
             <div class="fg"><label class="lbl req">Forme juridique</label>
@@ -3475,6 +3479,7 @@ function setClientType(t){
   document.getElementById('f-pm').style.display = isPM ? 'block' : 'none';
   document.getElementById('f-trust').style.display = t==='trust' ? 'block' : 'none';
   document.getElementById('f-crypto').style.display = t==='crypto' ? 'block' : 'none';
+  document.getElementById('f-pappers').style.display = (!isPP) ? 'block' : 'none';
   v1();
 }
 function v1(){
@@ -7200,31 +7205,43 @@ async function searchPappers() {
 }
 
 function applyPappersResult(el) {
-  document.getElementById('pm-den').value = el.dataset.name || '';
-  const formeSelect = document.getElementById('pm-for');
-  const formeApi = (el.dataset.forme || '').toLowerCase();
-  let matched = false;
-  for(let i = 0; i < formeSelect.options.length; i++) {
-    const optText = formeSelect.options[i].text.toLowerCase();
-    if(optText.includes('sa') && (formeApi.includes('sa ') || formeApi.includes('société anonyme'))) { formeSelect.selectedIndex = i; matched = true; break; }
-    if(optText.includes('sarl') && formeApi.includes('sarl')) { formeSelect.selectedIndex = i; matched = true; break; }
-    if(optText.includes('scsp') && formeApi.includes('scsp')) { formeSelect.selectedIndex = i; matched = true; break; }
-    if(optText.includes('soparfi') && formeApi.includes('soparfi')) { formeSelect.selectedIndex = i; matched = true; break; }
-    if(optText.includes('sas') && formeApi.includes('sas')) { formeSelect.selectedIndex = i; matched = true; break; }
-  }
-  if(!matched && formeApi) {
+  const t = S.clientType;
+  if(t === 'trust') {
+    document.getElementById('tr-nom').value = el.dataset.name || '';
+    const formeApi = (el.dataset.forme || '').toLowerCase();
+    const trType = document.getElementById('tr-type');
+    if(formeApi.includes('trust')) { for(let i=0;i<trType.options.length;i++){if(trType.options[i].text.toLowerCase().includes('trust')){trType.selectedIndex=i;break;}} }
+    else if(formeApi.includes('fondation')||formeApi.includes('foundation')) { for(let i=0;i<trType.options.length;i++){if(trType.options[i].text.toLowerCase().includes('fondation')){trType.selectedIndex=i;break;}} }
+    else if(formeApi.includes('fiducie')) { for(let i=0;i<trType.options.length;i++){if(trType.options[i].text.toLowerCase().includes('fiducie')){trType.selectedIndex=i;break;}} }
+  } else if(t === 'crypto') {
+    document.getElementById('cr-nom').value = el.dataset.name || '';
+  } else {
+    document.getElementById('pm-den').value = el.dataset.name || '';
+    const formeSelect = document.getElementById('pm-for');
+    const formeApi = (el.dataset.forme || '').toLowerCase();
+    let matched = false;
     for(let i = 0; i < formeSelect.options.length; i++) {
-      if(formeSelect.options[i].text.toLowerCase().includes(formeApi.substring(0, 4))) { formeSelect.selectedIndex = i; break; }
+      const optText = formeSelect.options[i].text.toLowerCase();
+      if(optText.includes('sa') && (formeApi.includes('sa ') || formeApi.includes('société anonyme'))) { formeSelect.selectedIndex = i; matched = true; break; }
+      if(optText.includes('sarl') && formeApi.includes('sarl')) { formeSelect.selectedIndex = i; matched = true; break; }
+      if(optText.includes('scsp') && formeApi.includes('scsp')) { formeSelect.selectedIndex = i; matched = true; break; }
+      if(optText.includes('soparfi') && formeApi.includes('soparfi')) { formeSelect.selectedIndex = i; matched = true; break; }
+      if(optText.includes('sas') && formeApi.includes('sas')) { formeSelect.selectedIndex = i; matched = true; break; }
     }
+    if(!matched && formeApi) {
+      for(let i = 0; i < formeSelect.options.length; i++) {
+        if(formeSelect.options[i].text.toLowerCase().includes(formeApi.substring(0, 4))) { formeSelect.selectedIndex = i; break; }
+      }
+    }
+    document.getElementById('pm-rcs').value = el.dataset.rcs || '';
+    const paysSelect = document.getElementById('pm-pay');
+    const paysData = (el.dataset.pays || '').toLowerCase();
+    for(let i = 0; i < paysSelect.options.length; i++) {
+      if(paysSelect.options[i].text.toLowerCase().includes(paysData.substring(0, 4))) { paysSelect.selectedIndex = i; break; }
+    }
+    document.getElementById('pm-sie').value = el.dataset.siege || '';
+    document.getElementById('pm-rep').value = el.dataset.rep || '';
   }
-  document.getElementById('pm-rcs').value = el.dataset.rcs || '';
-  const paysSelect = document.getElementById('pm-pay');
-  const paysData = (el.dataset.pays || '').toLowerCase();
-  for(let i = 0; i < paysSelect.options.length; i++) {
-    if(paysSelect.options[i].text.toLowerCase().includes(paysData.substring(0, 4))) { paysSelect.selectedIndex = i; break; }
-  }
-  document.getElementById('pm-sie').value = el.dataset.siege || '';
-  document.getElementById('pm-rep').value = el.dataset.rep || '';
 
   document.getElementById('pappers-results').innerHTML = `
     <div style="padding:8px 10px;background:var(--ok-bg);border-radius:8px;margin-top:6px;display:flex;align-items:center;gap:8px">
