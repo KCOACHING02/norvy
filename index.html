@@ -2169,9 +2169,9 @@ body{padding-bottom:62px}
         <div class="p-connector" id="c2"></div>
         <div class="p-step"><div class="p-dot" id="d3"><span>3</span></div><div class="p-label">Qualification</div></div>
         <div class="p-connector" id="c3"></div>
-        <div class="p-step"><div class="p-dot" id="d4"><span>4</span></div><div class="p-label">Documents</div></div>
+        <div class="p-step"><div class="p-dot" id="d4"><span>4</span></div><div class="p-label">Screening</div></div>
         <div class="p-connector" id="c4"></div>
-        <div class="p-step"><div class="p-dot" id="d5"><span>5</span></div><div class="p-label">Screening</div></div>
+        <div class="p-step"><div class="p-dot" id="d5"><span>5</span></div><div class="p-label">Documents</div></div>
         <div class="p-connector" id="c5"></div>
         <div class="p-step"><div class="p-dot" id="d6"><span>6</span></div><div class="p-label">Décision</div></div>
         <div class="p-connector" id="c6"></div>
@@ -2289,8 +2289,28 @@ body{padding-bottom:62px}
             <div class="fg full"><label class="lbl req">Siège social</label><input id="pm-sie" placeholder="5 Boulevard Royal, L-2449 Luxembourg" oninput="v1()"/></div>
             <div class="fg full"><label class="lbl req">Représentant légal</label><input id="pm-rep" placeholder="Prénom NOM — Qualité (ex: Administrateur délégué)" oninput="v1()"/></div>
           </div>
-          <div class="note" style="margin-top:14px">
-            <span>ℹ️</span><span>L'identification des bénéficiaires effectifs (UBO ≥ 25%) sera demandée à l'étape Documents si la mission est qualifiée <strong>In Scope</strong>.</span>
+          <div class="divider"></div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+            <div>
+              <div style="font-size:.85rem;font-weight:700;color:var(--charcoal)">Bénéficiaires effectifs <span style="font-size:.72rem;font-weight:500;color:var(--mid)">— détention ou contrôle ≥ 25 % (AMLR)</span></div>
+              <div style="font-size:.73rem;color:var(--mid);margin-top:2px">Chacun est enregistré au dossier puis filtré automatiquement contre les listes de sanctions, PPE et médias défavorables.</div>
+            </div>
+            <button type="button" class="btn btn-secondary" style="font-size:.75rem;padding:7px 13px" onclick="addUbo()">+ Ajouter un bénéficiaire</button>
+          </div>
+          <div id="ubo-list"></div>
+          <div class="cl-item" id="ubo-none" onclick="toggleUboNone()" style="margin-top:8px">
+            <div class="cl-box" id="ubo-none-box"></div>
+            <div class="cl-text">
+              <div class="cl-title">Aucun bénéficiaire effectif identifiable au seuil de 25 %</div>
+              <div class="cl-sub">Les dirigeants sont alors retenus comme bénéficiaires effectifs. Motif à documenter ci-dessous.</div>
+            </div>
+          </div>
+          <div class="fg full" id="ubo-none-reason-wrap" style="display:none;margin-top:8px">
+            <label class="lbl req">Motif de l'impossibilité d'identifier un bénéficiaire effectif</label>
+            <input id="ubo-none-reason" placeholder="Ex : actionnariat dispersé, aucune personne ne dépasse 25 %, dirigeants retenus" oninput="v1()"/>
+          </div>
+          <div class="note" style="margin-top:12px">
+            <span>ℹ️</span><span>Le contrôle peut exister sans détention (pacte d'actionnaires, droits de vote, nomination des dirigeants). Une divergence avec le registre des bénéficiaires effectifs doit être signalée au registre.</span>
           </div>
         </div>
 
@@ -2467,39 +2487,17 @@ body{padding-bottom:62px}
 
         <div class="btn-row">
           <button class="btn btn-secondary" onclick="go(2)">← Retour</button>
-          <button class="btn btn-primary" onclick="go(4)">Continuer →</button>
+          <button class="btn btn-primary" onclick="go(4)">Lancer le screening →</button>
         </div>
       </div>
     </div>
 
-    <!-- ═══ ÉTAPE 4 — DOCUMENTS ════════════════════════════════════════ -->
+    <!-- ═══ ÉTAPE 4 — SCREENING ════════════════════════════════════════ -->
     <div class="sp" id="s4">
       <div class="card">
         <div class="card-step">Étape 4 · 7</div>
-        <div class="card-title">Collecte des documents</div>
-        <div class="card-desc">Cochez les documents collectés. Norvy adapte la liste selon le type de client et le niveau de vigilance calculé.</div>
-
-        <div id="doc-list"></div>
-
-        <div class="divider"></div>
-        <div class="fg">
-          <label class="lbl">Notes complémentaires sur les documents</label>
-          <textarea placeholder="Ex : Original de la pièce d'identité vérifié le 15/03/2026 par Me Dupont..."></textarea>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn btn-secondary" onclick="go(3)">← Retour</button>
-          <button class="btn btn-primary" id="b4" onclick="go(5)" disabled>Lancer le screening →</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══ ÉTAPE 5 — SCREENING ════════════════════════════════════════ -->
-    <div class="sp" id="s5">
-      <div class="card">
-        <div class="card-step">Étape 5 · 7</div>
         <div class="card-title">Screening KYC/AML</div>
-        <div class="card-desc">Vérification du client contre les listes de sanctions financières, PPE et adverse media. Obligatoire pour toute mission, même hors champ AML.</div>
+        <div class="card-desc">Vérification du client contre les listes de sanctions financières, PPE et adverse media. Obligatoire pour toute mission, même hors champ AML. Réalisé avant la collecte des pièces : la liste des documents s'adapte au résultat.</div>
 
         <div style="margin-bottom:18px">
           <div style="font-size:.82rem;font-weight:700;color:var(--charcoal);margin-bottom:10px">Entités à screener</div>
@@ -2524,9 +2522,31 @@ body{padding-bottom:62px}
         </div>
 
         <div class="btn-row">
-          <button class="btn btn-secondary" onclick="go(4)">← Retour</button>
+          <button class="btn btn-secondary" onclick="go(3)">← Retour</button>
           <button class="btn btn-primary" id="b5-run" onclick="runScreening()">🔍 Lancer le screening</button>
-          <button class="btn btn-primary" id="b5-next" onclick="go(6)" style="display:none">Continuer →</button>
+          <button class="btn btn-primary" id="b5-next" onclick="go(5)" style="display:none">Continuer → Documents</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ÉTAPE 5 — DOCUMENTS ════════════════════════════════════════ -->
+    <div class="sp" id="s5">
+      <div class="card">
+        <div class="card-step">Étape 5 · 7</div>
+        <div class="card-title">Collecte des documents</div>
+        <div class="card-desc">Cochez les documents collectés. Norvy adapte la liste selon le type de client, le niveau de vigilance et le résultat du screening.</div>
+
+        <div id="doc-list"></div>
+
+        <div class="divider"></div>
+        <div class="fg">
+          <label class="lbl">Notes complémentaires sur les documents</label>
+          <textarea placeholder="Ex : Original de la pièce d'identité vérifié le 15/03/2026 par Me Dupont..."></textarea>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="go(4)">← Retour</button>
+          <button class="btn btn-primary" id="b4" onclick="go(6)" disabled>Continuer → Décision</button>
         </div>
       </div>
     </div>
@@ -3348,7 +3368,7 @@ function animateDashboard(){
 
 // ── STATE ────────────────────────────────────────────────────────────────
 const S = {
-  clientType:'pp', missions:[],
+  clientType:'pp', missions:[], ubos:[], uboNone:false,
   gafi:null, ppe:null, dist:null,
   decision:null, docsChecked:new Set(),
   screeningDone:false,
@@ -3365,6 +3385,67 @@ const MISSION_LABELS = {
 };
 
 function isInScope(){ return S.missions.some(m=>IN_SCOPE.includes(m)) }
+
+// ── Bénéficiaires effectifs ───────────────────────────────────────────────
+const UBO_NAT = ['Luxembourgeoise','Française','Belge','Allemande','Italienne','Espagnole','Portugaise','Britannique','Autre UE','Hors UE — pays standard','Hors UE — pays à risque GAFI'];
+const UBO_NATURE = [
+  'Détention directe du capital',
+  'Détention indirecte (via une ou plusieurs entités)',
+  'Contrôle par d\'autres moyens (droits de vote, pacte, nomination des dirigeants)',
+  'Dirigeant retenu à défaut de bénéficiaire identifiable'
+];
+
+function uboLabel(u, i){
+  const nom = [u.nom, u.prenom].filter(Boolean).join(' ').trim();
+  return nom || `Bénéficiaire effectif ${i+1}`;
+}
+function addUbo(){ S.ubos.push({nom:'',prenom:'',dob:'',nat:'',pct:'',nature:UBO_NATURE[0]}); renderUbos(); v1(); }
+function removeUbo(i){ S.ubos.splice(i,1); renderUbos(); v1(); }
+function setUbo(i,field,value){ S.ubos[i][field]=value; if(field==='nom'||field==='prenom'){const t=document.getElementById(`ubo-t-${i}`); if(t) t.textContent=uboLabel(S.ubos[i],i);} v1(); }
+function toggleUboNone(){
+  S.uboNone=!S.uboNone;
+  document.getElementById('ubo-none').classList.toggle('checked',S.uboNone);
+  document.getElementById('ubo-none-box').textContent=S.uboNone?'✓':'';
+  document.getElementById('ubo-none-reason-wrap').style.display=S.uboNone?'':'none';
+  v1();
+}
+function renderUbos(){
+  const el=document.getElementById('ubo-list');
+  if(!el) return;
+  if(!S.ubos.length){
+    el.innerHTML='<div class="note"><span>👥</span><span>Aucun bénéficiaire effectif saisi. Ajoutez chaque personne physique détenant ou contrôlant au moins 25 %, ou cochez la case ci-dessous.</span></div>';
+    return;
+  }
+  el.innerHTML=S.ubos.map((u,i)=>`
+    <div style="border:1.5px solid var(--border);border-radius:10px;padding:13px;margin-bottom:10px;background:var(--cream)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
+        <div style="font-size:.8rem;font-weight:700;color:var(--charcoal)" id="ubo-t-${i}">${uboLabel(u,i)}</div>
+        <span style="cursor:pointer;font-size:.73rem;color:var(--danger-fg);font-weight:600" onclick="removeUbo(${i})">Supprimer</span>
+      </div>
+      <div class="grid2">
+        <div class="fg"><label class="lbl req">Nom</label><input value="${u.nom.replace(/"/g,'&quot;')}" placeholder="MARTIN" oninput="setUbo(${i},'nom',this.value)"/></div>
+        <div class="fg"><label class="lbl req">Prénom</label><input value="${u.prenom.replace(/"/g,'&quot;')}" placeholder="Jean" oninput="setUbo(${i},'prenom',this.value)"/></div>
+        <div class="fg"><label class="lbl req">Date de naissance</label><input type="date" value="${u.dob}" onchange="setUbo(${i},'dob',this.value)"/></div>
+        <div class="fg"><label class="lbl req">Nationalité</label>
+          <select onchange="setUbo(${i},'nat',this.value)">
+            <option value="">Sélectionner...</option>
+            ${UBO_NAT.map(n=>`<option ${u.nat===n?'selected':''}>${n}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg"><label class="lbl req">Détention (%)</label><input type="number" min="0" max="100" step="0.1" value="${u.pct}" placeholder="25" oninput="setUbo(${i},'pct',this.value)"/></div>
+        <div class="fg"><label class="lbl req">Nature du contrôle</label>
+          <select onchange="setUbo(${i},'nature',this.value)">
+            ${UBO_NATURE.map(n=>`<option ${u.nature===n?'selected':''}>${n}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function uboComplete(u){ return !!(u.nom.trim() && u.prenom.trim() && u.dob && u.nat && String(u.pct).trim()!==''); }
+function ubosOk(){
+  if(S.uboNone) return !!document.getElementById('ubo-none-reason')?.value.trim();
+  return S.ubos.length>0 && S.ubos.every(uboComplete);
+}
 
 function calcRiskScore(){
   if(!isInScope()) return {score:0, level:'none', label:'Hors périmètre'};
@@ -3458,8 +3539,8 @@ function go(n){
     if(i<7) document.getElementById(`c${i}`).classList.toggle('done',i<n);
   }
   if(n===3) renderStep3();
-  if(n===4) renderStep4();
-  if(n===5) renderStep5();
+  if(n===4) renderStep5(); // étape 4 : screening
+  if(n===5) renderStep4(); // étape 5 : documents
   if(n===6) renderStep6();
   if(n===7) renderStep7();
   window.scrollTo({top:0,behavior:'smooth'});
@@ -3480,6 +3561,7 @@ function setClientType(t){
   document.getElementById('f-trust').style.display = t==='trust' ? 'block' : 'none';
   document.getElementById('f-crypto').style.display = t==='crypto' ? 'block' : 'none';
   document.getElementById('f-pappers').style.display = (!isPP) ? 'block' : 'none';
+  if(isPM) renderUbos();
   v1();
 }
 function v1(){
@@ -3497,7 +3579,8 @@ function v1(){
        !!document.getElementById('pm-rcs')?.value.trim()&&
        !!document.getElementById('pm-pay')?.value&&
        !!document.getElementById('pm-sie')?.value.trim()&&
-       !!document.getElementById('pm-rep')?.value.trim();
+       !!document.getElementById('pm-rep')?.value.trim()&&
+       ubosOk();
   } else if(t==='trust') {
     ok=!!document.getElementById('tr-nom')?.value.trim()&&
        !!document.getElementById('tr-type')?.value&&
@@ -3562,7 +3645,7 @@ function detectGAFI(){
 }
 
 function detectPPE(){
-  // Basé sur le résultat du screening étape 5
+  // Basé sur le résultat du screening étape 4
   // Si screening fait et négatif → Non
   // Si screening non fait → indéterminé (saisie manuelle)
   if(S.screeningDone){
@@ -3627,11 +3710,11 @@ function autoFillRiskFactors(){
       ppeCard.innerHTML = `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--info-bg);border:1.5px solid rgba(41,128,185,.2);border-radius:10px">
         <span style="font-size:1.4rem">🔍</span>
         <div style="flex:1">
-          <div style="font-size:.86rem;font-weight:700;color:var(--info-fg)">En attente du screening KYC (étape 5)</div>
+          <div style="font-size:.86rem;font-weight:700;color:var(--info-fg)">En attente du screening KYC (étape 4)</div>
           <div style="font-size:.74rem;color:var(--mid);margin-top:2px">Le statut PPE sera déterminé automatiquement lors du screening contre la base PPE internationale.</div>
-          <div style="font-size:.7rem;color:var(--light);margin-top:3px">🔍 Source : Screening PPE Database — Dow Jones Factiva · Lancement à l'étape 5</div>
+          <div style="font-size:.7rem;color:var(--light);margin-top:3px">🔍 Source : Screening PPE Database — Dow Jones Factiva · Lancement à l'étape 4</div>
         </div>
-        <span style="font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--info-bg);color:var(--info-fg);border:1px solid rgba(41,128,185,.2);white-space:nowrap">ÉTAPE 5</span>
+        <span style="font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--info-bg);color:var(--info-fg);border:1px solid rgba(41,128,185,.2);white-space:nowrap">ÉTAPE 4</span>
       </div>`;
       if(ppeManual) ppeManual.style.display = 'block'; // Permettre saisie manuelle si besoin
     } else if(S.ppe === 'oui'){
@@ -3754,7 +3837,8 @@ function renderVig(){
 // ── STEP 4 ───────────────────────────────────────────────────────────────
 function renderStep4(){
   const lv=vigilanceLevel();
-  const t=S.clientType;
+  // PPE détectée au screening : on applique la liste de documents PPE
+  const t=(S.clientType==='pp' && S.ppe==='oui') ? 'pp-ppe' : S.clientType;
   const r=calcRiskScore();
   const isEleve = r.level === 'eleve' || r.level === 'tres-eleve';
   const el=document.getElementById('doc-list');
@@ -3786,8 +3870,7 @@ function renderStep4(){
         {id:'sta',t:"Statuts à jour de la société",s:"Version consolidée",req:true},
         {id:'dir',t:"Liste des dirigeants et représentants légaux",s:"Avec pièces d'identité",req:true},
         {id:'id-dir',t:"Pièce d'identité de chaque dirigeant",s:"Passeport ou CNI",req:true},
-        {id:'ubo',t:"Identification des UBO ≥ 25% (seuil AMLD6)",s:"Bénéficiaires effectifs",req:true},
-        {id:'id-ubo',t:"Pièce d'identité de chaque UBO ≥ 25%",s:"Passeport ou CNI",req:true},
+        {id:'rbe-div',t:"Vérification de cohérence avec le registre des bénéficiaires effectifs",s:"Toute divergence doit être signalée au registre",req:true},
         {id:'decl-ra',t:"Déclaration nature et objet de la relation d'affaires",s:"Formulaire Norvy",req:true},
         {id:'rbe',t:"Vérification registre UBO national",s:"INPI / RCS / BCE",req:true},
       ];
@@ -3797,8 +3880,7 @@ function renderStep4(){
         {id:'sta',t:"Statuts à jour",s:"Version consolidée",req:true},
         {id:'dir',t:"Liste des dirigeants",s:"Avec pièces d'identité",req:true},
         {id:'id-dir',t:"Pièce d'identité de chaque dirigeant",s:"Passeport ou CNI",req:true},
-        {id:'ubo',t:"Identification des UBO ≥ 25%",s:"Bénéficiaires effectifs",req:true},
-        {id:'id-ubo',t:"Pièce d'identité de chaque UBO ≥ 25%",s:"Passeport ou CNI",req:true},
+        {id:'rbe-div',t:"Vérification de cohérence avec le registre des bénéficiaires effectifs",s:"Toute divergence doit être signalée au registre",req:true},
         {id:'organi',t:"Organigramme complet jusqu'au UBO personne physique",s:"Structure capitalistique complète",req:true},
         {id:'docs-inter',t:"Documents constitutifs de chaque entité intermédiaire",s:"Statuts, extraits RCS",req:true},
         {id:'activ',t:"Justificatif d'activité économique réelle",s:"Bilan, compte de résultat, contrats",req:true},
@@ -3839,6 +3921,19 @@ function renderStep4(){
     ];
   }
 
+  // Pièces des bénéficiaires effectifs saisis à l'étape 1
+  if(isInScope() && (S.clientType==='pm' || S.clientType==='pm-complex')){
+    S.ubos.forEach((u,i)=>{
+      docs.push({id:'id-ubo-'+i,t:`Pièce d'identité — ${uboLabel(u,i)}`,s:`${u.pct||'?'} % · ${u.nature||''}`,req:true});
+    });
+    if(S.uboNone) docs.push({id:'ubo-none-doc',t:"Justificatif de l'absence de bénéficiaire effectif identifiable",s:"Table de capitalisation ou attestation, dirigeants retenus",req:true});
+  }
+  if(S._mesh && S._mesh.hasProfiles){
+    docs.push({id:'qualif-screening',t:"Qualification des correspondances du screening",s:"Faux positif / vrai positif justifié à l'étape 4",req:true});
+  }
+  if(S.ppe==='oui' && !docs.some(d=>d.id==='decl-ppe')){
+    docs.push({id:'decl-ppe',t:"Déclaration PPE détaillée — fonctions et dates",s:"PPE identifiée au screening",req:true});
+  }
   const riskLabel = isInScope() ? (() => { const rs = calcRiskScore(); const icons = {faible:'🟢',standard:'🔵',eleve:'🟡','tres-eleve':'🔴'}; return `Documents requis — Risque ${icons[rs.level]||''} ${rs.label} (${rs.score}/100) — ${t.toUpperCase()}`; })() : 'Documents pour screening (mission hors champ AML)';
   el.innerHTML=`<div style="font-size:.82rem;font-weight:700;color:var(--charcoal);margin-bottom:10px">${riskLabel}</div>
   <div class="checklist">${docs.map(d=>`
@@ -3886,8 +3981,12 @@ function renderStep5(){
   const isTrust=S.missions.includes('trust');
 
   let entities=[{label:nom.trim()||'Client principal',type:isPP?'Personne physique':'Personne morale',role:'Client'}];
-  if(!isPP) entities.push({label:'Représentant légal',type:'Personne physique',role:'Représentant'});
-  if(!isPP) entities.push({label:'UBO(s) identifiés',type:'Personnes physiques',role:'Bénéficiaires effectifs ≥ 25%'});
+  if(!isPP){
+    const rep=(document.getElementById('pm-rep')?.value||'').split(/\s[—–-]\s/)[0].trim();
+    if(rep) entities.push({label:rep,type:'Personne physique',role:'Représentant légal'});
+    S.ubos.filter(uboComplete).forEach((u,i)=>entities.push({label:uboLabel(u,i),type:'Personne physique',role:`Bénéficiaire effectif · ${u.pct||'?'} %`}));
+    if(S.uboNone) entities.push({label:'Dirigeants retenus à défaut de bénéficiaire effectif',type:'Personnes physiques',role:'À filtrer individuellement'});
+  }
   if(S.ppe==='oui') entities.push({label:'Personnes associées PPE',type:'À identifier',role:'Famille / associés PPE'});
 
   document.getElementById('sc-entities').innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">${
@@ -3948,7 +4047,7 @@ function renderStep6(){
       </div>
       <div style="background:var(--cream);border:1px solid var(--border);border-radius:9px;padding:12px">
         <div style="font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--light);margin-bottom:4px">Screening</div>
-        <div style="font-size:.85rem;font-weight:600;color:var(--ok-fg)">✓ Négatif</div>
+        <div style="font-size:.85rem;font-weight:600;color:var(--charcoal)">${typeof window.meshScreeningLabel==='function' ? window.meshScreeningLabel() : (S.screeningDone ? '<span style="color:var(--ok-fg)">✓ Négatif</span>' : '⏳ Non effectué')}</div>
       </div>
     </div>`;
 
@@ -4033,6 +4132,9 @@ function renderStep7(){
     riskLevel: risk.level,
     riskLabel: risk.label,
     reviewPeriod: risk.period,
+    ubos: JSON.parse(JSON.stringify(S.ubos)),
+    uboNone: S.uboNone,
+    uboNoneReason: document.getElementById('ubo-none-reason')?.value.trim() || '',
     gafi: S.gafi,
     ppe: S.ppe,
     dist: S.dist,
@@ -4148,7 +4250,7 @@ function viewCreatedDossier() {
 
 // ── RESET ────────────────────────────────────────────────────────────────
 function resetAll(){
-  Object.assign(S,{clientType:'pp',missions:[],gafi:null,ppe:null,dist:null,decision:null,docsChecked:new Set(),screeningDone:false,riskStructure:15,riskFonds:25,riskHistorique:35});
+  Object.assign(S,{clientType:'pp',missions:[],ubos:[],uboNone:false,gafi:null,ppe:null,dist:null,decision:null,docsChecked:new Set(),screeningDone:false,riskStructure:15,riskFonds:25,riskHistorique:35});
   document.querySelectorAll('.mc').forEach(c=>{c.classList.remove('sel');c.querySelector('.mc-check').textContent='';});
   document.querySelectorAll('#ct-pp,#ct-pp-ppe,#ct-pm,#ct-pm-complex,#ct-trust,#ct-crypto,#g-non,#g-oui,#p-non,#p-oui,#dist-non,#dist-oui,#dec-acc,#dec-sus,#dec-ref,#dec-ds').forEach(c=>c&&c.classList.remove('sel'));
   document.getElementById('ct-pp').classList.add('sel');
@@ -4160,6 +4262,8 @@ function resetAll(){
   const rf = document.getElementById('risk-fonds'); if(rf) rf.value = '25';
   const rh = document.getElementById('risk-historique'); if(rh) rh.value = '35';
   document.getElementById('b2').disabled=true;
+  const un=document.getElementById('ubo-none'); if(un){un.classList.remove('checked');document.getElementById('ubo-none-box').textContent='';document.getElementById('ubo-none-reason-wrap').style.display='none';const r=document.getElementById('ubo-none-reason'); if(r) r.value='';}
+  renderUbos();
   go(1);v1();
 }
 
@@ -4994,7 +5098,7 @@ function renderComplianceRiskChart() {
   const colors = {faible:'#27ae60',modere:'#f39c12',eleve:'#e67e22',critique:'#c0392b'};
   const labels = {faible:'Faible',modere:'Modéré',eleve:'Élevé',critique:'Critique'};
   const total = dossiers.length;
-  const cx = w/2, cy = h/2 - 10, r = Math.min(w,h)/2 - 35;
+  const cx = w/2, cy = h/2 - 10, r = Math.min(w,h)/2 - 35; if(r<=0) return;
   let angle = -Math.PI/2;
   for(const [level, count] of Object.entries(levels)) {
     if(count === 0) continue;
@@ -5419,7 +5523,7 @@ function renderFinancialOverview() {
     const colors = {faible:'#27ae60',modere:'#f39c12',eleve:'#e67e22',critique:'#c0392b'};
     const labels = {faible:'Faible',modere:'Modéré',eleve:'Élevé',critique:'Critique'};
     const total = dossiers.length;
-    const cx = w/2, cy = h/2 - 5, r = Math.min(w,h)/2 - 30;
+    const cx = w/2, cy = h/2 - 5, r = Math.min(w,h)/2 - 30; if(r<=0) return;
     let angle = -Math.PI/2;
 
     for(const [level, count] of Object.entries(levels)) {
@@ -6283,6 +6387,26 @@ function generateDossierPDF(ref) {
   fieldRow('Statut du dossier', d.status === 'actif' ? 'Actif' : d.status === 'suspendu' ? 'Suspendu' : d.status === 'refuse' ? 'Refusé' : d.status === 'archive' ? 'Archivé' : d.status);
   y += 4;
 
+  if((d.ubos || []).length || d.uboNone){
+    y += 2;
+    doc.setTextColor(130,140,135); doc.setFontSize(8);
+    doc.text('Bénéficiaires effectifs', M + 2, y); y += 6;
+    doc.setTextColor(40,40,40); doc.setFontSize(9);
+    (d.ubos || []).forEach(u => {
+      if(y > 275) { doc.addPage(); y = 20; }
+      const nom = [u.nom, u.prenom].filter(Boolean).join(' ');
+      doc.text(`• ${nom} — ${u.pct || '?'} % — ${u.nat || ''} — né(e) le ${u.dob ? new Date(u.dob).toLocaleDateString('fr-LU') : '?'}`, M + 4, y); y += 5;
+      doc.setFontSize(8); doc.setTextColor(130,140,135);
+      doc.text(`  ${u.nature || ''}`, M + 4, y); y += 5;
+      doc.setFontSize(9); doc.setTextColor(40,40,40);
+    });
+    if(d.uboNone){
+      if(y > 275) { doc.addPage(); y = 20; }
+      doc.text(`• Aucun bénéficiaire identifiable : ${d.uboNoneReason || 'dirigeants retenus'}`, M + 4, y); y += 6;
+    }
+    y += 2;
+  }
+
   // ── 2. Analyse LCB/FT ──
   sectionTitle('ANALYSE LCB/FT', 'II.');
   fieldRow('Mission', d.missionLabel || d.missionLabels?.[0] || '—');
@@ -7094,7 +7218,7 @@ function sendStripeLink(invoiceId) {
 function closeStripeModal() { document.getElementById('stripe-modal').classList.add('hidden'); }
 
 // ══ PAPPERS (SIMULATION) ══
-const PAPPERS_API_KEY = '2d4f1539fbab01fec31b8f0965b44c8d359f87e4cb0b508e';
+const PAPPERS_API_KEY = ''; // Clé retirée du code : elle est gérée par le serveur Norvy (variable PAPPERS_API_KEY)
 let pappersMode = 'lu';
 
 function getPappersKey() {
@@ -7136,7 +7260,16 @@ async function searchPappers() {
       }
     }
 
-    const resp = await fetch(url);
+    let fetchOpts = {};
+    if (window.NorvyProxy) {
+      // Norvy servi par le serveur : la clé Pappers est ajoutée côté serveur
+      url = window.NorvyProxy.pappersUrl(url);
+      fetchOpts = { headers: window.NorvyProxy.headers() };
+    } else if (!apiKey) {
+      results.innerHTML = '<div style="font-size:.75rem;color:var(--warn-fg);padding:6px 0">⚠️ Clé Pappers non configurée. Renseignez-la dans Paramètres › Intégrations.</div>';
+      return;
+    }
+    const resp = await fetch(url, fetchOpts);
     if(!resp.ok) {
       const errData = await resp.json().catch(() => ({}));
       if(resp.status === 401 || resp.status === 403) {
@@ -9013,5 +9146,6 @@ setTimeout(function(){
   }
 },1500);
 </script>
+<script src="norvy-mesh.js"></script>
 </body>
 </html>
