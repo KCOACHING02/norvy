@@ -2375,11 +2375,47 @@ body{padding-bottom:62px}
 
         <div class="grid2">
           <div class="fg"><label class="lbl">Avocat responsable</label>
-            <select><option>Me Dupont Jean — Associé</option><option>Me Lambert Sophie — Collaboratrice</option><option>Me Fernandez Carlos — Collaborateur</option></select>
+            <select id="ra-avocat"><option>Me Dupont Jean — Associé</option><option>Me Lambert Sophie — Collaboratrice</option><option>Me Fernandez Carlos — Collaborateur</option></select>
           </div>
-          <div class="fg"><label class="lbl">Date prévisionnelle</label><input type="date"/></div>
-          <div class="fg full"><label class="lbl">Description complémentaire</label>
-            <textarea placeholder="Précisez la nature exacte de la mission pour le journal d'audit..."></textarea>
+          <div class="fg"><label class="lbl">Date prévisionnelle</label><input type="date" id="ra-date"/></div>
+        </div>
+
+        <div class="divider"></div>
+        <div style="font-size:.85rem;font-weight:700;color:var(--charcoal);margin-bottom:4px">Objet et nature envisagée de la relation d'affaires</div>
+        <div style="font-size:.73rem;color:var(--mid);margin-bottom:12px">Exigé par l'AMLR pour toute mission assujettie : ces éléments servent de référence pour détecter ensuite une opération atypique.</div>
+        <div class="grid2">
+          <div class="fg full"><label class="lbl req">Objet précis de la mission</label>
+            <textarea id="ra-objet" placeholder="Ex : acquisition d'un immeuble de rapport à Luxembourg-Ville pour le compte du client, rédaction de l'acte et séquestre du prix" oninput="v2()"></textarea>
+          </div>
+          <div class="fg"><label class="lbl req">Montant estimé de l'opération (€)</label><input type="number" id="ra-montant" min="0" step="1000" placeholder="850000" oninput="v2()"/></div>
+          <div class="fg"><label class="lbl req">Origine des fonds annoncée</label>
+            <select id="ra-origine" onchange="v2()">
+              <option value="">Sélectionner...</option>
+              <option>Revenus professionnels</option>
+              <option>Épargne constituée</option>
+              <option>Prêt bancaire</option>
+              <option>Cession d'actifs (immobilier, titres, société)</option>
+              <option>Donation ou succession</option>
+              <option>Revenus d'investissement</option>
+              <option>Fonds propres de la société</option>
+              <option>Autre / à documenter</option>
+            </select>
+          </div>
+          <div class="fg"><label class="lbl req">Fréquence attendue</label>
+            <select id="ra-freq" onchange="v2()">
+              <option value="">Sélectionner...</option>
+              <option>Mission ponctuelle</option>
+              <option>Relation suivie — opérations récurrentes</option>
+              <option>Mandat permanent</option>
+            </select>
+          </div>
+          <div class="fg"><label class="lbl req">Fonds transitant par le cabinet</label>
+            <select id="ra-fonds" onchange="v2()">
+              <option value="">Sélectionner...</option>
+              <option>Non — aucun maniement de fonds</option>
+              <option>Oui — compte tiers / CARPA</option>
+              <option>Oui — compte séquestre dédié</option>
+            </select>
           </div>
         </div>
 
@@ -2594,8 +2630,9 @@ body{padding-bottom:62px}
         <div id="monitoring-plan"></div>
 
         <div class="fg" style="margin-top:18px">
-          <label class="lbl">Commentaire de décision (obligatoire si refus ou DS)</label>
-          <textarea id="dec-comment" placeholder="Motif de la décision, observations de l'avocat responsable..."></textarea>
+          <label class="lbl">Commentaire de décision (obligatoire si refus ou déclaration de soupçon)</label>
+          <textarea id="dec-comment" placeholder="Motif de la décision, observations de l'avocat responsable..." oninput="validateDecision()"></textarea>
+          <div id="dec-hint" style="margin-top:6px"></div>
         </div>
 
         <div class="btn-row">
@@ -3604,7 +3641,21 @@ function toggleM(el,val){
   ch.textContent=on?'✓':'';
   if(on){if(!S.missions.includes(val))S.missions.push(val);}
   else S.missions=S.missions.filter(m=>m!==val);
-  document.getElementById('b2').disabled=S.missions.length===0;
+  v2();
+}
+
+// Objet et nature de la relation d'affaires : obligatoires pour une mission assujettie
+function relationData(){
+  const g=id=>(document.getElementById(id)?.value||'').trim();
+  return { objet:g('ra-objet'), montant:g('ra-montant'), origine:g('ra-origine'),
+           frequence:g('ra-freq'), maniementFonds:g('ra-fonds'),
+           avocat:g('ra-avocat'), datePrev:g('ra-date') };
+}
+function v2(){
+  const r=relationData();
+  const ok = S.missions.length>0 && (!isInScope() ||
+    (r.objet.length>=20 && r.montant!=='' && r.origine && r.frequence && r.maniementFonds));
+  const b=document.getElementById('b2'); if(b) b.disabled=!ok;
 }
 
 // ── STEP 3 ───────────────────────────────────────────────────────────────
@@ -3924,6 +3975,20 @@ function renderStep4(){
     ];
   }
 
+  // Information du client sur le traitement de ses données, avant l'entrée en relation
+  docs.push({id:'rgpd',t:"Note d'information sur le traitement des données",s:"RGPD et AMLR : remise au client avant l'entrée en relation",req:true});
+
+  // Pays tiers à haut risque : mesures renforcées obligatoires
+  if(isInScope() && (S.gafi==='oui' || S.gafi==='incertain')){
+    docs.push(
+      {id:'edd-info',t:"Informations complémentaires sur le client et les bénéficiaires effectifs",s:"Pays tiers à haut risque — mesure renforcée obligatoire",req:true},
+      {id:'edd-fonds',t:"Origine des fonds ET origine du patrimoine documentées",s:"Pays tiers à haut risque — justificatifs probants",req:true},
+      {id:'edd-motif',t:"Motifs économiques et licéité de l'opération envisagée",s:"Note écrite au dossier",req:true},
+      {id:'edd-appro',t:"Approbation de la direction du cabinet pour l'entrée en relation",s:"Associé responsable LCB-FT",req:true},
+      {id:'edd-suivi',t:"Plan de surveillance renforcée des opérations",s:"Fréquence et points de contrôle définis",req:true}
+    );
+  }
+
   // Pièces des bénéficiaires effectifs saisis à l'étape 1
   if(isInScope() && (S.clientType==='pm' || S.clientType==='pm-complex')){
     S.ubos.forEach((u,i)=>{
@@ -4139,7 +4204,20 @@ function setDecision(d){
     dd.innerHTML=`<div class="alert danger"><span class="alert-icon">📢</span><div><div class="alert-title">Déclaration de soupçon — Circuit OAL activé</div><div class="alert-body"><strong>Circuit :</strong> Votre déclaration sera transmise au Bâtonnier de l'OAL (délai légal 8 jours) qui vérifiera le périmètre d'assujettissement avant transmission à la CRF (Cellule de Renseignement Financier).<br/><br/><strong>Confidentialité absolue :</strong> Il est strictement interdit d'informer le client qu'une déclaration de soupçon a été faite (obligation de non-divulgation — tipping-off).</div><div class="alert-tags"><span class="tag r">Tipping-off interdit</span><span class="tag r">Archivé automatiquement</span><span class="tag r">Transmission Bâtonnier OAL</span></div></div></div>`;
   }
 
-  document.getElementById('b6').disabled=false;
+  validateDecision();
+}
+
+// Refus ou déclaration de soupçon : motif écrit obligatoire (journal d'audit et contrôle OAL)
+function validateDecision(){
+  const b=document.getElementById('b6');
+  if(!b) return;
+  const c=(document.getElementById('dec-comment')?.value||'').trim();
+  const motifRequis = S.decision==='refuser' || S.decision==='declaration';
+  b.disabled = !S.decision || (motifRequis && c.length<20);
+  const h=document.getElementById('dec-hint');
+  if(h) h.innerHTML = (motifRequis && c.length<20)
+    ? `<div class="note" style="border-left-color:var(--danger-fg)"><span>✍️</span><span>Un motif écrit d'au moins 20 caractères est obligatoire pour ${S.decision==='refuser'?'un refus':'une déclaration de soupçon'} (${c.length}/20).</span></div>`
+    : '';
 }
 
 function renderMonitoring(){
@@ -4212,7 +4290,10 @@ function renderStep7(){
     status: statusMap[dec] || 'actif',
     createdAt: new Date().toISOString(),
     createdBy: DB.getSession()?.userId || null,
-    docMeta: JSON.parse(JSON.stringify(S.docMeta))
+    docMeta: JSON.parse(JSON.stringify(S.docMeta)),
+    relation: relationData(),
+    decisionComment: (document.getElementById('dec-comment')?.value||'').trim(),
+    retentionPolicy: '5 ans après la fin de la relation d\'affaires'
   };
   const dossiers = DB.getDossiers();
   dossiers.unshift(dossier);
@@ -4349,6 +4430,8 @@ function resetAll(){
   document.getElementById('b2').disabled=true;
   const un=document.getElementById('ubo-none'); if(un){un.classList.remove('checked');document.getElementById('ubo-none-box').textContent='';document.getElementById('ubo-none-reason-wrap').style.display='none';const r=document.getElementById('ubo-none-reason'); if(r) r.value='';}
   renderUbos();
+  ['ra-objet','ra-montant','ra-origine','ra-freq','ra-fonds','ra-date','dec-comment'].forEach(id=>{const e=document.getElementById(id); if(e) e.value='';});
+  const dh=document.getElementById('dec-hint'); if(dh) dh.innerHTML='';
   go(1);v1();
 }
 
@@ -5790,6 +5873,15 @@ function renderDossierTabContent(ref, tab) {
         <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Statut</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${statusLabel}</div></div>
         <div style="background:var(--cream);border-radius:10px;padding:12px"><div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Date</div><div style="font-size:.88rem;font-weight:600;color:var(--charcoal)">${dateStr}</div></div>
       </div>
+      ${d.relation?.objet ? `<div style="background:var(--cream);border-radius:10px;padding:12px;margin-bottom:10px">
+        <div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Objet et nature de la relation d'affaires</div>
+        <div style="font-size:.82rem;color:var(--charcoal)">${d.relation.objet}</div>
+        <div style="font-size:.72rem;color:var(--mid);margin-top:5px">${[d.relation.montant?Number(d.relation.montant).toLocaleString('fr-FR')+' €':'', d.relation.origine, d.relation.frequence, d.relation.maniementFonds].filter(Boolean).join(' · ')}</div>
+      </div>` : ''}
+      ${d.decisionComment ? `<div style="background:var(--cream);border-radius:10px;padding:12px;margin-bottom:10px">
+        <div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Motif de la décision</div>
+        <div style="font-size:.82rem;color:var(--charcoal)">${d.decisionComment}</div></div>` : ''}
+      <div style="font-size:.7rem;color:var(--light);margin-bottom:10px">🗄️ Conservation : ${d.retentionPolicy || "5 ans après la fin de la relation d'affaires"}</div>
       ${(()=>{
         const sc = computeAMLR6Score(d);
         const gbg = sc.level==='critique'?'var(--danger-bg)':sc.level==='eleve'?'#fdecd0':sc.level==='modere'?'var(--warn-bg)':'var(--ok-bg)';
@@ -6503,6 +6595,15 @@ function generateDossierPDF(ref) {
   fieldRow('Relation à distance', d.dist === 'oui' ? 'OUI — Art. 28(4) AMLR' : 'Non');
   fieldRow('Screening', d.screeningResult === 'negatif' ? 'Négatif (aucun hit)' : d.screeningResult === 'alerte' ? 'ALERTE — Correspondance détectée' : 'Non effectué');
   fieldRow('Décision', d.decision === 'accepter' ? 'Mission acceptée' : d.decision === 'refuser' ? 'Mission refusée' : d.decision === 'suspendre' ? 'Mission suspendue' : '—');
+  if(d.decisionComment) fieldRow('Motif de la décision', d.decisionComment);
+  if(d.relation?.objet){
+    fieldRow('Objet de la relation', d.relation.objet);
+    fieldRow('Montant estimé', d.relation.montant ? Number(d.relation.montant).toLocaleString('fr-FR') + ' €' : '—');
+    fieldRow('Origine des fonds', d.relation.origine || '—');
+    fieldRow('Fréquence attendue', d.relation.frequence || '—');
+    fieldRow('Maniement de fonds', d.relation.maniementFonds || '—');
+  }
+  fieldRow('Conservation', d.retentionPolicy || "5 ans après la fin de la relation d'affaires");
   y += 4;
 
   // ── 3. Score AMLR6 ──
