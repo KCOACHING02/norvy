@@ -2310,7 +2310,10 @@ body{padding-bottom:62px}
               <div style="font-size:.85rem;font-weight:700;color:var(--charcoal)">Bénéficiaires effectifs <span style="font-size:.72rem;font-weight:500;color:var(--mid)">— détention ou contrôle ≥ 25 % (AMLR)</span></div>
               <div style="font-size:.73rem;color:var(--mid);margin-top:2px">Chacun est enregistré au dossier puis filtré automatiquement contre les listes de sanctions, PPE et médias défavorables.</div>
             </div>
-            <button type="button" class="btn btn-secondary" style="font-size:.75rem;padding:7px 13px" onclick="addUbo()">+ Ajouter un bénéficiaire</button>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button type="button" class="btn btn-sage" style="font-size:.75rem;padding:7px 13px" onclick="importUbosInpi(this)">📥 Importer depuis l'INPI</button>
+              <button type="button" class="btn btn-secondary" style="font-size:.75rem;padding:7px 13px" onclick="addUbo()">+ Ajouter un bénéficiaire</button>
+            </div>
           </div>
           <div id="ubo-list"></div>
           <div class="cl-item" id="ubo-none" onclick="toggleUboNone()" style="margin-top:8px">
@@ -3471,7 +3474,7 @@ function renderUbos(){
   el.innerHTML=S.ubos.map((u,i)=>`
     <div style="border:1.5px solid var(--border);border-radius:10px;padding:13px;margin-bottom:10px;background:var(--cream)">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
-        <div style="font-size:.8rem;font-weight:700;color:var(--charcoal)" id="ubo-t-${i}">${uboLabel(u,i)}</div>
+        <div style="font-size:.8rem;font-weight:700;color:var(--charcoal)" id="ubo-t-${i}">${uboLabel(u,i)}${u.source?` <span style="font-size:.62rem;font-weight:700;color:var(--sage)">· importé du RNE${u.naissancePartielle?` (né(e) ${u.naissancePartielle})`:''}</span>`:''}</div>
         <span style="cursor:pointer;font-size:.73rem;color:var(--danger-fg);font-weight:600" onclick="removeUbo(${i})">Supprimer</span>
       </div>
       <div class="grid2">
@@ -3493,6 +3496,46 @@ function renderUbos(){
       </div>
     </div>`).join('');
 }
+// Import des bénéficiaires effectifs déclarés au RNE (INPI)
+const NAT_CODE_FR = {FR:'Française',FRA:'Française',LU:'Luxembourgeoise',LUX:'Luxembourgeoise',BE:'Belge',BEL:'Belge',
+  DE:'Allemande',DEU:'Allemande',IT:'Italienne',ITA:'Italienne',ES:'Espagnole',ESP:'Espagnole',PT:'Portugaise',PRT:'Portugaise',
+  GB:'Britannique',GBR:'Britannique'};
+function natToNorvy(v){
+  if(!v) return '';
+  const code = String(v).toUpperCase().trim();
+  if(NAT_CODE_FR[code]) return NAT_CODE_FR[code];
+  const hit = UBO_NAT.find(n => n.toLowerCase().startsWith(String(v).toLowerCase().slice(0,4)));
+  return hit || '';
+}
+async function importUbosInpi(btn){
+  const siren = sirenOf(document.getElementById('pm-rcs')?.value);
+  if(!siren){ showToast('SIREN manquant',"Renseignez un SIREN à 9 chiffres (société française)",'warn','⚠️'); return; }
+  const old = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Interrogation du RNE…';
+  try{
+    const d = await proxyJson(`/api/fr/inpi/${siren}/beneficiaires`);
+    if(!d.beneficiaires.length){ showToast('Aucun bénéficiaire renvoyé', d.note, 'warn', 'ℹ️'); return; }
+    let ajoutes = 0;
+    d.beneficiaires.forEach(b=>{
+      const nom = (b.nom||'').trim(), prenom = (b.prenoms||'').trim();
+      if(S.ubos.some(u=>u.nom.toLowerCase()===nom.toLowerCase() && u.prenom.toLowerCase()===prenom.toLowerCase())) return;
+      const dob = /^\d{4}-\d{2}-\d{2}$/.test(b.naissance||'') ? b.naissance : '';
+      S.ubos.push({nom, prenom, dob, nat:natToNorvy(b.nationalite),
+        pct: (b.pourcentage||'').toString().replace(',','.').replace(/[^0-9.]/g,''),
+        nature: (b.modalites||[]).some(m=>/controle|pouvoir|nomination/i.test(m)) ? UBO_NATURE[2] : UBO_NATURE[0],
+        source:'INPI/RNE', naissancePartielle: dob ? '' : (b.naissance||'')});
+      ajoutes++;
+    });
+    renderUbos(); v1();
+    DB.addAudit({type:'dossier',dot:'var(--info-fg)',title:`👥 Bénéficiaires effectifs importés du RNE — SIREN ${siren}`,
+      detail:`${ajoutes} bénéficiaire(s) importé(s) · source INPI · ${d.note}`, tags:[{t:'INPI',c:'b'},{t:'Bénéficiaires effectifs',c:'g'}]});
+    showToast(`${ajoutes} bénéficiaire(s) importé(s)`, "Complétez les dates de naissance : l'INPI ne transmet que l'année et le mois", 'ok', '👥');
+    const manquantes = S.ubos.filter(u=>!u.dob).length;
+    if(manquantes) setTimeout(()=>showToast('Dates à compléter', `${manquantes} date(s) de naissance à confirmer auprès du client`, 'warn', '📅'), 1200);
+  }catch(err){
+    showToast('Import impossible', err.message, 'danger', '❌');
+  }finally{ btn.disabled=false; btn.textContent=old; }
+}
+
 function uboComplete(u){ return !!(u.nom.trim() && u.prenom.trim() && u.dob && u.nat && String(u.pct).trim()!==''); }
 function ubosOk(){
   if(S.uboNone) return !!document.getElementById('ubo-none-reason')?.value.trim();
@@ -4331,6 +4374,7 @@ function renderStep7(){
     });
   });
   DB.saveDocuments(allDocs);
+  finaliserDossierDocs(ref);
 
   // Log audit
   DB.addAudit({
@@ -5954,6 +5998,7 @@ function renderDossierTabContent(ref, tab) {
           <div class="doc-name">${dc.name}</div>
           <div class="doc-meta">${dc.docType?.toUpperCase() || 'DOCUMENT'} · ${dc.size || '—'} · ${new Date(dc.uploadedAt).toLocaleDateString('fr-LU',{day:'numeric',month:'short',year:'numeric'})}</div>
           ${dc.meta ? `<div class="doc-meta" style="color:var(--sage)">${dc.meta}</div>` : ''}
+          ${dc.url ? `<a href="${dc.url}" target="_blank" rel="noopener" style="font-size:.68rem;color:var(--info-fg);font-weight:600;text-decoration:none">📄 Ouvrir la pièce classée →</a>` : ''}
         </div>
         <span class="doc-badge" style="background:${dc.verified?'var(--ok-bg);color:var(--ok-fg)':'var(--warn-bg);color:var(--warn-fg)'}">${dc.verified?'✓ Vérifié':'⏳ En attente'}</span>
       </div>`).join('') : '<div style="text-align:center;padding:24px;color:var(--light);font-size:.83rem">📂 Aucun document enregistré</div>';
@@ -7619,6 +7664,155 @@ function applyPappersResult(el) {
   showToast('Pappers', 'Données de ' + el.dataset.name + ' importées automatiquement', 'ok', '🔍');
 }
 
+// ══ Classement automatique des pièces sur le serveur ══════════════════════
+function dossierFolder(){ return (typeof S!=='undefined' && S._meshRef) ? S._meshRef : (window._norvyBrouillon ||= 'brouillon-' + Date.now().toString(36)); }
+
+async function proxyPost(path, body){
+  if(!window.NorvyProxy) throw new Error("Norvy doit être servi par le serveur du cabinet");
+  const r = await fetch(path, {method:'POST', headers:{...window.NorvyProxy.headers(),'Content-Type':'application/json'}, body: JSON.stringify(body||{})});
+  const d = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.error || d.message || `Erreur ${r.status}`);
+  return d;
+}
+
+// Bouton « Récupérer et classer » : interroge le RNE et range les PDF au dossier
+async function autoClasserDocs(btn, refDossier){
+  const siren = refDossier
+    ? sirenOf((DB.getDossiers().find(x=>x.ref===refDossier)||{}).rcs)
+    : sirenOf(document.getElementById('pm-rcs')?.value);
+  if(!siren){ showToast('SIREN manquant',"Récupération automatique réservée aux sociétés françaises",'warn','⚠️'); return; }
+  const folder = refDossier || dossierFolder();
+  const old = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Récupération et classement…';
+  try{
+    const d = await proxyPost(`/api/dossiers/${folder}/documents/auto`, {siren});
+    const ok = d.classees.filter(c=>!c.erreur);
+    if(!ok.length){ showToast('Aucune pièce classée', d.note || 'Aucun acte public disponible', 'warn', 'ℹ️'); return; }
+
+    const docs = DB.getDocuments();
+    ok.forEach((c,i)=>{
+      docs.push({id:Date.now()+i, ref: refDossier || folder, name: c.role,
+        docType: /comptes/i.test(c.role) ? 'rapport' : 'statuts',
+        size:`${Math.round(c.taille/1024)} Ko`, verified:true, uploadedAt:new Date().toISOString(),
+        url: c.url, fichier: c.fichier,
+        meta:`${c.source}${c.libelles?.length?' · '+c.libelles.join(' · '):''} · classé le ${new Date().toLocaleDateString('fr-LU')}`});
+    });
+    DB.saveDocuments(docs);
+    DB.addAudit({type:'dossier',dot:'var(--info-fg)',title:`📂 ${ok.length} pièce(s) classée(s) automatiquement — SIREN ${siren}`,
+      detail: ok.map(c=>`${c.role} (${Math.round(c.taille/1024)} Ko)`).join(' · ') + ' · source RNE (INPI), gratuit',
+      tags:[{t:'INPI',c:'b'},{t:'Classement auto',c:'g'}]});
+
+    if(refDossier){ renderDossierTabContent(refDossier,'docs'); }
+    else if(S._requiredDocs?.includes('sta') && ok.some(c=>/statut|acte/i.test(c.role))){
+      S.docsChecked.add('sta');
+      const m = docMeta('sta');
+      const st = ok.find(c=>/statut/i.test(c.role)) || ok[0];
+      m.ref = `${st.role} récupéré au RNE et classé au dossier (${st.fichier})`;
+      m.date = new Date().toISOString().split('T')[0];
+      renderStep4();
+    }
+    showToast(`${ok.length} pièce(s) classée(s)`, ok.map(c=>c.role).join(', '), 'ok', '📂');
+    const rates = d.classees.filter(c=>c.erreur);
+    if(rates.length) setTimeout(()=>showToast('Pièces non récupérées', rates.map(c=>`${c.role} : ${c.erreur}`).join(' · '), 'warn', '⚠️'), 1200);
+  }catch(err){
+    showToast('Classement impossible', err.message, 'danger', '❌');
+  }finally{ btn.disabled=false; btn.textContent=old; }
+}
+
+// Renomme le dossier de pièces quand la référence définitive est attribuée
+async function finaliserDossierDocs(refFinal){
+  const brouillon = window._norvyBrouillon;
+  if(!window.NorvyProxy) return;
+  try{
+    if(brouillon && brouillon !== refFinal){
+      await proxyPost(`/api/dossiers/${refFinal}/rename`, {from: brouillon});
+      const docs = DB.getDocuments().map(d => d.url && d.url.includes(`/${brouillon}/`)
+        ? {...d, ref: refFinal, url: d.url.replace(`/${brouillon}/`, `/${refFinal}/`)} : d);
+      DB.saveDocuments(docs);
+    }
+    window._norvyBrouillon = null;
+  }catch{ /* le dossier reste accessible sous son nom provisoire */ }
+}
+
+// ══ Fiche d'identification RNE : produite par Norvy, horodatée, classée au dossier ══
+async function ficheIdentificationRNE(btn, refDossier){
+  const siren = refDossier
+    ? sirenOf((DB.getDossiers().find(x=>x.ref===refDossier)||{}).rcs)
+    : sirenOf(document.getElementById('pm-rcs')?.value);
+  if(!siren){ showToast('SIREN manquant',"Réservé aux sociétés françaises (SIREN à 9 chiffres)",'warn','⚠️'); return; }
+  const folder = refDossier || dossierFolder();
+  const old = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Consultation du RNE…';
+  try{
+    const d = await proxyJson(`/api/fr/recherche?q=${siren}&per_page=1`);
+    const e = (d.results||[])[0];
+    if(!e) throw new Error("SIREN introuvable au registre national des entreprises");
+
+    if(typeof window.jspdf === 'undefined') throw new Error("Générateur PDF non chargé : vérifiez votre connexion internet");
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const M = 18; let y = 22;
+    const consult = new Date();
+    doc.setFillColor(38,50,56); doc.rect(0,0,210,16,'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(11);
+    doc.text("Fiche d'identification — Registre national des entreprises", M, 10.5);
+    doc.setTextColor(40,40,40); y = 28;
+    doc.setFontSize(15); doc.text(e.nom || '—', M, y); y += 8;
+    doc.setFontSize(9); doc.setTextColor(120,120,120);
+    doc.text(`Consultation du ${consult.toLocaleDateString('fr-LU')} à ${consult.toLocaleTimeString('fr-LU',{hour:'2-digit',minute:'2-digit'})} · source : RNE (INPI) via l'API Recherche d'entreprises`, M, y);
+    y += 10; doc.setTextColor(40,40,40);
+    const ligne = (k,v)=>{ if(y>272){doc.addPage(); y=22;} doc.setTextColor(120,120,120); doc.setFontSize(8.5); doc.text(k, M, y);
+      doc.setTextColor(40,40,40); doc.setFontSize(10); doc.text(String(v||'—'), M+55, y, {maxWidth:120}); y += 7.5; };
+    ligne('SIREN', siren);
+    ligne('Forme juridique', e.formeJuridique);
+    ligne('Activité principale', e.activite);
+    ligne('Date de création', e.dateCreation ? new Date(e.dateCreation).toLocaleDateString('fr-LU') : '');
+    ligne('État administratif', e.etat === 'A' ? 'Active' : 'Cessée');
+    ligne('Siège social', e.siege);
+    y += 3;
+    if((e.dirigeants||[]).length){
+      doc.setTextColor(120,120,120); doc.setFontSize(8.5); doc.text('Dirigeants et représentants', M, y); y += 6;
+      doc.setTextColor(40,40,40); doc.setFontSize(10);
+      e.dirigeants.forEach(x=>{ if(y>272){doc.addPage(); y=22;} doc.text(`• ${x.nom||''}${x.qualite?` — ${x.qualite}`:''}`, M+2, y); y += 6; });
+    }
+    y += 6;
+    if(y>250){doc.addPage(); y=22;}
+    doc.setDrawColor(200,200,200); doc.line(M, y, 192, y); y += 6;
+    doc.setFontSize(7.5); doc.setTextColor(120,120,120);
+    doc.text("Document établi automatiquement par Norvy à partir des données publiques du RNE, à des fins de vigilance LCB-FT.", M, y, {maxWidth:174}); y += 4;
+    doc.text("Il ne se substitue ni à l'attestation d'immatriculation délivrée par l'INPI, ni à l'extrait Kbis délivré par le greffe.", M, y, {maxWidth:174});
+
+    const base64 = doc.output('datauristring').split(',')[1];
+    const nom = `Fiche_identification_RNE_${siren}_${consult.toISOString().slice(0,10)}.pdf`;
+    const saved = await proxyPost(`/api/dossiers/${folder}/documents/upload`, {filename: nom, contentBase64: base64});
+
+    const docs = DB.getDocuments();
+    docs.push({id:Date.now(), ref: refDossier || folder, name:"Fiche d'identification RNE", docType:'rcs',
+      size:`${Math.round(saved.taille/1024)} Ko`, verified:true, uploadedAt:new Date().toISOString(),
+      url: saved.url, fichier: saved.fichier,
+      meta:`Données RNE consultées le ${consult.toLocaleDateString('fr-LU')} · établie par Norvy`});
+    DB.saveDocuments(docs);
+    DB.addAudit({type:'dossier',dot:'var(--info-fg)',title:`🏛️ Fiche d'identification RNE établie — SIREN ${siren}`,
+      detail:`${e.nom} · ${e.formeJuridique||''} · consultation horodatée du ${consult.toLocaleString('fr-LU')} · classée au dossier`,
+      tags:[{t:'RNE',c:'b'},{t:'Identification',c:'g'}]});
+
+    if(refDossier) renderDossierTabContent(refDossier,'docs');
+    else if(S._requiredDocs?.includes('rcs')){
+      S.docsChecked.add('rcs');
+      const m = docMeta('rcs');
+      m.ref = `Fiche d'identification RNE du ${consult.toLocaleDateString('fr-LU')} (${saved.fichier})`;
+      m.date = consult.toISOString().split('T')[0];
+      renderStep4();
+    }
+    showToast('Fiche établie et classée', `${e.nom} · ${Math.round(saved.taille/1024)} Ko`, 'ok', '🏛️');
+  }catch(err){
+    showToast('Fiche impossible', err.message, 'danger', '❌');
+  }finally{ btn.disabled=false; btn.textContent=old; }
+}
+
+function ouvrirAttestationInpi(siren){
+  window.open(`https://data.inpi.fr/entreprises/${siren}`, '_blank', 'noopener');
+  showToast("Fiche INPI ouverte", "Téléchargez l'attestation d'immatriculation, puis ajoutez-la au dossier", 'info', '🏛️');
+}
+
 // ══ Documents officiels via Pappers (France) ══════════════════════════════
 const PAPPERS_DOCS = [
   {kind:'extrait_pappers', label:'Extrait Pappers', icon:'📄', docId:'rcs', sub:"Équivalent Kbis, sans valeur juridique opposable"},
@@ -7696,7 +7890,10 @@ function pappersDocsBar(siren, handler, refArg){
     <div style="font-size:.78rem;font-weight:700;color:var(--sage);margin-bottom:2px">📥 Documents officiels — SIREN ${siren}</div>
     <div style="font-size:.72rem;color:var(--mid);margin-bottom:8px">Récupération directe auprès de Pappers (INPI, INSEE, greffes). Chaque document consomme des crédits Pappers.</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <button type="button" class="btn btn-sage" style="font-size:.73rem;padding:6px 11px" title="Actes et statuts déposés au registre national des entreprises — gratuit" onclick="openInpiDocs('${siren}'${refArg?`,'${refArg}'`:''})">📚 Actes & statuts (INPI, gratuit)</button>
+      <button type="button" class="btn btn-primary" style="font-size:.73rem;padding:6px 11px" title="Récupère les statuts, le dernier acte et les comptes annuels au RNE, et les classe dans le dossier" onclick="autoClasserDocs(this${refArg?`,'${refArg}'`:''})">⚡ Récupérer et classer automatiquement</button>
+      <button type="button" class="btn btn-sage" style="font-size:.73rem;padding:6px 11px" title="Fiche horodatée établie par Norvy à partir des données du RNE — gratuit" onclick="ficheIdentificationRNE(this${refArg?`,'${refArg}'`:''})">🏛️ Fiche d'identification RNE (gratuit)</button>
+      <button type="button" class="btn btn-sage" style="font-size:.73rem;padding:6px 11px" title="Choisir une pièce précise parmi les actes déposés — gratuit" onclick="openInpiDocs('${siren}'${refArg?`,'${refArg}'`:''})">📚 Choisir un acte (INPI, gratuit)</button>
+      <button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="Ouvre la fiche officielle sur data.inpi.fr pour télécharger l'attestation d'immatriculation (gratuite)" onclick="ouvrirAttestationInpi('${siren}')">📎 Attestation officielle INPI</button>
       ${PAPPERS_DOCS.map(d=>`<button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="${d.sub} · consomme des crédits Pappers" onclick="${handler}('${d.kind}',${refArg?`'${refArg}',`:''}this)">${d.icon} ${d.label}</button>`).join('')}
     </div></div>`;
 }
