@@ -4015,7 +4015,8 @@ function renderStep4(){
     </div>
     ${S.docsChecked.has(d.id)?docMetaForm(d):''}`).join('')}
   </div>
-  <div id="doc-hint" style="margin-top:8px"></div>`;
+  <div id="doc-hint" style="margin-top:8px"></div>
+  ${(S.clientType==='pm'||S.clientType==='pm-complex') ? pappersDocsBar(sirenOf(document.getElementById('pm-rcs')?.value),'fetchPappersDocWizard') : ''}`;
 
   S._requiredDocs=docs.filter(d=>d.req).map(d=>d.id);
   S._docLabels=docs.map(d=>({id:d.id,t:d.t}));
@@ -4268,6 +4269,8 @@ function renderStep7(){
     clientName: clientName || 'Client sans nom',
     nom: isPPsave ? (document.getElementById('pp-nom')?.value||'') : '',
     prenom: isPPsave ? (document.getElementById('pp-pre')?.value||'') : '',
+    rcs: (document.getElementById('pm-rcs')?.value||'').trim(),
+    paysImmat: (document.getElementById('pm-pay')?.value||''),
     denomination: isPMsave ? (document.getElementById('pm-den')?.value||'') : t === 'trust' ? (document.getElementById('tr-nom')?.value||'') : t === 'crypto' ? (document.getElementById('cr-nom')?.value||'') : '',
     missions: [...S.missions],
     missionLabels,
@@ -5947,6 +5950,8 @@ function renderDossierTabContent(ref, tab) {
         <button class="btn btn-sage" style="font-size:.74rem;padding:6px 14px" onclick="showAddDocForm('${ref}')">+ Ajouter un document</button>
       </div>
       <div id="doc-add-form-zone"></div>
+      ${(d.clientType==='pm'||d.clientType==='pm-complex') ? pappersDocsBar(sirenOf(d.rcs),'fetchPappersDocDossier',ref) : ''}
+      <div style="height:12px"></div>
       <div>${docsHtml}</div>`;
   }
 
@@ -7578,6 +7583,87 @@ function applyPappersResult(el) {
     tags:[{t:'Pappers API',c:'b'},{t:el.dataset.forme||'',c:'g'}]
   });
   showToast('Pappers', 'Données de ' + el.dataset.name + ' importées automatiquement', 'ok', '🔍');
+}
+
+// ══ Documents officiels via Pappers (France) ══════════════════════════════
+const PAPPERS_DOCS = [
+  {kind:'extrait_pappers', label:'Extrait Pappers', icon:'📄', docId:'rcs', sub:"Équivalent Kbis, sans valeur juridique opposable"},
+  {kind:'extrait_inpi', label:'Extrait INPI', icon:'🏛️', docId:'rcs', sub:"Extrait officiel du registre national des entreprises"},
+  {kind:'statuts', label:'Statuts', icon:'📜', docId:'sta', sub:"Derniers statuts déposés"},
+  {kind:'declaration_beneficiaires_effectifs', label:'Déclaration des bénéficiaires effectifs', icon:'👥', docId:'rbe-div', sub:"Déclaration déposée au registre"},
+  {kind:'avis_situation_insee', label:'Avis de situation INSEE', icon:'📍', docId:null, sub:"Situation au répertoire SIRENE"},
+];
+const sirenOf = v => (String(v||'').replace(/\D/g,'').length===9 ? String(v).replace(/\D/g,'') : '');
+
+async function fetchPappersDoc(kind, siren, opts={}){
+  const d = PAPPERS_DOCS.find(x=>x.kind===kind) || {label:kind};
+  if(!window.NorvyProxy){ showToast('Indisponible',"Cette fonction nécessite Norvy servi par le serveur du cabinet",'warn','⚠️'); return null; }
+  if(!siren){ showToast('SIREN manquant',"Renseignez un numéro SIREN à 9 chiffres (France)",'warn','⚠️'); return null; }
+  const btn = opts.btn; const oldText = btn ? btn.textContent : null;
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Récupération…'; }
+  try{
+    const url = window.NorvyProxy.pappersUrl(`https://api.pappers.fr/v2/document/${kind}?siren=${encodeURIComponent(siren)}`);
+    const r = await fetch(url, {headers: window.NorvyProxy.headers()});
+    if(!r.ok){
+      const e = await r.json().catch(()=>({}));
+      throw new Error(e.error || e.message || `Erreur ${r.status}`);
+    }
+    const blob = await r.blob();
+    const ext = /spreadsheet|excel/.test(blob.type) ? 'xlsx' : 'pdf';
+    const nom = `${d.label.replace(/[^a-zA-Z0-9]+/g,'_')}_${siren}_${new Date().toISOString().split('T')[0]}.${ext}`;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = nom; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+    DB.addAudit({type:'dossier',dot:'var(--info-fg)',title:`📥 ${d.label} récupéré via Pappers`,
+      detail:`SIREN ${siren} · ${nom} · ${Math.round(blob.size/1024)} Ko${opts.ref?' · '+opts.ref:''}`,
+      tags:[{t:'Pappers',c:'b'},{t:d.label,c:'g'}]});
+    showToast('Document récupéré', `${d.label} téléchargé (${Math.round(blob.size/1024)} Ko)`, 'ok', '📥');
+    return {nom, size:blob.size, label:d.label};
+  }catch(err){
+    showToast('Récupération impossible', err.message, 'danger', '❌');
+    return null;
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent=oldText; }
+  }
+}
+
+// Depuis l'assistant : coche la pièce correspondante et trace la source
+async function fetchPappersDocWizard(kind, btn){
+  const siren = sirenOf(document.getElementById('pm-rcs')?.value);
+  const res = await fetchPappersDoc(kind, siren, {btn});
+  if(!res) return;
+  const d = PAPPERS_DOCS.find(x=>x.kind===kind);
+  if(d && d.docId && (S._requiredDocs||[]).includes(d.docId)){
+    S.docsChecked.add(d.docId);
+    const m = docMeta(d.docId);
+    m.ref = `${d.label} récupéré via Pappers le ${new Date().toLocaleDateString('fr-LU')} (${res.nom})`;
+    m.date = new Date().toISOString().split('T')[0];
+    renderStep4();
+  }
+}
+
+// Depuis la fiche d'un dossier : enregistre la pièce dans l'onglet Documents
+async function fetchPappersDocDossier(kind, ref, btn){
+  const dos = DB.getDossiers().find(x=>x.ref===ref);
+  const siren = sirenOf(dos && dos.rcs);
+  const res = await fetchPappersDoc(kind, siren, {btn, ref});
+  if(!res) return;
+  const docs = DB.getDocuments();
+  docs.push({id:Date.now(), ref, name:res.label, docType:'rcs', size:`${Math.round(res.size/1024)} Ko`,
+    verified:true, uploadedAt:new Date().toISOString(),
+    meta:`Récupéré via Pappers le ${new Date().toLocaleDateString('fr-LU')} · SIREN ${siren} · ${res.nom}`});
+  DB.saveDocuments(docs);
+  renderDossierTabContent(ref,'docs');
+}
+
+function pappersDocsBar(siren, handler, refArg){
+  if(!siren) return `<div class="note" style="margin-top:10px"><span>ℹ️</span><span>Récupération automatique disponible pour les sociétés françaises (SIREN à 9 chiffres). Pour le Luxembourg, l'extrait RCS et les statuts se commandent sur <strong>lbr.lu</strong> ; LBR propose une API, mais sur contrat.</span></div>`;
+  return `<div style="margin-top:10px;padding:12px;border:1.5px solid var(--sage-muted);border-radius:10px;background:var(--sage-pale)">
+    <div style="font-size:.78rem;font-weight:700;color:var(--sage);margin-bottom:2px">📥 Documents officiels — SIREN ${siren}</div>
+    <div style="font-size:.72rem;color:var(--mid);margin-bottom:8px">Récupération directe auprès de Pappers (INPI, INSEE, greffes). Chaque document consomme des crédits Pappers.</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${PAPPERS_DOCS.map(d=>`<button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="${d.sub}" onclick="${handler}('${d.kind}',${refArg?`'${refArg}',`:''}this)">${d.icon} ${d.label}</button>`).join('')}
+    </div></div>`;
 }
 
 function clearPappersResults() { document.getElementById('pappers-results').innerHTML = ''; }
