@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -3368,7 +3369,7 @@ function animateDashboard(){
 
 // ── STATE ────────────────────────────────────────────────────────────────
 const S = {
-  clientType:'pp', missions:[], ubos:[], uboNone:false,
+  clientType:'pp', missions:[], ubos:[], uboNone:false, docMeta:{},
   gafi:null, ppe:null, dist:null,
   decision:null, docsChecked:new Set(),
   screeningDone:false,
@@ -3869,7 +3870,8 @@ function renderStep4(){
         {id:'rcs',t:"Extrait Kbis / RCS < 3 mois",s:"À l'entrée en relation uniquement",req:true},
         {id:'sta',t:"Statuts à jour de la société",s:"Version consolidée",req:true},
         {id:'dir',t:"Liste des dirigeants et représentants légaux",s:"Avec pièces d'identité",req:true},
-        {id:'id-dir',t:"Pièce d'identité de chaque dirigeant",s:"Passeport ou CNI",req:true},
+        {id:'id-dir',t:"Pièce d'identité du représentant légal",s:"Passeport ou CNI",req:true},
+        {id:'mandat',t:"Pouvoir du représentant",s:"Statuts, délégation de pouvoirs ou procuration : la personne doit être habilitée à agir",req:true},
         {id:'rbe-div',t:"Vérification de cohérence avec le registre des bénéficiaires effectifs",s:"Toute divergence doit être signalée au registre",req:true},
         {id:'decl-ra',t:"Déclaration nature et objet de la relation d'affaires",s:"Formulaire Norvy",req:true},
         {id:'rbe',t:"Vérification registre UBO national",s:"INPI / RCS / BCE",req:true},
@@ -3879,7 +3881,8 @@ function renderStep4(){
         {id:'rcs',t:"Extrait Kbis / RCS < 3 mois",s:"À l'entrée en relation",req:true},
         {id:'sta',t:"Statuts à jour",s:"Version consolidée",req:true},
         {id:'dir',t:"Liste des dirigeants",s:"Avec pièces d'identité",req:true},
-        {id:'id-dir',t:"Pièce d'identité de chaque dirigeant",s:"Passeport ou CNI",req:true},
+        {id:'id-dir',t:"Pièce d'identité du représentant légal",s:"Passeport ou CNI",req:true},
+        {id:'mandat',t:"Pouvoir du représentant",s:"Statuts, délégation de pouvoirs ou procuration : la personne doit être habilitée à agir",req:true},
         {id:'rbe-div',t:"Vérification de cohérence avec le registre des bénéficiaires effectifs",s:"Toute divergence doit être signalée au registre",req:true},
         {id:'organi',t:"Organigramme complet jusqu'au UBO personne physique",s:"Structure capitalistique complète",req:true},
         {id:'docs-inter',t:"Documents constitutifs de chaque entité intermédiaire",s:"Statuts, extraits RCS",req:true},
@@ -3940,27 +3943,92 @@ function renderStep4(){
     <div class="cl-item ${S.docsChecked.has(d.id)?'checked':d.req?'':''}  " id="cl-${d.id}" onclick="toggleDoc('${d.id}',${d.req})">
       <div class="cl-box">${S.docsChecked.has(d.id)?'✓':d.req&&!S.docsChecked.has(d.id)?'!':''}</div>
       <div class="cl-text">
-        <div class="cl-title">${d.t}</div>
+        <div class="cl-title">${d.t}${isIdDoc(d.id)?' <span style="font-size:.65rem;font-weight:700;color:var(--sage)">· à vérifier</span>':''}</div>
         <div class="cl-sub">${d.s}</div>
       </div>
       <span class="cl-badge ${d.req?'req':'opt'}">${d.req?'Obligatoire':'Optionnel'}</span>
-    </div>`).join('')}
-  </div>`;
+    </div>
+    ${S.docsChecked.has(d.id)?docMetaForm(d):''}`).join('')}
+  </div>
+  <div id="doc-hint" style="margin-top:8px"></div>`;
 
   S._requiredDocs=docs.filter(d=>d.req).map(d=>d.id);
+  S._docLabels=docs.map(d=>({id:d.id,t:d.t}));
   checkDocsComplete();
+}
+
+// ── Vérification de l'identité (AMLR : identifier ET vérifier) ────────────
+const ID_DOC_RE = /^(pi|id-dir|id-ubo-|id-set|id-trust|passport)/;
+const ID_TYPES = ["Carte nationale d'identité","Passeport","Titre de séjour","Permis de conduire (UE)","Autre pièce officielle"];
+const ID_METHODS = [
+  "Original présenté en face-à-face",
+  "Copie certifiée conforme",
+  "Identification électronique (eIDAS / LuxTrust / France Identité)",
+  "Visioconférence avec capture horodatée",
+  "Tiers introducteur (sous la responsabilité du cabinet)"
+];
+const today = () => new Date().toISOString().split('T')[0];
+const isIdDoc = id => ID_DOC_RE.test(id);
+function docMeta(id){ if(!S.docMeta[id]) S.docMeta[id]={type:'',num:'',exp:'',method:'',date:today(),ref:''}; return S.docMeta[id]; }
+function setDocMeta(id,field,value){ docMeta(id)[field]=value; checkDocsComplete(); const w=document.getElementById(`dm-warn-${id}`); if(w) w.innerHTML=docMetaWarning(id); }
+function docMetaWarning(id){
+  const m=S.docMeta[id];
+  if(!m || !isIdDoc(id)) return '';
+  if(m.exp && m.exp < today()) return '<span style="color:var(--danger-fg);font-weight:600">⛔ Pièce expirée : elle ne permet pas de vérifier l\'identité.</span>';
+  if(m.exp && m.exp < new Date(Date.now()+90*86400000).toISOString().split('T')[0]) return '<span style="color:var(--warn-fg);font-weight:600">⚠ Pièce valable moins de 3 mois.</span>';
+  return '';
+}
+function docMetaOk(id){
+  if(!isIdDoc(id)) return true;
+  const m=S.docMeta[id];
+  return !!(m && m.type && m.num.trim() && m.exp && m.exp >= today() && m.method && m.date);
+}
+function docMetaForm(d){
+  const m=docMeta(d.id);
+  if(isIdDoc(d.id)){
+    return `<div style="border:1.5px solid var(--sage-muted);border-top:none;border-radius:0 0 9px 9px;background:var(--sage-pale);padding:12px;margin:-6px 0 8px">
+      <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--sage);margin-bottom:8px">Vérification de l'identité</div>
+      <div class="grid2">
+        <div class="fg"><label class="lbl req">Type de pièce</label>
+          <select onchange="setDocMeta('${d.id}','type',this.value)">
+            <option value="">Sélectionner...</option>
+            ${ID_TYPES.map(t=>`<option ${m.type===t?'selected':''}>${t}</option>`).join('')}
+          </select></div>
+        <div class="fg"><label class="lbl req">Numéro de la pièce</label><input value="${m.num.replace(/"/g,'&quot;')}" placeholder="Ex : 12AB34567" oninput="setDocMeta('${d.id}','num',this.value)"/></div>
+        <div class="fg"><label class="lbl req">Date d'expiration</label><input type="date" value="${m.exp}" onchange="setDocMeta('${d.id}','exp',this.value)"/></div>
+        <div class="fg"><label class="lbl req">Date de vérification</label><input type="date" value="${m.date}" onchange="setDocMeta('${d.id}','date',this.value)"/></div>
+        <div class="fg full"><label class="lbl req">Moyen de vérification</label>
+          <select onchange="setDocMeta('${d.id}','method',this.value)">
+            <option value="">Sélectionner...</option>
+            ${ID_METHODS.map(t=>`<option ${m.method===t?'selected':''}>${t}</option>`).join('')}
+          </select></div>
+      </div>
+      <div id="dm-warn-${d.id}" style="font-size:.73rem;margin-top:6px">${docMetaWarning(d.id)}</div>
+    </div>`;
+  }
+  return `<div style="border:1.5px solid var(--border);border-top:none;border-radius:0 0 9px 9px;background:var(--cream);padding:10px 12px;margin:-6px 0 8px">
+    <div class="grid2">
+      <div class="fg"><label class="lbl">Référence / observations</label><input value="${m.ref.replace(/"/g,'&quot;')}" placeholder="N° d'acte, émetteur, remarque" oninput="setDocMeta('${d.id}','ref',this.value)"/></div>
+      <div class="fg"><label class="lbl">Date de collecte</label><input type="date" value="${m.date}" onchange="setDocMeta('${d.id}','date',this.value)"/></div>
+    </div></div>`;
 }
 
 function toggleDoc(id,isReq){
   if(S.docsChecked.has(id)) S.docsChecked.delete(id);
-  else S.docsChecked.add(id);
+  else { S.docsChecked.add(id); docMeta(id); }
   renderStep4();
 }
 
 function checkDocsComplete(){
   const reqs=S._requiredDocs||[];
-  const allDone=reqs.every(id=>S.docsChecked.has(id));
-  document.getElementById('b4').disabled=!allDone;
+  const allDone=reqs.every(id=>S.docsChecked.has(id) && docMetaOk(id));
+  const btn=document.getElementById('b4');
+  if(btn) btn.disabled=!allDone;
+  const hint=document.getElementById('doc-hint');
+  if(hint){
+    const manquants=reqs.filter(id=>S.docsChecked.has(id) && !docMetaOk(id)).length;
+    hint.innerHTML = manquants ? `<div class="note" style="border-left-color:var(--warn-fg)"><span>⚠️</span><span>${manquants} pièce(s) d'identité à compléter : type, numéro, date d'expiration (non expirée) et moyen de vérification.</span></div>` : '';
+  }
 }
 
 // ── STEP 5 ───────────────────────────────────────────────────────────────
@@ -4143,11 +4211,28 @@ function renderStep7(){
     decision: dec,
     status: statusMap[dec] || 'actif',
     createdAt: new Date().toISOString(),
-    createdBy: DB.getSession()?.userId || null
+    createdBy: DB.getSession()?.userId || null,
+    docMeta: JSON.parse(JSON.stringify(S.docMeta))
   };
   const dossiers = DB.getDossiers();
   dossiers.unshift(dossier);
   DB.saveDossiers(dossiers);
+
+  // Les pièces collectées alimentent l'onglet Documents du dossier
+  const allDocs = DB.getDocuments();
+  (S._docLabels||[]).filter(dl=>S.docsChecked.has(dl.id)).forEach((dl,i)=>{
+    const m = S.docMeta[dl.id] || {};
+    allDocs.push({
+      id: Date.now()+i, ref, name: dl.t,
+      docType: isIdDoc(dl.id) ? 'id' : 'autre',
+      size: '—', verified: isIdDoc(dl.id) ? docMetaOk(dl.id) : !!m.date,
+      uploadedAt: (m.date ? new Date(m.date) : new Date()).toISOString(),
+      meta: isIdDoc(dl.id)
+        ? `${m.type||''} n° ${m.num||''} · expire le ${m.exp?new Date(m.exp).toLocaleDateString('fr-LU'):'?'} · ${m.method||''}`
+        : (m.ref||'')
+    });
+  });
+  DB.saveDocuments(allDocs);
 
   // Log audit
   DB.addAudit({
@@ -4250,7 +4335,7 @@ function viewCreatedDossier() {
 
 // ── RESET ────────────────────────────────────────────────────────────────
 function resetAll(){
-  Object.assign(S,{clientType:'pp',missions:[],ubos:[],uboNone:false,gafi:null,ppe:null,dist:null,decision:null,docsChecked:new Set(),screeningDone:false,riskStructure:15,riskFonds:25,riskHistorique:35});
+  Object.assign(S,{clientType:'pp',missions:[],ubos:[],uboNone:false,docMeta:{},gafi:null,ppe:null,dist:null,decision:null,docsChecked:new Set(),screeningDone:false,riskStructure:15,riskFonds:25,riskHistorique:35});
   document.querySelectorAll('.mc').forEach(c=>{c.classList.remove('sel');c.querySelector('.mc-check').textContent='';});
   document.querySelectorAll('#ct-pp,#ct-pp-ppe,#ct-pm,#ct-pm-complex,#ct-trust,#ct-crypto,#g-non,#g-oui,#p-non,#p-oui,#dist-non,#dist-oui,#dec-acc,#dec-sus,#dec-ref,#dec-ds').forEach(c=>c&&c.classList.remove('sel'));
   document.getElementById('ct-pp').classList.add('sel');
@@ -5759,6 +5844,7 @@ function renderDossierTabContent(ref, tab) {
         <div class="doc-info">
           <div class="doc-name">${dc.name}</div>
           <div class="doc-meta">${dc.docType?.toUpperCase() || 'DOCUMENT'} · ${dc.size || '—'} · ${new Date(dc.uploadedAt).toLocaleDateString('fr-LU',{day:'numeric',month:'short',year:'numeric'})}</div>
+          ${dc.meta ? `<div class="doc-meta" style="color:var(--sage)">${dc.meta}</div>` : ''}
         </div>
         <span class="doc-badge" style="background:${dc.verified?'var(--ok-bg);color:var(--ok-fg)':'var(--warn-bg);color:var(--warn-fg)'}">${dc.verified?'✓ Vérifié':'⏳ En attente'}</span>
       </div>`).join('') : '<div style="text-align:center;padding:24px;color:var(--light);font-size:.83rem">📂 Aucun document enregistré</div>';
@@ -6451,7 +6537,7 @@ function generateDossierPDF(ref) {
       startY: y, margin: {left: M, right: M},
       head: [['Document', 'Type', 'Date', 'Statut']],
       body: docs.map(dc => [
-        dc.name,
+        dc.name + (dc.meta ? '\n' + dc.meta : ''),
         (dc.docType||'autre').toUpperCase(),
         new Date(dc.uploadedAt).toLocaleDateString('fr-LU'),
         dc.verified ? 'Vérifié' : 'En attente'
