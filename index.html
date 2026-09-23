@@ -1480,6 +1480,18 @@ body{padding-bottom:62px}
   </div>
 </div>
 
+<!-- MODAL DOCUMENTS INPI -->
+<div class="ctrl-modal hidden" id="inpi-modal" onclick="if(event.target===this)closeInpiModal()">
+  <div style="background:var(--card-bg,#fff);border-radius:16px;padding:24px;width:100%;max-width:620px;max-height:85vh;overflow-y:auto;animation:fadeUp .3s ease">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div style="font-family:var(--font-display);font-size:1.25rem;color:var(--charcoal)">📚 Actes et statuts déposés</div>
+      <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="closeInpiModal()">✕</span>
+    </div>
+    <div style="font-size:.73rem;color:var(--mid);margin-bottom:14px">Registre national des entreprises (INPI) — accès gratuit, sans crédit Pappers.</div>
+    <div id="inpi-modal-body"></div>
+  </div>
+</div>
+
 <!-- MODAL STRIPE -->
 <div class="ctrl-modal hidden" id="stripe-modal" onclick="if(event.target===this)closeStripeModal()">
   <div style="background:var(--card-bg,#fff);border-radius:16px;padding:28px 24px;width:100%;max-width:480px;position:relative;animation:fadeUp .3s ease">
@@ -2256,8 +2268,9 @@ body{padding-bottom:62px}
               <span style="font-size:.62rem;padding:2px 8px;border-radius:99px;background:var(--sage);color:#fff;font-weight:700">API</span>
             </div>
             <div style="display:flex;gap:4px;margin-bottom:8px">
+              <button id="pappers-mode-rne" class="btn btn-outline" style="font-size:.68rem;padding:5px 10px;border-radius:6px" onclick="setPappersMode('rne')">🇫🇷 France — gratuit (RNE)</button>
               <button id="pappers-mode-lu" class="btn btn-sage" style="font-size:.68rem;padding:5px 10px;border-radius:6px" onclick="setPappersMode('lu')">🇱🇺 Luxembourg</button>
-              <button id="pappers-mode-fr" class="btn btn-outline" style="font-size:.68rem;padding:5px 10px;border-radius:6px" onclick="setPappersMode('fr')">🇫🇷 France</button>
+              <button id="pappers-mode-fr" class="btn btn-outline" style="font-size:.68rem;padding:5px 10px;border-radius:6px" onclick="setPappersMode('fr')">🇫🇷 France — Pappers</button>
             </div>
             <div style="display:flex;gap:8px">
               <input id="pappers-search" class="step-input" style="flex:1;margin:0;font-size:.82rem" placeholder="Nom d'entreprise ou n° RCS..." oninput="clearPappersResults()">
@@ -2274,9 +2287,10 @@ body{padding-bottom:62px}
             <div class="fg"><label class="lbl req">Forme juridique</label>
               <select id="pm-for" onchange="v1()">
                 <option value="">Sélectionner...</option>
-                <option>SA (Société Anonyme)</option><option>SARL</option><option>SCSp</option>
-                <option>SOPARFI</option><option>Fondation</option><option>Trust / Fiducie</option>
-                <option>ASBL</option><option>Autre</option>
+                <option>SA (Société Anonyme)</option><option>SARL</option><option>SAS / SASU</option>
+                <option>SCI</option><option>SNC</option><option>SCA</option><option>SCS</option><option>SCSp</option>
+                <option>SOPARFI</option><option>Société civile</option><option>Fondation</option><option>Trust / Fiducie</option>
+                <option>ASBL / Association</option><option>Autre</option>
               </select>
             </div>
             <div class="fg"><label class="lbl req">N° immatriculation (RCS)</label><input id="pm-rcs" placeholder="B123456" oninput="v1()"/></div>
@@ -7420,10 +7434,12 @@ function getPappersKey() {
 
 function setPappersMode(mode) {
   pappersMode = mode;
-  document.getElementById('pappers-mode-lu').className = mode === 'lu' ? 'btn btn-sage' : 'btn btn-outline';
-  document.getElementById('pappers-mode-fr').className = mode === 'fr' ? 'btn btn-sage' : 'btn btn-outline';
-  document.getElementById('pappers-mode-lu').style.cssText = 'font-size:.68rem;padding:5px 10px;border-radius:6px';
-  document.getElementById('pappers-mode-fr').style.cssText = 'font-size:.68rem;padding:5px 10px;border-radius:6px';
+  ['lu','fr','rne'].forEach(m=>{
+    const el = document.getElementById('pappers-mode-'+m);
+    if(!el) return;
+    el.className = mode === m ? 'btn btn-sage' : 'btn btn-outline';
+    el.style.cssText = 'font-size:.68rem;padding:5px 10px;border-radius:6px';
+  });
   const input = document.getElementById('pappers-search');
   input.placeholder = mode === 'lu' ? "Nom d'entreprise ou n° RCS (B123456)..." : "Nom d'entreprise ou n° SIREN...";
   clearPappersResults();
@@ -7434,6 +7450,7 @@ async function searchPappers() {
   const results = document.getElementById('pappers-results');
   if(!query) { results.innerHTML = '<div style="font-size:.72rem;color:var(--warn-fg);padding:4px 0">Saisissez un nom ou numéro ' + (pappersMode === 'lu' ? 'RCS' : 'SIREN') + '</div>'; return; }
 
+  if(pappersMode === 'rne') return searchRNE(query);
   results.innerHTML = '<div style="font-size:.75rem;color:var(--info-fg);padding:6px 0"><span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Recherche Pappers ' + (pappersMode === 'lu' ? '🇱🇺' : '🇫🇷') + ' en cours...</div>';
 
   try {
@@ -7545,7 +7562,21 @@ function applyPappersResult(el) {
     const formeSelect = document.getElementById('pm-for');
     const formeApi = (el.dataset.forme || '').toLowerCase();
     let matched = false;
-    for(let i = 0; i < formeSelect.options.length; i++) {
+    const norm = t => String(t||'').toLowerCase().replace(/[^a-z]/g,'');
+    const fa = norm(formeApi);
+    const MAP = [['sasu','sas / sasu'],['sas','sas / sasu'],['sarl','sarl'],['eurl','sarl'],['scop','sarl'],
+      ['societeanonyme','sa (société anonyme)'],['sa','sa (société anonyme)'],['sci','sci'],['snc','snc'],
+      ['sca','sca'],['scsp','scsp'],['scs','scs'],['soparfi','soparfi'],['societecivile','société civile'],
+      ['fondation','fondation'],['fiducie','trust / fiducie'],['trust','trust / fiducie'],['asbl','asbl / association'],['association','asbl / association']];
+    for(const [cle, cible] of MAP){
+      if(fa.includes(cle)){
+        for(let i = 0; i < formeSelect.options.length; i++){
+          if(norm(formeSelect.options[i].text) === norm(cible)){ formeSelect.selectedIndex = i; matched = true; break; }
+        }
+      }
+      if(matched) break;
+    }
+    if(!matched) for(let i = 0; i < formeSelect.options.length; i++) {
       const optText = formeSelect.options[i].text.toLowerCase();
       if(optText.includes('sa') && (formeApi.includes('sa ') || formeApi.includes('société anonyme'))) { formeSelect.selectedIndex = i; matched = true; break; }
       if(optText.includes('sarl') && formeApi.includes('sarl')) { formeSelect.selectedIndex = i; matched = true; break; }
@@ -7555,7 +7586,10 @@ function applyPappersResult(el) {
     }
     if(!matched && formeApi) {
       for(let i = 0; i < formeSelect.options.length; i++) {
-        if(formeSelect.options[i].text.toLowerCase().includes(formeApi.substring(0, 4))) { formeSelect.selectedIndex = i; break; }
+        if(formeSelect.options[i].text.toLowerCase().includes(formeApi.substring(0, 4))) { formeSelect.selectedIndex = i; matched = true; break; }
+      }
+      if(!matched) for(let i = 0; i < formeSelect.options.length; i++) {
+        if(formeSelect.options[i].text === 'Autre') { formeSelect.selectedIndex = i; break; }
       }
     }
     document.getElementById('pm-rcs').value = el.dataset.rcs || '';
@@ -7662,8 +7696,105 @@ function pappersDocsBar(siren, handler, refArg){
     <div style="font-size:.78rem;font-weight:700;color:var(--sage);margin-bottom:2px">📥 Documents officiels — SIREN ${siren}</div>
     <div style="font-size:.72rem;color:var(--mid);margin-bottom:8px">Récupération directe auprès de Pappers (INPI, INSEE, greffes). Chaque document consomme des crédits Pappers.</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
-      ${PAPPERS_DOCS.map(d=>`<button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="${d.sub}" onclick="${handler}('${d.kind}',${refArg?`'${refArg}',`:''}this)">${d.icon} ${d.label}</button>`).join('')}
+      <button type="button" class="btn btn-sage" style="font-size:.73rem;padding:6px 11px" title="Actes et statuts déposés au registre national des entreprises — gratuit" onclick="openInpiDocs('${siren}'${refArg?`,'${refArg}'`:''})">📚 Actes & statuts (INPI, gratuit)</button>
+      ${PAPPERS_DOCS.map(d=>`<button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="${d.sub} · consomme des crédits Pappers" onclick="${handler}('${d.kind}',${refArg?`'${refArg}',`:''}this)">${d.icon} ${d.label}</button>`).join('')}
     </div></div>`;
+}
+
+// ══ Registres publics français (gratuits) ═════════════════════════════════
+async function proxyJson(path){
+  if(!window.NorvyProxy) throw new Error("Norvy doit être servi par le serveur du cabinet");
+  const r = await fetch(path, {headers: window.NorvyProxy.headers()});
+  const d = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.error || d.message || `Erreur ${r.status}`);
+  return d;
+}
+
+// Recherche gratuite via l'API Recherche d'entreprises (data.gouv.fr)
+async function searchRNE(query){
+  const results = document.getElementById('pappers-results');
+  results.innerHTML = '<div style="font-size:.75rem;color:var(--info-fg);padding:6px 0">⏳ Recherche au registre national des entreprises…</div>';
+  try{
+    const d = await proxyJson(`/api/fr/recherche?q=${encodeURIComponent(query)}&per_page=5`);
+    if(!d.results.length){ results.innerHTML = '<div style="font-size:.75rem;color:var(--mid);padding:6px 0">Aucun résultat pour « '+query+' »</div>'; return; }
+    results.innerHTML = d.results.map(e=>{
+      const dir = (e.dirigeants||[])[0];
+      const rep = dir ? `${dir.nom||''}${dir.qualite?' — '+dir.qualite:''}` : '';
+      const dirs = (e.dirigeants||[]).map(x=>`${x.nom||''} (${x.qualite||''})`).join(' | ');
+      const esc = t => String(t||'').replace(/"/g,'&quot;');
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-top:6px;cursor:pointer;transition:all .15s"
+        onclick="applyPappersResult(this)" onmouseover="this.style.borderColor='var(--sage)'" onmouseout="this.style.borderColor='var(--border)'"
+        data-name="${esc(e.nom)}" data-rcs="${esc(e.siren)}" data-forme="${esc(e.formeJuridique)}" data-pays="France"
+        data-siege="${esc(e.siege)}" data-rep="${esc(rep)}" data-capital="" data-activite="${esc(e.activite)}"
+        data-date="${esc(e.dateCreation)}" data-dirigeants="${esc(dirs)}">
+        <div style="width:32px;height:32px;background:var(--sage-pale);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--sage);flex-shrink:0">${esc((e.nom||'??').substring(0,2).toUpperCase())}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.78rem;font-weight:700;color:var(--charcoal)">${esc(e.nom)}</div>
+          <div style="font-size:.62rem;color:var(--light)">SIREN ${esc(e.siren)} · ${esc(e.formeJuridique)} · ${esc(e.activite||'N/A')}${e.etat==='A'?'':' · ⚠ cessée'}</div>
+        </div>
+        <span style="font-size:.6rem;padding:2px 8px;border-radius:99px;background:var(--ok-bg);color:var(--ok-fg);font-weight:700">Sélectionner</span>
+      </div>`;
+    }).join('') + '<div style="font-size:.62rem;color:var(--light);margin-top:6px">Source : Recherche d\'entreprises (INSEE + INPI) — gratuit, aucun crédit consommé</div>';
+  }catch(err){
+    results.innerHTML = `<div style="font-size:.75rem;color:var(--danger-fg);padding:6px 0">❌ ${err.message}</div>`;
+  }
+}
+
+// ══ Actes et statuts déposés (INPI / RNE) — gratuits ══════════════════════
+async function openInpiDocs(siren, ref){
+  const modal = document.getElementById('inpi-modal');
+  const body = document.getElementById('inpi-modal-body');
+  modal.classList.remove('hidden');
+  body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--mid);font-size:.83rem">⏳ Interrogation du registre national des entreprises…</div>';
+  try{
+    const d = await proxyJson(`/api/fr/inpi/${siren}/documents`);
+    const dispo = d.documents.filter(x=>!x.confidentiel);
+    if(!dispo.length){ body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--mid);font-size:.83rem">Aucun acte public disponible pour ce SIREN.</div>'; return; }
+    body.innerHTML = `<div style="font-size:.75rem;color:var(--mid);margin-bottom:10px">${dispo.length} document(s) déposé(s) au RNE · téléchargement gratuit</div>` +
+      dispo.map(x=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
+        <span style="font-size:1.1rem">${x.type==='acte'?'📜':'📊'}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.79rem;font-weight:600;color:var(--charcoal)">${(x.libelles||[]).join(' · ') || (x.type==='acte'?'Acte':'Comptes annuels')}</div>
+          <div style="font-size:.66rem;color:var(--light)">${x.date ? new Date(x.date).toLocaleDateString('fr-LU') : ''} · ${x.type}</div>
+        </div>
+        <button class="btn btn-outline" style="font-size:.7rem;padding:5px 10px" onclick="downloadInpiDoc('${x.type==='acte'?'actes':'bilans'}','${x.id}','${siren}',${ref?`'${ref}'`:'null'},this)">📥 Télécharger</button>
+      </div>`).join('');
+  }catch(err){
+    body.innerHTML = `<div style="padding:16px;color:var(--danger-fg);font-size:.8rem">❌ ${err.message}</div>`;
+  }
+}
+function closeInpiModal(){ document.getElementById('inpi-modal').classList.add('hidden'); }
+
+async function downloadInpiDoc(type, id, siren, ref, btn){
+  const old = btn.textContent; btn.disabled = true; btn.textContent = '⏳';
+  try{
+    const r = await fetch(`/api/fr/inpi/${type}/${id}`, {headers: window.NorvyProxy.headers()});
+    if(!r.ok){ const e = await r.json().catch(()=>({})); throw new Error(e.error || `Erreur ${r.status}`); }
+    const blob = await r.blob();
+    const nom = `INPI_${type}_${siren}_${id}.pdf`;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nom; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+    DB.addAudit({type:'dossier',dot:'var(--info-fg)',title:`📥 Document INPI récupéré — ${siren}`,
+      detail:`${type} ${id} · ${nom} · ${Math.round(blob.size/1024)} Ko · source RNE (gratuit)`,
+      tags:[{t:'INPI',c:'b'},{t:type,c:'g'}]});
+    if(ref){
+      const docs = DB.getDocuments();
+      docs.push({id:Date.now(), ref, name: type==='actes' ? 'Acte / statuts (INPI)' : 'Comptes annuels (INPI)',
+        docType:'statuts', size:`${Math.round(blob.size/1024)} Ko`, verified:true, uploadedAt:new Date().toISOString(),
+        meta:`Registre national des entreprises · ${nom} · récupéré le ${new Date().toLocaleDateString('fr-LU')}`});
+      DB.saveDocuments(docs);
+      renderDossierTabContent(ref,'docs');
+    } else if(typeof S!=='undefined' && S._requiredDocs?.includes('sta')){
+      S.docsChecked.add('sta');
+      const m = docMeta('sta');
+      m.ref = `Statuts récupérés au RNE (INPI) le ${new Date().toLocaleDateString('fr-LU')} — ${nom}`;
+      m.date = new Date().toISOString().split('T')[0];
+      renderStep4();
+    }
+    showToast('Document INPI récupéré', `${nom} (${Math.round(blob.size/1024)} Ko)`, 'ok', '📥');
+  }catch(err){
+    showToast('Téléchargement impossible', err.message, 'danger', '❌');
+  }finally{ btn.disabled=false; btn.textContent=old; }
 }
 
 function clearPappersResults() { document.getElementById('pappers-results').innerHTML = ''; }
