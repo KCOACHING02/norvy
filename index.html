@@ -1665,6 +1665,7 @@ body{padding-bottom:62px}
       <div class="nav-item" onclick="showView('dossiers')"><span class="nav-icon">📁</span> Dossiers clients <span class="nav-badge-pill" style="background:var(--sage-pale);color:var(--sage)">47</span></div>
       <div class="nav-item" onclick="showView('screening')"><span class="nav-icon">🔍</span> Screening KYC</div>
       <div class="nav-item" onclick="showView('oal')"><span class="nav-icon">📋</span> Questionnaire OAL</div>
+      <div class="nav-item" onclick="showView('cabinet')"><span class="nav-icon">🏛️</span> Conformité cabinet</div>
       <div class="nav-sec" style="margin-top:10px">Compliance</div>
       <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">📊</span> Journal d'audit</div>
       <div class="nav-item" onclick="showView('audit')"><span class="nav-icon">⚠️</span> Alertes <span class="nav-badge-pill red">3</span></div>
@@ -3397,6 +3398,209 @@ async function hashPassword(pwd) {
 }
 
 // ══ NAVIGATION ══
+// ══ Conformité du cabinet : risques, procédures, formations ═══════════════
+const CAT_RISQUES = [
+  {id:'clients',   t:"Typologie de clientèle", ex:"Personnes morales étrangères, structures complexes, PPE"},
+  {id:'missions',  t:"Missions et services", ex:"Immobilier, constitution de sociétés, fiducies, fiscalité"},
+  {id:'geo',       t:"Zones géographiques", ex:"Pays tiers à haut risque, pays sous sanctions"},
+  {id:'canaux',    t:"Canaux d'entrée en relation", ex:"Relation à distance, apporteurs d'affaires, intermédiaires"},
+  {id:'fonds',     t:"Maniement de fonds", ex:"Compte tiers, CARPA, séquestre, espèces"},
+  {id:'taille',    t:"Organisation du cabinet", ex:"Effectif, rotation, sous-traitance, outils"},
+];
+const NIVEAUX = ['Faible','Modéré','Élevé'];
+
+function cabinetData(){ return DB.load('cabinet', {risques:{}, formations:[]}); }
+function saveCabinetData(d){ DB.save('cabinet', d); }
+
+function renderCabinet(){
+  const d = cabinetData();
+  const v = id => document.getElementById(id);
+  if(v('cab-resp')) v('cab-resp').value = d.responsable || '';
+  if(v('cab-resp-date')) v('cab-resp-date').value = d.responsableDate || '';
+  if(v('cab-resp-supp')) v('cab-resp-supp').value = d.suppleant || '';
+  if(v('cab-resp-barreau')) v('cab-resp-barreau').value = d.barreauDate || '';
+  if(v('cab-risque-concl')) v('cab-risque-concl').value = d.conclusion || '';
+  if(v('cab-proc-version')) v('cab-proc-version').value = d.procVersion || '';
+  if(v('cab-proc-date')) v('cab-proc-date').value = d.procDate || '';
+
+  const zone = document.getElementById('cab-risques');
+  if(zone) zone.innerHTML = CAT_RISQUES.map(c=>{
+    const r = (d.risques||{})[c.id] || {};
+    return `<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;background:var(--cream)">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+        <div><div style="font-size:.84rem;font-weight:700;color:var(--charcoal)">${c.t}</div>
+          <div style="font-size:.7rem;color:var(--light)">${c.ex}</div></div>
+        <select onchange="majRisque('${c.id}','niveau',this.value)" style="max-width:150px">
+          <option value="">Niveau...</option>
+          ${NIVEAUX.map(n=>`<option ${r.niveau===n?'selected':''}>${n}</option>`).join('')}
+        </select>
+      </div>
+      <input value="${(r.mesures||'').replace(/"/g,'&quot;')}" placeholder="Mesures d'atténuation retenues" style="margin-top:8px" oninput="majRisque('${c.id}','mesures',this.value)"/>
+    </div>`;
+  }).join('');
+
+  renderFormations();
+  renderAlertesCabinet();
+  const etat = document.getElementById('cab-proc-etat');
+  if(etat) etat.innerHTML = d.procGenereLe
+    ? `<div class="note"><span>📘</span><span>Dernier document généré le ${new Date(d.procGenereLe).toLocaleDateString('fr-LU')}${d.procVersion?` (version ${d.procVersion})`:''}.</span></div>` : '';
+}
+
+function majRisque(id, champ, valeur){
+  const d = cabinetData();
+  d.risques = d.risques || {};
+  d.risques[id] = {...(d.risques[id]||{}), [champ]: valeur};
+  saveCabinetData(d);
+  renderAlertesCabinet();
+}
+
+function saveCabinet(){
+  const d = cabinetData();
+  const g = id => document.getElementById(id)?.value.trim() || '';
+  Object.assign(d, {responsable:g('cab-resp'), responsableDate:g('cab-resp-date'), suppleant:g('cab-resp-supp'),
+    barreauDate:g('cab-resp-barreau'), conclusion:g('cab-risque-concl'),
+    procVersion:g('cab-proc-version'), procDate:g('cab-proc-date'), revueLe:new Date().toISOString()});
+  saveCabinetData(d);
+  DB.addAudit({type:'settings',dot:'var(--sage)',title:'🏛️ Conformité cabinet mise à jour',
+    detail:`Responsable : ${d.responsable||'non désigné'} · ${Object.keys(d.risques||{}).length} catégorie(s) de risque évaluée(s)`,
+    tags:[{t:'Cabinet',c:'g'}]});
+  showToast('Enregistré','Conformité du cabinet mise à jour','ok','✅');
+  renderAlertesCabinet();
+}
+
+// Ce qui manque au cabinet, affiché en haut de la page
+function renderAlertesCabinet(){
+  const el = document.getElementById('cab-alertes');
+  if(!el) return;
+  const d = cabinetData();
+  const manques = [];
+  if(!d.responsable) manques.push("aucun responsable LCB-FT désigné");
+  const evalues = CAT_RISQUES.filter(c=>(d.risques||{})[c.id]?.niveau).length;
+  if(evalues < CAT_RISQUES.length) manques.push(`classification des risques incomplète (${evalues}/${CAT_RISQUES.length})`);
+  if(d.revueLe && (Date.now()-new Date(d.revueLe)) > 365*86400000) manques.push("classification non revue depuis plus d'un an");
+  if(!d.procGenereLe) manques.push("procédures internes non établies");
+  const formations = d.formations || [];
+  const recentes = formations.filter(f=>(Date.now()-new Date(f.date)) < 365*86400000);
+  if(!recentes.length) manques.push("aucune formation enregistrée dans les 12 derniers mois");
+  el.innerHTML = manques.length
+    ? `<div class="note" style="border-left-color:var(--danger-fg);margin-bottom:16px"><span>⚠️</span><span><strong>${manques.length} point(s) à régulariser :</strong> ${manques.join(' · ')}.</span></div>`
+    : `<div class="note" style="border-left-color:var(--ok-fg);margin-bottom:16px"><span>✅</span><span>Obligations propres au cabinet à jour : responsable désigné, risques évalués, procédures établies, formations suivies.</span></div>`;
+}
+
+// ── Formations ──
+function ajouterFormation(){
+  const g = id => document.getElementById(id)?.value.trim() || '';
+  const f = {nom:g('frm-nom'), date:g('frm-date'), theme:g('frm-theme'), duree:g('frm-duree'), organisme:g('frm-orga')};
+  if(!f.nom || !f.date || !f.theme){ showToast('Champs manquants','Participant, date et thème sont obligatoires','warn','⚠️'); return; }
+  const d = cabinetData();
+  d.formations = [...(d.formations||[]), {...f, id:Date.now()}];
+  saveCabinetData(d);
+  ['frm-nom','frm-date','frm-theme','frm-duree','frm-orga'].forEach(id=>{const e=document.getElementById(id); if(e) e.value='';});
+  DB.addAudit({type:'settings',dot:'var(--sage)',title:'🎓 Formation LCB-FT enregistrée',
+    detail:`${f.nom} · ${f.theme} · ${new Date(f.date).toLocaleDateString('fr-LU')}${f.duree?` · ${f.duree} h`:''}`, tags:[{t:'Formation',c:'g'}]});
+  showToast('Formation enregistrée', `${f.nom} — ${f.theme}`, 'ok', '🎓');
+  renderCabinet();
+}
+function supprimerFormation(id){
+  const d = cabinetData();
+  d.formations = (d.formations||[]).filter(f=>f.id!==id);
+  saveCabinetData(d); renderCabinet();
+}
+function renderFormations(){
+  const el = document.getElementById('cab-formations');
+  if(!el) return;
+  const list = [...(cabinetData().formations||[])].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  if(!list.length){ el.innerHTML = '<div class="note"><span>🎓</span><span>Aucune formation enregistrée.</span></div>'; return; }
+  el.innerHTML = list.map(f=>{
+    const vieille = (Date.now()-new Date(f.date)) > 365*86400000;
+    return `<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 11px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
+      <div><div style="font-size:.82rem;font-weight:600;color:var(--charcoal)">${f.nom} — ${f.theme}</div>
+        <div style="font-size:.7rem;color:${vieille?'var(--warn-fg)':'var(--light)'}">${new Date(f.date).toLocaleDateString('fr-LU')}${f.duree?` · ${f.duree} h`:''}${f.organisme?` · ${f.organisme}`:''}${vieille?' · à renouveler':''}</div></div>
+      <span style="cursor:pointer;font-size:.72rem;color:var(--danger-fg);font-weight:600" onclick="supprimerFormation(${f.id})">Supprimer</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Documents PDF ──
+function pdfCabinet(titre){
+  if(typeof window.jspdf === 'undefined'){ showToast('PDF indisponible','Générateur non chargé','warn','⚠️'); return null; }
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF();
+  const s = DB.getSettings();
+  doc.setFillColor(38,50,56); doc.rect(0,0,210,18,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(12); doc.text(titre, 18, 11.5);
+  doc.setTextColor(40,40,40); doc.setFontSize(9);
+  doc.text(`${s.cabinetName||'Cabinet'} · établi le ${new Date().toLocaleDateString('fr-LU')}`, 18, 26);
+  return doc;
+}
+function exportClassificationPDF(){
+  const doc = pdfCabinet("Classification des risques du cabinet — AMLR");
+  if(!doc) return;
+  const d = cabinetData(); let y = 38;
+  CAT_RISQUES.forEach(c=>{
+    const r = (d.risques||{})[c.id] || {};
+    if(y>265){ doc.addPage(); y=20; }
+    doc.setFontSize(10); doc.setTextColor(40,40,40);
+    doc.text(`${c.t} — ${r.niveau || 'non évalué'}`, 18, y); y += 5.5;
+    doc.setFontSize(8.5); doc.setTextColor(120,120,120);
+    doc.text(doc.splitTextToSize(`Mesures : ${r.mesures || 'à définir'}`, 174), 20, y); y += 9;
+  });
+  if(d.conclusion){ if(y>250){doc.addPage(); y=20;} doc.setFontSize(10); doc.setTextColor(40,40,40);
+    doc.text('Conclusion', 18, y); y+=5.5; doc.setFontSize(9);
+    doc.text(doc.splitTextToSize(d.conclusion, 174), 18, y); }
+  doc.save(`Classification_risques_${new Date().toISOString().slice(0,10)}.pdf`);
+  DB.addAudit({type:'settings',dot:'var(--sage)',title:'📄 Classification des risques exportée',detail:`${CAT_RISQUES.length} catégories`,tags:[{t:'Cabinet',c:'g'}]});
+}
+function exportFormationsPDF(){
+  const doc = pdfCabinet("Registre des formations LCB-FT");
+  if(!doc) return;
+  let y = 38;
+  [...(cabinetData().formations||[])].sort((a,b)=>String(b.date).localeCompare(String(a.date))).forEach(f=>{
+    if(y>270){ doc.addPage(); y=20; }
+    doc.setFontSize(9.5); doc.setTextColor(40,40,40);
+    doc.text(`${new Date(f.date).toLocaleDateString('fr-LU')} — ${f.nom}`, 18, y); y+=5;
+    doc.setFontSize(8.5); doc.setTextColor(120,120,120);
+    doc.text(`${f.theme}${f.duree?` · ${f.duree} h`:''}${f.organisme?` · ${f.organisme}`:''}`, 20, y); y+=8;
+  });
+  doc.save(`Registre_formations_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+function genererProceduresPDF(){
+  const doc = pdfCabinet("Procédures internes LCB-FT");
+  if(!doc) return;
+  const d = cabinetData(); const s = DB.getSettings();
+  const version = document.getElementById('cab-proc-version')?.value.trim() || '1.0';
+  const sections = [
+    ["1. Objet", `Les présentes procédures décrivent l'organisation du cabinet ${s.cabinetName||''} pour l'application du règlement (UE) 2024/1624 et des obligations professionnelles en matière de lutte contre le blanchiment et le financement du terrorisme.`],
+    ["2. Responsable de la conformité", `Responsable désigné : ${d.responsable || '— à désigner —'}${d.responsableDate?` (depuis le ${new Date(d.responsableDate).toLocaleDateString('fr-LU')})`:''}. Suppléant : ${d.suppleant || '— à désigner —'}. Le responsable valide les entrées en relation à risque élevé, décide des déclarations de soupçon et tient la présente documentation à jour.`],
+    ["3. Champ d'application", "Chaque mission fait l'objet d'une qualification préalable : les missions de conseil juridique hors opération et la représentation en justice sont hors champ, sous réserve du contrôle des mesures restrictives, qui s'applique à toute relation."],
+    ["4. Entrée en relation", "Aucune mission assujettie n'est ouverte avant : identification et vérification du client et de son représentant, identification des bénéficiaires effectifs au seuil de 25 %, filtrage sanctions, PPE et médias défavorables, recueil de l'objet et de la nature de la relation ainsi que de l'origine des fonds, évaluation du risque et décision motivée."],
+    ["5. Vigilance renforcée", "Sont soumis à vigilance renforcée : les personnes politiquement exposées, les pays tiers à haut risque, les structures complexes ou les montages faisant intervenir des personnes morales interposées. Les mesures comprennent l'accord de la direction, la documentation de l'origine des fonds et du patrimoine, et une surveillance rapprochée."],
+    ["6. Surveillance continue", "Les relations d'affaires font l'objet d'une revue périodique : annuelle en risque élevé, tous les cinq ans au maximum dans les autres cas. Les clients sont filtrés en continu et toute alerte est qualifiée puis tracée."],
+    ["7. Déclaration de soupçon", "Tout soupçon est porté sans délai au responsable de la conformité, qui décide de la déclaration. La déclaration transite par le Bâtonnier lorsque la réglementation applicable le prévoit. L'interdiction de divulgation au client est absolue."],
+    ["8. Conservation", "Les pièces d'identification, les analyses de risque et les documents relatifs aux opérations sont conservés cinq ans après la fin de la relation d'affaires, sous forme sécurisée et restituable."],
+    ["9. Formation", "Chaque personne concernée suit une formation au moins annuelle. Les formations sont consignées dans le registre du cabinet."],
+    ["10. Contrôle interne", "Le responsable vérifie chaque année l'application des présentes procédures et met à jour la classification des risques."],
+  ];
+  let y = 36;
+  doc.setFontSize(9); doc.setTextColor(120,120,120);
+  doc.text(`Version ${version}${d.procDate?` · adoptées le ${new Date(d.procDate).toLocaleDateString('fr-LU')}`:''}`, 18, 32);
+  sections.forEach(([t, corps])=>{
+    if(y>258){ doc.addPage(); y=20; }
+    doc.setFontSize(10.5); doc.setTextColor(40,40,40); doc.text(t, 18, y); y+=5.5;
+    doc.setFontSize(9); doc.setTextColor(70,70,70);
+    const lignes = doc.splitTextToSize(corps, 174);
+    lignes.forEach(l=>{ if(y>278){doc.addPage(); y=20;} doc.text(l, 18, y); y+=4.6; });
+    y += 4;
+  });
+  doc.save(`Procedures_LCBFT_v${version}_${new Date().toISOString().slice(0,10)}.pdf`);
+  const data = cabinetData(); data.procGenereLe = new Date().toISOString(); data.procVersion = version;
+  data.procDate = document.getElementById('cab-proc-date')?.value || data.procDate;
+  saveCabinetData(data);
+  DB.addAudit({type:'settings',dot:'var(--sage)',title:'📘 Procédures internes générées',detail:`Version ${version}`,tags:[{t:'Cabinet',c:'g'}]});
+  showToast('Procédures générées', `Version ${version} — à relire et à adopter formellement`, 'ok', '📘');
+  renderCabinet();
+}
+
 function showView(name){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
@@ -3413,6 +3617,7 @@ function showView(name){
     resetAll();
     setOnboardingMode('full');
   }
+  if(name==='cabinet') renderCabinet();
   if(name==='oal'){
     initOAL();
     showOALSection(1);
@@ -4126,7 +4331,7 @@ function renderStep4(){
         {id:'decl-ra',t:"Déclaration nature et objet de la relation d'affaires",s:"Formulaire Norvy",req:true},
         {id:'sf',t:"Justificatif origine des fonds 12 derniers mois",s:"Relevés bancaires complets",req:true},
         {id:'patri',t:"Justificatif source de patrimoine",s:"Déclarations fiscales, actes notariés",req:true},
-        {id:'decl-ppe',t:"Déclaration PPE détaillée — fonctions et dates",s:"Formulaire Norvy spécifique PPE",req:true},
+        {id:'decl-ppe',t:"Déclaration PPE détaillée — fonctions et dates",s:"Statut maintenu au moins 12 mois après la cessation des fonctions (AMLR)",req:true},
         {id:'auth-sr',t:"Autorisation écrite associé senior",s:"Signature obligatoire",req:true},
         {id:'adv-media',t:"Rapport adverse media",s:"ComplyAdvantage ou équivalent",req:true},
       ];
@@ -7872,9 +8077,12 @@ async function norvyBootSync(){
       }
     }
     majEtatSync();
-    if(change && !sessionStorage.getItem('norvy_resync')){
+    // Rechargement uniquement avant connexion, pour ne jamais interrompre une saisie
+    if(change && !DB.getSession() && !sessionStorage.getItem('norvy_resync')){
       sessionStorage.setItem('norvy_resync','1');
-      location.reload();       // une seule fois, pour repartir des données du serveur
+      location.reload();
+    } else if(change){
+      showToast('Données du cabinet mises à jour', "Des modifications faites ailleurs ont été reprises — rechargez pour les voir", 'info', '🔄');
     }
   }catch(e){
     DB._sync.actif = false; DB._sync.erreur = e.message;
@@ -9600,6 +9808,7 @@ window.showView=function(name){
   }
   if(name==='onboarding'){resetAll();setOnboardingMode('full');}
   if(name==='oal'){initOAL();showOALSection(1);}
+  if(name==='cabinet') renderCabinet();
   // FAB visibility
   const fab = document.getElementById('fab-wrap');
   if(fab) { fab.classList.toggle('hidden', name === 'login' || name === 'onboarding'); fab.classList.remove('open'); }
@@ -10268,6 +10477,82 @@ window.addEventListener('load',()=>{
     </div>
   </div>
 </div>
+<div class="view" id="view-cabinet">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Conformité du cabinet</div>
+      <div class="topbar-date">Obligations propres à l'étude, distinctes des dossiers clients</div>
+    </div>
+  </header>
+  <div style="padding:22px 26px;max-width:1100px">
+    <div id="cab-alertes"></div>
+
+    <!-- Responsable LCB-FT -->
+    <div class="card" style="padding:18px 20px;margin-bottom:16px">
+      <div style="font-family:var(--font-display);font-size:1.05rem;color:var(--charcoal);margin-bottom:3px">👤 Responsable LCB-FT</div>
+      <div style="font-size:.75rem;color:var(--mid);margin-bottom:12px">L'AMLR impose de désigner nommément la personne chargée du contrôle de la conformité, et son suppléant.</div>
+      <div class="grid2">
+        <div class="fg"><label class="lbl">Responsable désigné</label><input id="cab-resp" placeholder="Me Dupont Jean — Associé"/></div>
+        <div class="fg"><label class="lbl">Date de désignation</label><input type="date" id="cab-resp-date"/></div>
+        <div class="fg"><label class="lbl">Suppléant</label><input id="cab-resp-supp" placeholder="Me Lambert Sophie"/></div>
+        <div class="fg"><label class="lbl">Déclaré au Barreau le</label><input type="date" id="cab-resp-barreau"/></div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:10px;font-size:.8rem;padding:8px 16px" onclick="saveCabinet()">Enregistrer</button>
+    </div>
+
+    <!-- Classification des risques -->
+    <div class="card" style="padding:18px 20px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div>
+          <div style="font-family:var(--font-display);font-size:1.05rem;color:var(--charcoal);margin-bottom:3px">🎯 Classification des risques du cabinet</div>
+          <div style="font-size:.75rem;color:var(--mid);margin-bottom:12px">Évaluation par catégorie, à revoir au moins une fois par an. Elle justifie les seuils appliqués aux dossiers.</div>
+        </div>
+        <button class="btn btn-secondary" style="font-size:.78rem;padding:8px 14px" onclick="exportClassificationPDF()">📄 Exporter en PDF</button>
+      </div>
+      <div id="cab-risques"></div>
+      <div class="fg full" style="margin-top:10px"><label class="lbl">Conclusion générale du cabinet</label>
+        <textarea id="cab-risque-concl" placeholder="Synthèse de l'exposition du cabinet, priorités de vigilance pour l'année..."></textarea></div>
+      <button class="btn btn-primary" style="margin-top:10px;font-size:.8rem;padding:8px 16px" onclick="saveCabinet()">Enregistrer la classification</button>
+    </div>
+
+    <!-- Procédures internes -->
+    <div class="card" style="padding:18px 20px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div>
+          <div style="font-family:var(--font-display);font-size:1.05rem;color:var(--charcoal);margin-bottom:3px">📘 Procédures internes écrites</div>
+          <div style="font-size:.75rem;color:var(--mid);margin-bottom:12px">Norvy rédige les procédures à partir de vos paramètres et de votre classification. À relire et à adopter formellement.</div>
+        </div>
+        <button class="btn btn-secondary" style="font-size:.78rem;padding:8px 14px" onclick="genererProceduresPDF()">📄 Générer le document</button>
+      </div>
+      <div class="grid2">
+        <div class="fg"><label class="lbl">Version</label><input id="cab-proc-version" placeholder="1.0"/></div>
+        <div class="fg"><label class="lbl">Adoptées le</label><input type="date" id="cab-proc-date"/></div>
+      </div>
+      <div id="cab-proc-etat" style="margin-top:8px"></div>
+    </div>
+
+    <!-- Registre des formations -->
+    <div class="card" style="padding:18px 20px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div>
+          <div style="font-family:var(--font-display);font-size:1.05rem;color:var(--charcoal);margin-bottom:3px">🎓 Registre des formations LCB-FT</div>
+          <div style="font-size:.75rem;color:var(--mid);margin-bottom:12px">Chaque personne concernée doit être formée, et la formation doit pouvoir être prouvée.</div>
+        </div>
+        <button class="btn btn-secondary" style="font-size:.78rem;padding:8px 14px" onclick="exportFormationsPDF()">📄 Exporter le registre</button>
+      </div>
+      <div class="grid2">
+        <div class="fg"><label class="lbl">Participant</label><input id="frm-nom" placeholder="Me Lambert Sophie"/></div>
+        <div class="fg"><label class="lbl">Date</label><input type="date" id="frm-date"/></div>
+        <div class="fg"><label class="lbl">Thème</label><input id="frm-theme" placeholder="Entrée en relation et bénéficiaires effectifs"/></div>
+        <div class="fg"><label class="lbl">Durée (heures)</label><input type="number" step="0.5" id="frm-duree" placeholder="3"/></div>
+        <div class="fg full"><label class="lbl">Organisme / formateur</label><input id="frm-orga" placeholder="Barreau de Luxembourg, formation interne..."/></div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:10px;font-size:.8rem;padding:8px 16px" onclick="ajouterFormation()">+ Enregistrer la formation</button>
+      <div id="cab-formations" style="margin-top:14px"></div>
+    </div>
+  </div>
+</div>
+
 <div class="view" id="view-audit">
   <aside class="sidebar" id="audit-sb">
     <div class="sidebar-logo"><div class="logo-mark">n</div><div class="logo-text-wrap"><div class="logo-name">norvy</div><div class="logo-tagline">Compliance · Luxembourg</div></div></div>
