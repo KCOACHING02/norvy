@@ -1480,6 +1480,21 @@ body{padding-bottom:62px}
   </div>
 </div>
 
+<!-- MODAL ORGANIGRAMME -->
+<div class="ctrl-modal hidden" id="orga-modal" onclick="if(event.target===this)fermerOrganigramme()">
+  <div style="background:var(--card-bg,#fff);border-radius:16px;padding:22px;width:100%;max-width:1000px;max-height:88vh;overflow:auto;animation:fadeUp .3s ease">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px">
+      <div style="font-family:var(--font-display);font-size:1.25rem;color:var(--charcoal)">🗺️ Organigramme des bénéficiaires effectifs</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-secondary" style="font-size:.76rem;padding:7px 13px" onclick="exportOrganigrammePDF()">📄 Exporter en PDF</button>
+        <span style="cursor:pointer;font-size:1.2rem;color:var(--light)" onclick="fermerOrganigramme()">✕</span>
+      </div>
+    </div>
+    <div style="font-size:.73rem;color:var(--mid);margin-bottom:14px">Construit à partir des statuts lus, des registres et de la chaîne de détention remontée.</div>
+    <div id="orga-body"></div>
+  </div>
+</div>
+
 <!-- MODAL DOCUMENTS INPI -->
 <div class="ctrl-modal hidden" id="inpi-modal" onclick="if(event.target===this)closeInpiModal()">
   <div style="background:var(--card-bg,#fff);border-radius:16px;padding:24px;width:100%;max-width:620px;max-height:85vh;overflow-y:auto;animation:fadeUp .3s ease">
@@ -2330,6 +2345,7 @@ body{padding-bottom:62px}
               <button type="button" class="btn btn-sage" style="font-size:.75rem;padding:7px 13px" onclick="importUbosInpi(this)">📥 Importer depuis l'INPI</button>
               <button type="button" class="btn btn-outline" style="font-size:.75rem;padding:7px 13px" title="Lecture des statuts classés au dossier par IA — environ 0,15 $" onclick="analyserStatuts(this)">🧠 Lire les statuts (IA)</button>
               <button type="button" class="btn btn-outline" style="font-size:.75rem;padding:7px 13px" title="Remonte les sociétés associées jusqu'aux personnes physiques" onclick="remonterChaine(this)">🔗 Remonter la chaîne</button>
+              <button type="button" class="btn btn-outline" style="font-size:.75rem;padding:7px 13px" title="Visualiser la structure de détention" onclick="ouvrirOrganigramme()">🗺️ Organigramme</button>
               <button type="button" class="btn btn-outline" style="font-size:.75rem;padding:7px 13px" title="Associés et répartition du capital certifiés par le greffe — 30 crédits" onclick="importerAssociesGreffe(this)">📊 Associés (greffe, 30 crédits)</button>
               <button type="button" class="btn btn-secondary" style="font-size:.75rem;padding:7px 13px" onclick="addUbo()">+ Ajouter un bénéficiaire</button>
             </div>
@@ -4722,6 +4738,8 @@ function renderStep7(){
     docMeta: JSON.parse(JSON.stringify(S.docMeta)),
     relation: relationData(),
     enrich: S.enrich ? JSON.parse(JSON.stringify(S.enrich)) : null,
+    associesPM: JSON.parse(JSON.stringify(S._associesPM || [])),
+    chaine: S._chaine ? JSON.parse(JSON.stringify(S._chaine)) : null,
     notesDocuments: document.getElementById('doc-notes')?.value.trim() || '',
     decisionComment: (document.getElementById('dec-comment')?.value||'').trim(),
     retentionPolicy: '5 ans après la fin de la relation d\'affaires'
@@ -4849,7 +4867,7 @@ function viewCreatedDossier() {
 // ── RESET ────────────────────────────────────────────────────────────────
 function resetAll(){
   etatEnrich={}; const ep=document.getElementById('enrich-panel'); if(ep){ep.style.display='none';ep.innerHTML='';}
-  Object.assign(S,{clientType:'pp',missions:[],ubos:[],uboNone:false,docMeta:{},docFiles:{},enrich:null,_notesStatuts:null,_associesPM:[],gafi:null,ppe:null,dist:null,decision:null,docsChecked:new Set(),screeningDone:false,riskStructure:15,riskFonds:25,riskHistorique:35});
+  Object.assign(S,{clientType:'pp',missions:[],ubos:[],uboNone:false,docMeta:{},docFiles:{},enrich:null,_notesStatuts:null,_associesPM:[],_chaine:null,gafi:null,ppe:null,dist:null,decision:null,docsChecked:new Set(),screeningDone:false,riskStructure:15,riskFonds:25,riskHistorique:35});
   document.querySelectorAll('.mc').forEach(c=>{c.classList.remove('sel');c.querySelector('.mc-check').textContent='';});
   document.querySelectorAll('#ct-pp,#ct-pp-ppe,#ct-pm,#ct-pm-complex,#ct-trust,#ct-crypto,#g-non,#g-oui,#p-non,#p-oui,#dist-non,#dist-oui,#dec-acc,#dec-sus,#dec-ref,#dec-ds').forEach(c=>c&&c.classList.remove('sel'));
   document.getElementById('ct-pp').classList.add('sel');
@@ -6311,6 +6329,7 @@ function renderDossierTabContent(ref, tab) {
         <div style="font-size:.82rem;color:var(--charcoal)">${d.relation.objet}</div>
         <div style="font-size:.72rem;color:var(--mid);margin-top:5px">${[d.relation.montant?Number(d.relation.montant).toLocaleString('fr-FR')+' €':'', d.relation.origine, d.relation.frequence, d.relation.maniementFonds].filter(Boolean).join(' · ')}</div>
       </div>` : ''}
+      ${(d.ubos||[]).length || (d.associesPM||[]).length ? `<div style="margin-bottom:10px"><button class="btn btn-secondary" style="font-size:.76rem;padding:7px 13px" onclick="ouvrirOrganigramme('${ref}')">🗺️ Organigramme des bénéficiaires effectifs</button></div>` : ''}
       ${d.decisionComment ? `<div style="background:var(--cream);border-radius:10px;padding:12px;margin-bottom:10px">
         <div style="font-size:.68rem;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Motif de la décision</div>
         <div style="font-size:.82rem;color:var(--charcoal)">${d.decisionComment}</div></div>` : ''}
@@ -8213,6 +8232,151 @@ async function lirePieceIdentite(docId, fichier, face){
   }
 }
 
+// ══ Organigramme des bénéficiaires effectifs ══════════════════════════════
+// Construit à partir de ce que Norvy possède déjà : société, associés saisis
+// ou lus dans les statuts, et chaîne de détention remontée.
+function organigrammeData(source){
+  const d = source || {};
+  const societe = d.denomination || document.getElementById('pm-den')?.value || 'Société';
+  const siren = d.rcs || document.getElementById('pm-rcs')?.value || '';
+  const ubos = d.ubos || S.ubos || [];
+  const pm = d.associesPM || S._associesPM || [];
+  const chaine = d.chaine || S._chaine || null;
+
+  const noeud = (type, nom, sous, pct, detail) => ({type, nom, sous: sous||'', pct: pct??null, detail: detail||'', enfants: []});
+  const racine = noeud('societe', societe, siren ? `SIREN ${siren}` : '');
+
+  // Détentions directes : personnes physiques d'abord
+  ubos.filter(u=>!/chaîne|chaine/i.test(u.source||'')).forEach(u=>{
+    racine.enfants.push(noeud('personne', `${u.prenom||''} ${u.nom||''}`.trim(),
+      [u.nat, u.dob ? `né(e) le ${new Date(u.dob).toLocaleDateString('fr-LU')}` : ''].filter(Boolean).join(' · '),
+      u.pct ? Number(u.pct) : null, u.source||''));
+  });
+
+  // Personnes morales interposées, complétées par la chaîne si elle a été remontée
+  pm.forEach(p=>{
+    const n = noeud('societe', p.denomination || 'Société associée', p.siren ? `SIREN ${p.siren}` : 'SIREN inconnu',
+      p.pourcentage ? Number(String(p.pourcentage).replace(',','.')) : null);
+    (chaine?.personnes||[]).forEach(pers=>{
+      const via = (pers.chemins||[[]])[0] || [];
+      if(via.some(x=>String(x).toLowerCase().includes(String(p.denomination||'').toLowerCase().slice(0,8)))){
+        n.enfants.push(noeud('personne', `${pers.prenoms||''} ${pers.nom||''}`.trim(),
+          [pers.nationalite, pers.naissance ? `né(e) le ${pers.naissance}` : ''].filter(Boolean).join(' · '),
+          pers.partDirecte, pers.partCumulee != null ? `${pers.partCumulee} % au total` : ''));
+      }
+    });
+    (chaine?.impasses||[]).forEach(i=>{
+      if(String(i.denomination||'').toLowerCase() === String(p.denomination||'').toLowerCase())
+        n.enfants.push(noeud('impasse', 'Chaîne interrompue', i.motif));
+    });
+    if(!n.enfants.length) n.enfants.push(noeud('impasse','Détenteurs inconnus',"Remontez la chaîne ou demandez l'organigramme au client"));
+    racine.enfants.push(n);
+  });
+
+  if(d.uboNone || (!ubos.length && !pm.length && (d.uboNone ?? S.uboNone)))
+    racine.enfants.push(noeud('impasse','Aucun bénéficiaire au seuil de 25 %', d.uboNoneReason || document.getElementById('ubo-none-reason')?.value || 'Dirigeants retenus'));
+  return racine;
+}
+
+// Disposition en colonnes : société en haut, détenteurs en dessous
+function organigrammeLayout(racine){
+  const L = 168, H = 52, EX = 18, EY = 48;
+  const boites = [], liens = [];
+  let x = 0;
+  function placer(n, niveau){
+    const debut = x;
+    if(n.enfants.length){ n.enfants.forEach(e=>placer(e, niveau+1)); }
+    else { x += L + EX; }
+    const cx = n.enfants.length
+      ? (n.enfants[0]._x + n.enfants[n.enfants.length-1]._x) / 2
+      : debut;
+    n._x = cx; n._y = niveau * (H + EY);
+    boites.push(n);
+    n.enfants.forEach(e=>liens.push([n, e]));
+  }
+  placer(racine, 0);
+  const largeur = Math.max(...boites.map(b=>b._x)) + L + EX;
+  const hauteur = Math.max(...boites.map(b=>b._y)) + H + 20;
+  return {boites, liens, largeur, hauteur, L, H};
+}
+
+function organigrammeSVG(racine){
+  const {boites, liens, largeur, hauteur, L, H} = organigrammeLayout(racine);
+  const couleur = t => t==='societe' ? ['#e8eef5','#2c4a6b'] : t==='personne' ? ['#e9f2ea','#2f5d3a'] : ['#fdecec','#8a2f2f'];
+  const esc = t => String(t||'').replace(/[<>&]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+  const traits = liens.map(([p,e])=>{
+    const x1=p._x+L/2, y1=p._y+H, x2=e._x+L/2, y2=e._y, ym=(y1+y2)/2;
+    return `<path d="M${x1},${y1} L${x1},${ym} L${x2},${ym} L${x2},${y2}" fill="none" stroke="#b9c4cc" stroke-width="1.4"/>`;
+  }).join('');
+  const cases = boites.map(b=>{
+    const [fond, txt] = couleur(b.type);
+    return `<g>
+      <rect x="${b._x}" y="${b._y}" width="${L}" height="${H}" rx="8" fill="${fond}" stroke="${txt}" stroke-opacity=".25"/>
+      <text x="${b._x+10}" y="${b._y+20}" font-size="11.5" font-weight="700" fill="${txt}">${esc(b.nom).slice(0,26)}</text>
+      <text x="${b._x+10}" y="${b._y+34}" font-size="9" fill="#6b7780">${esc(b.sous).slice(0,32)}</text>
+      ${b.pct!=null?`<text x="${b._x+L-10}" y="${b._y+20}" font-size="11" font-weight="700" text-anchor="end" fill="${txt}">${b.pct} %</text>`:''}
+      ${b.detail?`<text x="${b._x+10}" y="${b._y+46}" font-size="8.5" fill="#94a0a8">${esc(b.detail).slice(0,34)}</text>`:''}
+    </g>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${largeur} ${hauteur}" width="100%" style="max-height:60vh" xmlns="http://www.w3.org/2000/svg">${traits}${cases}</svg>`;
+}
+
+function ouvrirOrganigramme(ref){
+  const source = ref ? DB.getDossiers().find(d=>d.ref===ref) : null;
+  const racine = organigrammeData(source ? {denomination:source.denomination, rcs:source.rcs, ubos:source.ubos,
+    associesPM:source.associesPM, chaine:source.chaine, uboNone:source.uboNone, uboNoneReason:source.uboNoneReason} : null);
+  const m = document.getElementById('orga-modal');
+  document.getElementById('orga-body').innerHTML = organigrammeSVG(racine)
+    + `<div style="font-size:.68rem;color:var(--light);margin-top:10px">Bleu : sociétés · Vert : personnes physiques · Rouge : chaîne à compléter. Pourcentages de détention directe ; le total cumulé figure sous chaque personne atteinte par la chaîne.</div>`;
+  m.dataset.ref = ref || '';
+  m.classList.remove('hidden');
+}
+function fermerOrganigramme(){ document.getElementById('orga-modal').classList.add('hidden'); }
+
+function exportOrganigrammePDF(){
+  if(typeof window.jspdf === 'undefined'){ showToast('PDF indisponible','Générateur non chargé','warn','⚠️'); return; }
+  const ref = document.getElementById('orga-modal')?.dataset.ref || '';
+  const source = ref ? DB.getDossiers().find(d=>d.ref===ref) : null;
+  const racine = organigrammeData(source ? {denomination:source.denomination, rcs:source.rcs, ubos:source.ubos,
+    associesPM:source.associesPM, chaine:source.chaine, uboNone:source.uboNone, uboNoneReason:source.uboNoneReason} : null);
+  const {boites, liens, largeur, hauteur, L, H} = organigrammeLayout(racine);
+  const {jsPDF} = window.jspdf;
+  const paysage = largeur > hauteur;
+  const doc = new jsPDF({orientation: paysage ? 'landscape' : 'portrait'});
+  const pageL = paysage ? 297 : 210, pageH = paysage ? 210 : 297;
+  const e = Math.min((pageL-30)/largeur, (pageH-60)/hauteur, 0.8);
+  const X = x => 15 + x*e, Y = y => 42 + y*e;
+
+  doc.setFillColor(38,50,56); doc.rect(0,0,pageL,16,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(11);
+  doc.text("Organigramme des bénéficiaires effectifs", 15, 10.5);
+  doc.setTextColor(40,40,40); doc.setFontSize(9);
+  doc.text(`${racine.nom}${ref?` · dossier ${ref}`:''} · établi le ${new Date().toLocaleDateString('fr-LU')}`, 15, 26);
+
+  doc.setDrawColor(185,196,204);
+  liens.forEach(([p,c])=>{
+    const x1=X(p._x+L/2), y1=Y(p._y+H), x2=X(c._x+L/2), y2=Y(c._y), ym=(y1+y2)/2;
+    doc.line(x1,y1,x1,ym); doc.line(x1,ym,x2,ym); doc.line(x2,ym,x2,y2);
+  });
+  boites.forEach(b=>{
+    const fond = b.type==='societe' ? [232,238,245] : b.type==='personne' ? [233,242,234] : [253,236,236];
+    doc.setFillColor(...fond); doc.setDrawColor(200,208,214);
+    doc.roundedRect(X(b._x), Y(b._y), L*e, H*e, 2, 2, 'FD');
+    doc.setTextColor(40,40,40); doc.setFontSize(8);
+    doc.text(String(b.nom).slice(0,30), X(b._x)+3, Y(b._y)+5.5);
+    doc.setFontSize(6.5); doc.setTextColor(110,120,128);
+    if(b.sous) doc.text(String(b.sous).slice(0,36), X(b._x)+3, Y(b._y)+9.5);
+    if(b.detail) doc.text(String(b.detail).slice(0,36), X(b._x)+3, Y(b._y)+13);
+    if(b.pct!=null){ doc.setFontSize(8); doc.setTextColor(40,40,40);
+      doc.text(`${b.pct} %`, X(b._x)+L*e-3, Y(b._y)+5.5, {align:'right'}); }
+  });
+  doc.setFontSize(7); doc.setTextColor(120,120,120);
+  doc.text("Établi par Norvy à partir des statuts et des registres. Les détentions indirectes sont calculées par multiplication le long de chaque branche et doivent être confirmées auprès du client.", 15, pageH-12, {maxWidth: pageL-30});
+  doc.save(`Organigramme_${(racine.nom||'societe').replace(/[^A-Za-z0-9]+/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`);
+  DB.addAudit({type:'dossier',dot:'var(--info-fg)',title:'🗺️ Organigramme des bénéficiaires effectifs exporté',
+    detail:`${racine.nom}${ref?` · dossier ${ref}`:''} · ${boites.length} entité(s) représentée(s)`, tags:[{t:'Organigramme',c:'b'}]});
+}
+
 // ══ Remontée des chaînes de détention ═════════════════════════════════════
 async function remonterChaine(btn){
   const siren = sirenOf(document.getElementById('pm-rcs')?.value);
@@ -8227,6 +8391,7 @@ async function remonterChaine(btn){
       personnesMorales: pm.map(a=>({denomination:a.denomination, siren:a.siren, pourcentage:a.pourcentage})),
       profondeur: 3,
     });
+    S._chaine = d;
     const retenues = d.personnes.filter(p=>(p.partCumulee||0) >= 25);
     const r = ajouterUbos(retenues.map(p=>({nom:p.nom, prenoms:p.prenoms, naissance:p.naissance,
       nationalite:p.nationalite, pourcentage:String(p.partCumulee)})), 'Chaîne de détention (IA) — à confirmer');
