@@ -8167,6 +8167,7 @@ async function televerserPiece(docId, input, face){
     showToast('Pièce classée', `${file.name}${face==='verso'?' — verso':isIdDoc(docId)?' — recto':''} (${Math.round(saved.taille/1024)} Ko)`, 'ok', '📎');
 
     if(isIdDoc(docId)) await lirePieceIdentite(docId, saved.fichier, face);
+    else if(docId === 'sta') await lireStatutsFichier(saved.fichier);
     if(isIdDoc(docId) && face !== 'verso' && !(S.docFiles||{})[`${docId}::verso`])
       setTimeout(()=>showToast('Verso à joindre', "Déposez le verso : il porte souvent la date d'expiration et l'adresse", 'info', '🔄'), 1600);
   }catch(err){
@@ -8550,6 +8551,38 @@ async function enrichirDossier(siren, contexte = {}){
 }
 
 // ══ Analyse des statuts par IA (Mistral OCR) ══════════════════════════════
+// Lit un fichier de statuts déjà classé et remplit le dossier
+async function lireStatutsFichier(fichier, refDossier){
+  showToast('Lecture des statuts', 'Analyse du document en cours…', 'info', '🧠');
+  try{
+    const d = await proxyPost(`/api/dossiers/${refDossier || dossierFolder()}/analyse-statuts`, {fichier});
+    const e = d.extrait || {};
+    const pp = (e.associes||[]).filter(a=>(a.nom||'').trim());
+    S._associesPM = (e.associes||[]).filter(a=>!(a.nom||'').trim() && (a.denomination||'').trim());
+    S.enrich = {...(S.enrich||{}), capital:e.capital_social||'', dateStatuts:e.date_statuts||'',
+      observations:e.observations||'', dirigeants:e.dirigeants||[], pagesLues:d.pages};
+    const dir = (e.dirigeants||[])[0];
+    if(dir) remplirSiVide('pm-rep', `${dir.prenoms||''} ${dir.nom||''} — ${dir.qualite||'Dirigeant'}`.trim());
+    const notes = [];
+    if(e.capital_social) notes.push(`Capital social : ${e.capital_social}`);
+    if(e.date_statuts) notes.push(`Statuts du ${e.date_statuts}`);
+    if(e.observations) notes.push(`Clauses relevées : ${e.observations}`);
+    if(notes.length){ S._notesStatuts = notes.join('\n'); const n=document.getElementById('doc-notes'); if(n && !n.value) n.value = S._notesStatuts; }
+    const r = ajouterUbos(pp.map(a=>({nom:a.nom, prenoms:a.prenoms, naissance:a.date_naissance,
+      nationalite:a.nationalite, pourcentage:a.pourcentage})), 'Statuts (IA) — à confirmer');
+    DB.addAudit({type:'dossier',dot:'var(--info-fg)',title:`🧠 Statuts analysés — ${fichier}`,
+      detail:`${e.denomination||''} · capital ${e.capital_social||'?'} · ${pp.length} associé(s), ${(e.dirigeants||[]).length} dirigeant(s) · ${d.pages} page(s) · ${d.source}`,
+      tags:[{t:'Mistral OCR',c:'b'},{t:'Statuts',c:'g'}]});
+    showToast(`${r.ajoutes} bénéficiaire(s) proposé(s)`,
+      `${d.pages} page(s) lue(s)${e.capital_social?` · capital ${e.capital_social}`:''}. Vérifiez chaque ligne avant de valider.`, 'ok', '🧠');
+    if(e.observations) setTimeout(()=>showToast('Clauses relevées', e.observations, 'warn', '⚠️'), 1400);
+    if((S._associesPM||[]).length) setTimeout(()=>showToast(`${S._associesPM.length} associé(s) personne morale`,
+      S._associesPM.map(a=>a.denomination).join(' · ') + " — remontez la chaîne (France) ou demandez l'organigramme au client", 'warn', '🏢'), 2400);
+  }catch(err){
+    showToast('Lecture impossible', err.message, 'danger', '❌');
+  }
+}
+
 async function analyserStatuts(btn, refDossier){
   const folder = refDossier || dossierFolder();
   const old = btn.textContent;
@@ -8800,6 +8833,18 @@ async function ficheIdentificationRNE(btn, refDossier){
   }finally{ btn.disabled=false; btn.textContent=old; }
 }
 
+const esc2 = t => String(t||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+
+function ouvrirLBR(denomination, rcs){
+  const q = (rcs && /^B/i.test(rcs.trim())) ? rcs.trim() : denomination;
+  window.open(`https://www.lbr.lu/mjrcs/jsp/secured/DisplayConsultDocumentsActionNotSecured.action?FROM_MENU=true&time=${Date.now()}`, '_blank', 'noopener');
+  showToast('Portail LBR ouvert', `Recherchez « ${q} », téléchargez les statuts puis déposez-les dans Norvy`, 'info', '🇱🇺');
+}
+function ouvrirRESA(denomination){
+  window.open(`https://www.lbr.lu/mjrcs-web-front/consult-journals`, '_blank', 'noopener');
+  showToast('RESA ouvert', `Publications légales gratuites — recherchez « ${denomination} »`, 'info', '📰');
+}
+
 function ouvrirAttestationInpi(siren){
   window.open(`https://data.inpi.fr/entreprises/${siren}`, '_blank', 'noopener');
   showToast("Fiche INPI ouverte", "Téléchargez l'attestation d'immatriculation, puis ajoutez-la au dossier", 'info', '🏛️');
@@ -8993,7 +9038,24 @@ async function downloadInpiDoc(type, id, siren, ref, btn){
 }
 
 function pappersDocsBar(siren, handler, refArg){
-  if(!siren) return `<div class="note" style="margin-top:10px"><span>ℹ️</span><span>Récupération automatique disponible pour les sociétés françaises (SIREN à 9 chiffres). Pour le Luxembourg, l'extrait RCS et les statuts se commandent sur <strong>lbr.lu</strong>.</span></div>`;
+  if(!siren){
+    const den = (refArg ? (DB.getDossiers().find(d=>d.ref===refArg)||{}).denomination : document.getElementById('pm-den')?.value) || '';
+    const rcs = (refArg ? (DB.getDossiers().find(d=>d.ref===refArg)||{}).rcs : document.getElementById('pm-rcs')?.value) || '';
+    const pays = (refArg ? (DB.getDossiers().find(d=>d.ref===refArg)||{}).paysImmat : document.getElementById('pm-pay')?.value) || '';
+    const estLU = /luxembourg/i.test(pays) || /^B\s?\d/i.test(rcs.trim());
+    if(!estLU) return `<div class="note" style="margin-top:10px"><span>ℹ️</span><span>Récupération automatique disponible pour les sociétés françaises (SIREN à 9 chiffres).</span></div>`;
+    return `<div style="margin-top:10px;padding:12px;border:1.5px solid var(--sage-muted);border-radius:10px;background:var(--sage-pale)">
+      <div style="font-size:.78rem;font-weight:700;color:var(--sage);margin-bottom:2px">🇱🇺 Pièces officielles — Luxembourg${rcs?` · RCS ${esc2(rcs)}`:''}</div>
+      <div style="font-size:.72rem;color:var(--mid);margin-bottom:8px">LBR ne donne pas d'accès automatisé : téléchargez la pièce depuis lbr.lu, puis déposez-la ici. Norvy la lit et remplit le dossier comme pour la France.</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button type="button" class="btn btn-primary" style="font-size:.73rem;padding:6px 11px" onclick="ouvrirLBR('${esc2(den)}','${esc2(rcs)}')">🔎 Ouvrir la fiche LBR</button>
+        <button type="button" class="btn btn-sage" style="font-size:.73rem;padding:6px 11px" onclick="ouvrirRESA('${esc2(den)}')">📰 Publications RESA (gratuit)</button>
+        <label class="btn btn-sage" style="font-size:.73rem;padding:6px 11px;cursor:pointer">📎 Déposer les statuts
+          <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" style="display:none" onchange="televerserPiece('sta',this)"/>
+        </label>
+        <button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="Relire les statuts déjà déposés" onclick="analyserStatuts(this${refArg?`,'${refArg}'`:''})">🧠 Relire les statuts</button>
+      </div></div>`;
+  }
   return `<div style="margin-top:10px;padding:12px;border:1.5px solid var(--sage-muted);border-radius:10px;background:var(--sage-pale)">
     <div style="font-size:.78rem;font-weight:700;color:var(--sage);margin-bottom:2px">📥 Pièces officielles — SIREN ${siren}</div>
     <div style="font-size:.72rem;color:var(--mid);margin-bottom:8px">Registre national des entreprises (INPI) — gratuit. Les pièces sont classées dans le dossier.</div>
