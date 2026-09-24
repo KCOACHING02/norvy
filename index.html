@@ -2272,19 +2272,20 @@ body{padding-bottom:62px}
           <div style="background:var(--info-bg);border:1px solid rgba(74,111,165,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
               <span style="font-size:1.1rem">🔍</span>
-              <div style="font-size:.82rem;font-weight:700;color:var(--charcoal)">Recherche Pappers</div>
-              <span style="font-size:.62rem;padding:2px 8px;border-radius:99px;background:var(--sage);color:#fff;font-weight:700">API</span>
+              <div style="font-size:.82rem;font-weight:700;color:var(--charcoal)">Recherche de la société</div>
+              <span style="font-size:.62rem;padding:2px 8px;border-radius:99px;background:var(--sage);color:#fff;font-weight:700">AUTO</span>
             </div>
+            <div style="font-size:.72rem;color:var(--mid);margin-bottom:9px">Sélectionnez la société : Norvy remplit la fiche, récupère les statuts et propose les bénéficiaires effectifs.</div>
             <div style="display:flex;gap:4px;margin-bottom:8px">
-              <button id="pappers-mode-rne" class="btn btn-outline" style="font-size:.68rem;padding:5px 10px;border-radius:6px" onclick="setPappersMode('rne')">🇫🇷 France — gratuit (RNE)</button>
-              <button id="pappers-mode-lu" class="btn btn-sage" style="font-size:.68rem;padding:5px 10px;border-radius:6px" onclick="setPappersMode('lu')">🇱🇺 Luxembourg</button>
-              <button id="pappers-mode-fr" class="btn btn-outline" style="font-size:.68rem;padding:5px 10px;border-radius:6px" onclick="setPappersMode('fr')">🇫🇷 France — Pappers</button>
+              <button id="pappers-mode-rne" class="btn btn-sage" style="font-size:.68rem;padding:5px 10px;border-radius:6px" onclick="setPappersMode('rne')">🇫🇷 France</button>
+              <button id="pappers-mode-lu" class="btn btn-outline" style="font-size:.68rem;padding:5px 10px;border-radius:6px" onclick="setPappersMode('lu')">🇱🇺 Luxembourg</button>
             </div>
             <div style="display:flex;gap:8px">
               <input id="pappers-search" class="step-input" style="flex:1;margin:0;font-size:.82rem" placeholder="Nom d'entreprise ou n° RCS..." oninput="clearPappersResults()">
               <button onclick="searchPappers()" class="btn btn-sage" style="font-size:.78rem;padding:8px 16px;white-space:nowrap">Rechercher</button>
             </div>
             <div id="pappers-results" style="margin-top:8px"></div>
+            <div id="enrich-panel" style="margin-top:10px;display:none"></div>
           </div>
         </div>
 
@@ -2605,7 +2606,7 @@ body{padding-bottom:62px}
         <div class="divider"></div>
         <div class="fg">
           <label class="lbl">Notes complémentaires sur les documents</label>
-          <textarea placeholder="Ex : Original de la pièce d'identité vérifié le 15/03/2026 par Me Dupont..."></textarea>
+          <textarea id="doc-notes" placeholder="Ex : Original de la pièce d'identité vérifié le 15/03/2026 par Me Dupont..."></textarea>
         </div>
 
         <div class="btn-row">
@@ -3433,7 +3434,7 @@ function animateDashboard(){
 
 // ── STATE ────────────────────────────────────────────────────────────────
 const S = {
-  clientType:'pp', missions:[], ubos:[], uboNone:false, docMeta:{},
+  clientType:'pp', missions:[], ubos:[], uboNone:false, docMeta:{}, docFiles:{},
   gafi:null, ppe:null, dist:null,
   decision:null, docsChecked:new Set(),
   screeningDone:false,
@@ -4174,7 +4175,13 @@ function renderStep4(){
         <div class="cl-title">${d.t}${isIdDoc(d.id)?' <span style="font-size:.65rem;font-weight:700;color:var(--sage)">· à vérifier</span>':''}</div>
         <div class="cl-sub">${d.s}</div>
       </div>
-      <span class="cl-badge ${d.req?'req':'opt'}">${d.req?'Obligatoire':'Optionnel'}</span>
+      <span style="display:flex;align-items:center;gap:8px" onclick="event.stopPropagation()">
+        ${lienPiece(d.id)}
+        <label style="font-size:.66rem;color:var(--sage);font-weight:700;cursor:pointer;white-space:nowrap" title="Déposer un fichier depuis votre ordinateur">📎 ${(S.docFiles||{})[d.id]?'Remplacer':'Joindre'}
+          <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.xls,.xlsx" style="display:none" onchange="televerserPiece('${d.id}',this)"/>
+        </label>
+        <span class="cl-badge ${d.req?'req':'opt'}">${d.req?'Obligatoire':'Optionnel'}</span>
+      </span>
     </div>
     ${S.docsChecked.has(d.id)?docMetaForm(d):''}`).join('')}
   </div>
@@ -4253,6 +4260,8 @@ function checkDocsComplete(){
   const allDone=reqs.every(id=>S.docsChecked.has(id) && docMetaOk(id));
   const btn=document.getElementById('b4');
   if(btn) btn.disabled=!allDone;
+  const n=document.getElementById('doc-notes');
+  if(n && !n.value && S._notesStatuts) n.value = S._notesStatuts;
   const hint=document.getElementById('doc-hint');
   if(hint){
     const manquants=reqs.filter(id=>S.docsChecked.has(id) && !docMetaOk(id)).length;
@@ -4458,6 +4467,8 @@ function renderStep7(){
     createdBy: DB.getSession()?.userId || null,
     docMeta: JSON.parse(JSON.stringify(S.docMeta)),
     relation: relationData(),
+    enrich: S.enrich ? JSON.parse(JSON.stringify(S.enrich)) : null,
+    notesDocuments: document.getElementById('doc-notes')?.value.trim() || '',
     decisionComment: (document.getElementById('dec-comment')?.value||'').trim(),
     retentionPolicy: '5 ans après la fin de la relation d\'affaires'
   };
@@ -4583,7 +4594,8 @@ function viewCreatedDossier() {
 
 // ── RESET ────────────────────────────────────────────────────────────────
 function resetAll(){
-  Object.assign(S,{clientType:'pp',missions:[],ubos:[],uboNone:false,docMeta:{},gafi:null,ppe:null,dist:null,decision:null,docsChecked:new Set(),screeningDone:false,riskStructure:15,riskFonds:25,riskHistorique:35});
+  etatEnrich={}; const ep=document.getElementById('enrich-panel'); if(ep){ep.style.display='none';ep.innerHTML='';}
+  Object.assign(S,{clientType:'pp',missions:[],ubos:[],uboNone:false,docMeta:{},docFiles:{},enrich:null,_notesStatuts:null,gafi:null,ppe:null,dist:null,decision:null,docsChecked:new Set(),screeningDone:false,riskStructure:15,riskFonds:25,riskHistorique:35});
   document.querySelectorAll('.mc').forEach(c=>{c.classList.remove('sel');c.querySelector('.mc-check').textContent='';});
   document.querySelectorAll('#ct-pp,#ct-pp-ppe,#ct-pm,#ct-pm-complex,#ct-trust,#ct-crypto,#g-non,#g-oui,#p-non,#p-oui,#dist-non,#dist-oui,#dec-acc,#dec-sus,#dec-ref,#dec-ds').forEach(c=>c&&c.classList.remove('sel'));
   document.getElementById('ct-pp').classList.add('sel');
@@ -7578,7 +7590,7 @@ function closeStripeModal() { document.getElementById('stripe-modal').classList.
 
 // ══ PAPPERS (SIMULATION) ══
 const PAPPERS_API_KEY = ''; // Clé retirée du code : elle est gérée par le serveur Norvy (variable PAPPERS_API_KEY)
-let pappersMode = 'lu';
+let pappersMode = 'rne';
 
 function getPappersKey() {
   const settings = DB.load('settings', {});
@@ -7587,7 +7599,7 @@ function getPappersKey() {
 
 function setPappersMode(mode) {
   pappersMode = mode;
-  ['lu','fr','rne'].forEach(m=>{
+  ['lu','rne'].forEach(m=>{
     const el = document.getElementById('pappers-mode-'+m);
     if(!el) return;
     el.className = mode === m ? 'btn btn-sage' : 'btn btn-outline';
@@ -7712,7 +7724,7 @@ function applyPappersResult(el) {
     document.getElementById('cr-nom').value = el.dataset.name || '';
   } else {
     document.getElementById('pm-den').value = el.dataset.name || '';
-    setTimeout(()=>autoImportBE(sirenOf(el.dataset.rcs)), 400);
+    setTimeout(()=>enrichirDossier(sirenOf(el.dataset.rcs), {nom: el.dataset.name, activite: el.dataset.activite, dateCreation: el.dataset.date}), 400);
     const formeSelect = document.getElementById('pm-for');
     const formeApi = (el.dataset.forme || '').toLowerCase();
     let matched = false;
@@ -7771,6 +7783,230 @@ function applyPappersResult(el) {
     tags:[{t:'Pappers API',c:'b'},{t:el.dataset.forme||'',c:'g'}]
   });
   showToast('Pappers', 'Données de ' + el.dataset.name + ' importées automatiquement', 'ok', '🔍');
+}
+
+// ══ Pièces jointes aux lignes de la checklist ═════════════════════════════
+function attacherPiece(docId, fichier, url, source){
+  S.docFiles = S.docFiles || {};
+  S.docFiles[docId] = {fichier, url, source};
+  S.docsChecked.add(docId);
+  const m = docMeta(docId);
+  if(!m.ref) m.ref = `${source} · ${fichier}`;
+  m.date = m.date || new Date().toISOString().split('T')[0];
+  if(document.getElementById('doc-list')) renderStep4();
+}
+
+function lienPiece(docId){
+  const f = (S.docFiles||{})[docId];
+  if(!f) return '';
+  return `<a href="${f.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:.66rem;color:var(--info-fg);font-weight:700;text-decoration:none;white-space:nowrap">📄 Voir</a>`;
+}
+
+// Téléversement depuis le poste, avec lecture automatique des pièces d'identité
+async function televerserPiece(docId, input){
+  const file = input.files?.[0];
+  if(!file) return;
+  input.value = '';
+  if(!window.NorvyProxy){ showToast('Indisponible',"Norvy doit être servi par le serveur du cabinet",'warn','⚠️'); return; }
+  if(file.size > 12*1024*1024){ showToast('Fichier trop volumineux','12 Mo maximum','warn','⚠️'); return; }
+  const folder = dossierFolder();
+  showToast('Envoi en cours', file.name, 'info', '⏳');
+  try{
+    const base64 = await new Promise((ok,ko)=>{ const r=new FileReader(); r.onload=()=>ok(String(r.result).split(',')[1]); r.onerror=ko; r.readAsDataURL(file); });
+    const saved = await proxyPost(`/api/dossiers/${folder}/documents/upload`, {filename:`${docId}_${file.name}`, contentBase64: base64});
+    attacherPiece(docId, saved.fichier, saved.url, 'Déposé au dossier');
+
+    const docs = DB.getDocuments();
+    docs.push({id:Date.now(), ref: folder, name:(S._docLabels||[]).find(d=>d.id===docId)?.t || file.name,
+      docType: isIdDoc(docId)?'id':'autre', size:`${Math.round(saved.taille/1024)} Ko`, verified:false,
+      uploadedAt:new Date().toISOString(), url:saved.url, fichier:saved.fichier, meta:`Déposé le ${new Date().toLocaleDateString('fr-LU')}`});
+    DB.saveDocuments(docs);
+    DB.addAudit({type:'dossier',dot:'var(--info-fg)',title:`📎 Pièce déposée — ${file.name}`,
+      detail:`${Math.round(saved.taille/1024)} Ko · classée dans le dossier`, tags:[{t:'Document',c:'b'}]});
+    showToast('Pièce classée', `${file.name} (${Math.round(saved.taille/1024)} Ko)`, 'ok', '📎');
+
+    if(isIdDoc(docId)) await lirePieceIdentite(docId, saved.fichier);
+  }catch(err){
+    showToast('Dépôt impossible', err.message, 'danger', '❌');
+  }
+}
+
+// Lecture de la pièce d'identité : remplit les champs de vérification et recoupe
+async function lirePieceIdentite(docId, fichier){
+  showToast('Lecture de la pièce', 'Extraction des données en cours…', 'info', '🧠');
+  try{
+    const d = await proxyPost(`/api/dossiers/${dossierFolder()}/analyse-piece`, {fichier});
+    const e = d.extrait || {};
+    const m = docMeta(docId);
+    const TYPES = {"carte nationale d'identité":"Carte nationale d'identité", "passeport":"Passeport",
+      "titre de séjour":"Titre de séjour", "permis de conduire":"Permis de conduire (UE)"};
+    const t = Object.entries(TYPES).find(([k])=>(e.type_piece||'').toLowerCase().includes(k));
+    if(t) m.type = t[1]; else if(e.type_piece) m.type = "Autre pièce officielle";
+    if(e.numero) m.num = e.numero;
+    if(/^\d{4}-\d{2}-\d{2}$/.test(e.date_expiration||'')) m.exp = e.date_expiration;
+    m.date = new Date().toISOString().split('T')[0];
+    if(!m.method) m.method = "Copie certifiée conforme";
+    renderStep4();
+
+    const docs = DB.getDocuments();
+    const i = docs.findIndex(x=>x.fichier===fichier);
+    if(i>=0){ docs[i].verified = docMetaOk(docId);
+      docs[i].meta = `${m.type||''} n° ${m.num||''}${m.exp?` · expire le ${new Date(m.exp).toLocaleDateString('fr-LU')}`:''} · lu par IA le ${new Date().toLocaleDateString('fr-LU')}`;
+      DB.saveDocuments(docs); }
+    DB.addAudit({type:'dossier',dot:'var(--info-fg)',title:`🧠 Pièce d'identité lue par IA`,
+      detail:`${e.type_piece||''} n° ${e.numero||''} · ${e.prenoms||''} ${e.nom||''}${e.date_naissance?` · né(e) le ${e.date_naissance}`:''}${e.date_expiration?` · expire le ${e.date_expiration}`:''} · ${d.source}`,
+      tags:[{t:'Mistral OCR',c:'b'},{t:'Identité',c:'g'}]});
+
+    // Recoupement avec ce qui a été saisi
+    const alertes = [];
+    const norm = v => String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/g,'');
+    let attenduNom = '', attenduPrenom = '', attenduDob = '';
+    if(docId === 'pi'){ attenduNom = val('pp-nom'); attenduPrenom = val('pp-pre'); attenduDob = val('pp-dob'); }
+    else if(docId.startsWith('id-ubo-')){ const u = S.ubos[Number(docId.split('-')[2])]; if(u){ attenduNom=u.nom; attenduPrenom=u.prenom; attenduDob=u.dob; } }
+    else if(docId === 'id-dir'){ attenduNom = (document.getElementById('pm-rep')?.value||'').split('—')[0].trim(); }
+
+    if(attenduNom && e.nom && !norm(attenduNom).includes(norm(e.nom)) && !norm(e.nom).includes(norm(attenduNom))
+       && !(e.nom_usage && norm(attenduNom).includes(norm(e.nom_usage))))
+      alertes.push(`nom du dossier « ${attenduNom} » ≠ pièce « ${e.nom} »`);
+    if(attenduPrenom && e.prenoms && !norm(e.prenoms).includes(norm(attenduPrenom)))
+      alertes.push(`prénom « ${attenduPrenom} » ≠ pièce « ${e.prenoms} »`);
+    if(attenduDob && e.date_naissance && attenduDob !== e.date_naissance)
+      alertes.push(`date de naissance ${attenduDob} ≠ pièce ${e.date_naissance}`);
+
+    const expiree = m.exp && m.exp < new Date().toISOString().split('T')[0];
+    showToast(expiree ? 'Pièce expirée' : 'Pièce lue',
+      `${e.type_piece||'Pièce'} n° ${e.numero||'?'} · ${e.prenoms||''} ${e.nom||''}${e.date_expiration?` · expire le ${new Date(e.date_expiration).toLocaleDateString('fr-LU')}`:''}`,
+      expiree ? 'danger' : 'ok', expiree ? '⛔' : '🪪');
+    if(alertes.length) setTimeout(()=>showToast("Incohérence entre la pièce et le dossier", alertes.join(' · ') + " — à vérifier avant de valider", 'warn', '⚠️'), 1200);
+    // Proposition de compléter une fiche vide
+    if(docId==='pi' && !val('pp-dob') && /^\d{4}-\d{2}-\d{2}$/.test(e.date_naissance||'')){
+      remplirSiVide('pp-dob', e.date_naissance); v1();
+    }
+  }catch(err){
+    showToast('Lecture impossible', err.message + " — complétez les champs à la main", 'warn', '⚠️');
+  }
+}
+
+// ══ Enrichissement automatique du dossier ═════════════════════════════════
+// Une seule sélection de société déclenche : identité → pièces officielles →
+// lecture des statuts → bénéficiaires effectifs. Chaque étape est affichée.
+const ETAPES_ENRICH = [
+  {id:'identite', libelle:"Identité de la société"},
+  {id:'pieces',   libelle:"Pièces officielles (statuts, actes, comptes)"},
+  {id:'statuts',  libelle:"Lecture des statuts"},
+  {id:'benef',    libelle:"Bénéficiaires effectifs"},
+];
+let etatEnrich = {};
+
+function renderEnrich(){
+  const el = document.getElementById('enrich-panel');
+  if(!el) return;
+  el.style.display = 'block';
+  const icone = e => e.etat==='ok' ? '✅' : e.etat==='ko' ? '⚠️' : e.etat==='encours' ? '⏳' : '·';
+  el.innerHTML = `<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
+    <div style="font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--light);margin-bottom:8px">Enrichissement automatique</div>
+    ${ETAPES_ENRICH.map(et=>{
+      const e = etatEnrich[et.id] || {};
+      return `<div style="display:flex;gap:8px;align-items:flex-start;padding:3px 0;font-size:.78rem">
+        <span style="width:16px;flex-shrink:0">${icone(e)}</span>
+        <div><span style="color:${e.etat==='ok'?'var(--charcoal)':'var(--mid)'};font-weight:${e.etat==='ok'?600:400}">${et.libelle}</span>
+        ${e.detail?`<div style="font-size:.7rem;color:var(--light);margin-top:1px">${e.detail}</div>`:''}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+function majEtape(id, etat, detail){ etatEnrich[id] = {etat, detail}; renderEnrich(); }
+
+// Remplit un champ seulement s'il est vide, pour ne jamais écraser une saisie
+function remplirSiVide(id, valeur){
+  const el = document.getElementById(id);
+  if(el && !el.value && valeur){ el.value = valeur; return true; }
+  return false;
+}
+
+async function enrichirDossier(siren, contexte = {}){
+  if(!['pm','pm-complex'].includes(S.clientType)) return;
+  etatEnrich = {};
+  majEtape('identite','ok', contexte.nom ? `${contexte.nom}${contexte.activite?` · ${contexte.activite}`:''}` : 'Fiche remplie depuis le registre');
+  S.enrich = { siren, nom: contexte.nom||'', activite: contexte.activite||'', dateCreation: contexte.dateCreation||'', etat: contexte.etat||'' };
+
+  if(!siren || !window.NorvyProxy){
+    majEtape('pieces','ko', siren ? 'Norvy doit être servi par le serveur du cabinet' : 'Récupération automatique réservée aux sociétés françaises');
+    return;
+  }
+  const folder = dossierFolder();
+
+  // 1. Pièces officielles
+  majEtape('pieces','encours','Interrogation du registre national des entreprises…');
+  let fichierStatuts = null;
+  try{
+    const d = await proxyPost(`/api/dossiers/${folder}/documents/auto`, {siren});
+    const ok = (d.classees||[]).filter(c=>!c.erreur);
+    if(ok.length){
+      const docs = DB.getDocuments();
+      ok.forEach((c,i)=>docs.push({id:Date.now()+i, ref: folder, name:c.role,
+        docType:/comptes/i.test(c.role)?'rapport':'statuts', size:`${Math.round(c.taille/1024)} Ko`,
+        verified:true, uploadedAt:new Date().toISOString(), url:c.url, fichier:c.fichier,
+        meta:`${c.source}${c.libelles?.length?' · '+c.libelles.join(' · '):''} · classé le ${new Date().toLocaleDateString('fr-LU')}`}));
+      DB.saveDocuments(docs);
+      S._piecesAuto = ok;
+      const st = ok.find(c=>/statut/i.test(c.role)) || ok[0];
+      fichierStatuts = st.fichier;
+      attacherPiece('sta', st.fichier, st.url, `${st.role} — registre national des entreprises`);
+      const cpt = ok.find(c=>/comptes/i.test(c.role));
+      if(cpt) { S.docFiles = S.docFiles||{}; S.docFiles['comptes'] = {fichier:cpt.fichier, url:cpt.url, source:'RNE'}; }
+      majEtape('pieces','ok', ok.map(c=>c.role).join(' · '));
+      try{ await ficheIdentificationRNE({textContent:'',disabled:false}); }catch{}
+    } else {
+      majEtape('pieces','ko', d.note || 'Aucun acte public déposé pour ce SIREN');
+    }
+  }catch(e){ majEtape('pieces','ko', e.message); }
+
+  // 2. Lecture des statuts
+  let associesStatuts = [];
+  if(fichierStatuts){
+    majEtape('statuts','encours','Analyse du document…');
+    try{
+      const d = await proxyPost(`/api/dossiers/${folder}/analyse-statuts`, {fichier: fichierStatuts});
+      const e = d.extrait || {};
+      S.enrich = {...S.enrich, capital: e.capital_social||'', dateStatuts: e.date_statuts||'',
+        observations: e.observations||'', dirigeants: e.dirigeants||[], pagesLues: d.pages};
+      associesStatuts = (e.associes||[]).filter(a=>(a.nom||'').trim());
+      // Le représentant légal est pré-rempli si le champ est encore vide
+      const dir = (e.dirigeants||[])[0];
+      if(dir) remplirSiVide('pm-rep', `${dir.prenoms||''} ${dir.nom||''} — ${dir.qualite||'Dirigeant'}`.trim());
+      const notes = [];
+      if(e.capital_social) notes.push(`Capital social : ${e.capital_social}`);
+      if(e.date_statuts) notes.push(`Statuts du ${e.date_statuts}`);
+      if(e.observations) notes.push(`Clauses relevées : ${e.observations}`);
+      if(notes.length) S._notesStatuts = notes.join('\n');
+      majEtape('statuts','ok', `${d.pages} page(s) lue(s) · ${associesStatuts.length} associé(s), ${(e.dirigeants||[]).length} dirigeant(s)${e.capital_social?` · capital ${e.capital_social}`:''}`);
+      if(e.observations) setTimeout(()=>showToast('Clauses relevées dans les statuts', e.observations, 'warn', '⚠️'), 800);
+    }catch(e){ majEtape('statuts','ko', e.message); }
+  } else {
+    majEtape('statuts','ko','Aucun statut à analyser');
+  }
+
+  // 3. Bénéficiaires effectifs : statuts d'abord, puis registres
+  majEtape('benef','encours','Identification en cours…');
+  if(associesStatuts.length){
+    const r = ajouterUbos(associesStatuts.map(a=>({nom:a.nom, prenoms:a.prenoms, naissance:a.date_naissance,
+      nationalite:a.nationalite, pourcentage:a.pourcentage})), 'Statuts (IA) — à confirmer');
+    const pm = (S.enrich.associesPM = (associesStatuts.length ? [] : []));
+    majEtape('benef', r.ajoutes ? 'ok' : 'ko',
+      r.ajoutes ? `${r.ajoutes} proposé(s) d'après les statuts${r.ignores?`, ${r.ignores} sous 25 %`:''} — à confirmer` : `Aucun associé au-dessus de 25 % dans les statuts`);
+  } else {
+    await autoImportBE(siren);
+    const n = S.ubos.length;
+    majEtape('benef', n ? 'ok' : 'ko', n ? `${n} proposé(s) — à confirmer` : "Non disponibles : saisissez-les à la main ou consultez le greffe");
+  }
+  // Ce qu'il reste à compléter avant de pouvoir continuer
+  const manques = S.ubos.filter(u=>!uboComplete(u)).map((u,i)=>{
+    const quoi = [!u.dob&&'date de naissance', !u.nat&&'nationalité', String(u.pct).trim()===''&&'pourcentage'].filter(Boolean);
+    return `${uboLabel(u,i)} : ${quoi.join(', ')}`;
+  });
+  if(manques.length) majEtape('benef','ko', `À compléter — ${manques.join(' · ')}`);
+  v1();
 }
 
 // ══ Analyse des statuts par IA (Mistral OCR) ══════════════════════════════
@@ -7920,13 +8156,11 @@ async function autoClasserDocs(btn, refDossier){
       tags:[{t:'INPI',c:'b'},{t:'Classement auto',c:'g'}]});
 
     if(refDossier){ renderDossierTabContent(refDossier,'docs'); }
-    else if(S._requiredDocs?.includes('sta') && ok.some(c=>/statut|acte/i.test(c.role))){
-      S.docsChecked.add('sta');
-      const m = docMeta('sta');
+    else {
       const st = ok.find(c=>/statut/i.test(c.role)) || ok[0];
-      m.ref = `${st.role} récupéré au RNE et classé au dossier (${st.fichier})`;
-      m.date = new Date().toISOString().split('T')[0];
-      renderStep4();
+      if(st) attacherPiece('sta', st.fichier, st.url, `${st.role} — registre national des entreprises`);
+      const cpt = ok.find(c=>/comptes/i.test(c.role));
+      if(cpt && S._requiredDocs?.includes('bilan')) attacherPiece('bilan', cpt.fichier, cpt.url, 'Comptes annuels — RNE');
     }
     showToast(`${ok.length} pièce(s) classée(s)`, ok.map(c=>c.role).join(', '), 'ok', '📂');
     const rates = d.classees.filter(c=>c.erreur);
@@ -8013,12 +8247,8 @@ async function ficheIdentificationRNE(btn, refDossier){
       tags:[{t:'RNE',c:'b'},{t:'Identification',c:'g'}]});
 
     if(refDossier) renderDossierTabContent(refDossier,'docs');
-    else if(S._requiredDocs?.includes('rcs')){
-      S.docsChecked.add('rcs');
-      const m = docMeta('rcs');
-      m.ref = `Fiche d'identification RNE du ${consult.toLocaleDateString('fr-LU')} (${saved.fichier})`;
-      m.date = consult.toISOString().split('T')[0];
-      renderStep4();
+    else {
+      attacherPiece('rcs', saved.fichier, saved.url, `Fiche d'identification RNE du ${consult.toLocaleDateString('fr-LU')}`);
     }
     showToast('Fiche établie et classée', `${e.nom} · ${Math.round(saved.taille/1024)} Ko`, 'ok', '🏛️');
   }catch(err){
@@ -8100,22 +8330,6 @@ async function fetchPappersDocDossier(kind, ref, btn){
     meta:`Récupéré via Pappers le ${new Date().toLocaleDateString('fr-LU')} · SIREN ${siren} · ${res.nom}`});
   DB.saveDocuments(docs);
   renderDossierTabContent(ref,'docs');
-}
-
-function pappersDocsBar(siren, handler, refArg){
-  if(!siren) return `<div class="note" style="margin-top:10px"><span>ℹ️</span><span>Récupération automatique disponible pour les sociétés françaises (SIREN à 9 chiffres). Pour le Luxembourg, l'extrait RCS et les statuts se commandent sur <strong>lbr.lu</strong> ; LBR propose une API, mais sur contrat.</span></div>`;
-  return `<div style="margin-top:10px;padding:12px;border:1.5px solid var(--sage-muted);border-radius:10px;background:var(--sage-pale)">
-    <div style="font-size:.78rem;font-weight:700;color:var(--sage);margin-bottom:2px">📥 Documents officiels — SIREN ${siren}</div>
-    <div style="font-size:.72rem;color:var(--mid);margin-bottom:8px">Récupération directe auprès de Pappers (INPI, INSEE, greffes). Chaque document consomme des crédits Pappers.</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <button type="button" class="btn btn-primary" style="font-size:.73rem;padding:6px 11px" title="Récupère les statuts, le dernier acte et les comptes annuels au RNE, et les classe dans le dossier" onclick="autoClasserDocs(this${refArg?`,'${refArg}'`:''})">⚡ Récupérer et classer automatiquement</button>
-      <button type="button" class="btn btn-sage" style="font-size:.73rem;padding:6px 11px" title="Fiche horodatée établie par Norvy à partir des données du RNE — gratuit" onclick="ficheIdentificationRNE(this${refArg?`,'${refArg}'`:''})">🏛️ Fiche d'identification RNE (gratuit)</button>
-      <button type="button" class="btn btn-sage" style="font-size:.73rem;padding:6px 11px" title="Choisir une pièce précise parmi les actes déposés — gratuit" onclick="openInpiDocs('${siren}'${refArg?`,'${refArg}'`:''})">📚 Choisir un acte (INPI, gratuit)</button>
-      <button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="Ouvre la fiche officielle sur data.inpi.fr pour télécharger l'attestation d'immatriculation (gratuite)" onclick="ouvrirAttestationInpi('${siren}')">📎 Attestation officielle INPI</button>
-      <button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="Répartition du capital certifiée par le greffe (PDF) — 30 crédits" onclick="classerRepartitionCapital(this${refArg?`,'${refArg}'`:''})">📊 Répartition du capital (30 crédits)</button>
-      <button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="Analyse des statuts classés au dossier par Mistral OCR" onclick="analyserStatuts(this${refArg?`,'${refArg}'`:''})">🧠 Lire les statuts (IA)</button>
-      ${PAPPERS_DOCS.map(d=>`<button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="${d.sub} · consomme des crédits Pappers" onclick="${handler}('${d.kind}',${refArg?`'${refArg}',`:''}this)">${d.icon} ${d.label}</button>`).join('')}
-    </div></div>`;
 }
 
 // ══ Registres publics français (gratuits) ═════════════════════════════════
@@ -8212,6 +8426,21 @@ async function downloadInpiDoc(type, id, siren, ref, btn){
   }catch(err){
     showToast('Téléchargement impossible', err.message, 'danger', '❌');
   }finally{ btn.disabled=false; btn.textContent=old; }
+}
+
+function pappersDocsBar(siren, handler, refArg){
+  if(!siren) return `<div class="note" style="margin-top:10px"><span>ℹ️</span><span>Récupération automatique disponible pour les sociétés françaises (SIREN à 9 chiffres). Pour le Luxembourg, l'extrait RCS et les statuts se commandent sur <strong>lbr.lu</strong>.</span></div>`;
+  return `<div style="margin-top:10px;padding:12px;border:1.5px solid var(--sage-muted);border-radius:10px;background:var(--sage-pale)">
+    <div style="font-size:.78rem;font-weight:700;color:var(--sage);margin-bottom:2px">📥 Pièces officielles — SIREN ${siren}</div>
+    <div style="font-size:.72rem;color:var(--mid);margin-bottom:8px">Registre national des entreprises (INPI) — gratuit. Les pièces sont classées dans le dossier.</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button type="button" class="btn btn-primary" style="font-size:.73rem;padding:6px 11px" title="Statuts, dernier acte et comptes annuels, classés au dossier" onclick="autoClasserDocs(this${refArg?`,'${refArg}'`:''})">⚡ Récupérer et classer</button>
+      <button type="button" class="btn btn-sage" style="font-size:.73rem;padding:6px 11px" title="Lecture des statuts classés au dossier" onclick="analyserStatuts(this${refArg?`,'${refArg}'`:''})">🧠 Relire les statuts</button>
+      <button type="button" class="btn btn-sage" style="font-size:.73rem;padding:6px 11px" title="Fiche horodatée établie à partir des données du RNE" onclick="ficheIdentificationRNE(this${refArg?`,'${refArg}'`:''})">🏛️ Fiche d'identification RNE</button>
+      <button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="Choisir une pièce précise parmi les actes déposés" onclick="openInpiDocs('${siren}'${refArg?`,'${refArg}'`:''})">📚 Choisir un acte</button>
+      <button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="Attestation d'immatriculation officielle sur data.inpi.fr" onclick="ouvrirAttestationInpi('${siren}')">📎 Attestation INPI</button>
+      <button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="Répartition du capital certifiée par le greffe — 30 crédits" onclick="classerRepartitionCapital(this${refArg?`,'${refArg}'`:''})">📊 Capital certifié (30 crédits)</button>
+    </div></div>`;
 }
 
 function clearPappersResults() { document.getElementById('pappers-results').innerHTML = ''; }
