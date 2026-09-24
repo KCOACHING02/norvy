@@ -2329,6 +2329,7 @@ body{padding-bottom:62px}
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <button type="button" class="btn btn-sage" style="font-size:.75rem;padding:7px 13px" onclick="importUbosInpi(this)">📥 Importer depuis l'INPI</button>
               <button type="button" class="btn btn-outline" style="font-size:.75rem;padding:7px 13px" title="Lecture des statuts classés au dossier par IA — environ 0,15 $" onclick="analyserStatuts(this)">🧠 Lire les statuts (IA)</button>
+              <button type="button" class="btn btn-outline" style="font-size:.75rem;padding:7px 13px" title="Remonte les sociétés associées jusqu'aux personnes physiques" onclick="remonterChaine(this)">🔗 Remonter la chaîne</button>
               <button type="button" class="btn btn-outline" style="font-size:.75rem;padding:7px 13px" title="Associés et répartition du capital certifiés par le greffe — 30 crédits" onclick="importerAssociesGreffe(this)">📊 Associés (greffe, 30 crédits)</button>
               <button type="button" class="btn btn-secondary" style="font-size:.75rem;padding:7px 13px" onclick="addUbo()">+ Ajouter un bénéficiaire</button>
             </div>
@@ -4848,7 +4849,7 @@ function viewCreatedDossier() {
 // ── RESET ────────────────────────────────────────────────────────────────
 function resetAll(){
   etatEnrich={}; const ep=document.getElementById('enrich-panel'); if(ep){ep.style.display='none';ep.innerHTML='';}
-  Object.assign(S,{clientType:'pp',missions:[],ubos:[],uboNone:false,docMeta:{},docFiles:{},enrich:null,_notesStatuts:null,gafi:null,ppe:null,dist:null,decision:null,docsChecked:new Set(),screeningDone:false,riskStructure:15,riskFonds:25,riskHistorique:35});
+  Object.assign(S,{clientType:'pp',missions:[],ubos:[],uboNone:false,docMeta:{},docFiles:{},enrich:null,_notesStatuts:null,_associesPM:[],gafi:null,ppe:null,dist:null,decision:null,docsChecked:new Set(),screeningDone:false,riskStructure:15,riskFonds:25,riskHistorique:35});
   document.querySelectorAll('.mc').forEach(c=>{c.classList.remove('sel');c.querySelector('.mc-check').textContent='';});
   document.querySelectorAll('#ct-pp,#ct-pp-ppe,#ct-pm,#ct-pm-complex,#ct-trust,#ct-crypto,#g-non,#g-oui,#p-non,#p-oui,#dist-non,#dist-oui,#dec-acc,#dec-sus,#dec-ref,#dec-ds').forEach(c=>c&&c.classList.remove('sel'));
   document.getElementById('ct-pp').classList.add('sel');
@@ -8212,6 +8213,45 @@ async function lirePieceIdentite(docId, fichier, face){
   }
 }
 
+// ══ Remontée des chaînes de détention ═════════════════════════════════════
+async function remonterChaine(btn){
+  const siren = sirenOf(document.getElementById('pm-rcs')?.value);
+  const pm = (S._associesPM || []);
+  if(!pm.length){ showToast('Aucune personne morale', "Les associés personnes morales sont détectés à la lecture des statuts", 'info', 'ℹ️'); return; }
+  const old = btn ? btn.textContent : null;
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Remontée en cours…'; }
+  majEtape('chaine','encours', `${pm.length} société(s) à analyser…`);
+  try{
+    const d = await proxyPost(`/api/dossiers/${dossierFolder()}/chaine`, {
+      siren, denomination: document.getElementById('pm-den')?.value || '',
+      personnesMorales: pm.map(a=>({denomination:a.denomination, siren:a.siren, pourcentage:a.pourcentage})),
+      profondeur: 3,
+    });
+    const retenues = d.personnes.filter(p=>(p.partCumulee||0) >= 25);
+    const r = ajouterUbos(retenues.map(p=>({nom:p.nom, prenoms:p.prenoms, naissance:p.naissance,
+      nationalite:p.nationalite, pourcentage:String(p.partCumulee)})), 'Chaîne de détention (IA) — à confirmer');
+    // La détention est indirecte : la nature du contrôle est corrigée
+    S.ubos.forEach(u=>{ if(u.source==='Chaîne de détention (IA) — à confirmer') u.nature = UBO_NATURE[1]; });
+    renderUbos(); v1();
+
+    const parcours = d.niveaux.map(n=>`${n.chemin.join(' → ')} (${n.part||'?'} %)`);
+    DB.addAudit({type:'dossier',dot:'var(--info-fg)',title:`🔗 Chaîne de détention remontée — ${d.societesAnalysees} société(s)`,
+      detail: `${d.personnes.length} personne(s) physique(s) atteinte(s), ${retenues.length} au-dessus de 25 %${parcours.length?` · ${parcours.join(' | ')}`:''}${d.impasses.length?` · impasses : ${d.impasses.map(i=>`${i.denomination} (${i.motif})`).join(', ')}`:''}`,
+      tags:[{t:'Chaîne',c:'b'},{t:'Bénéficiaires effectifs',c:'g'}]});
+
+    majEtape('chaine', retenues.length ? 'ok' : 'ko',
+      retenues.length ? `${retenues.length} bénéficiaire(s) au-delà de 25 % via ${d.societesAnalysees} société(s) — à confirmer`
+                      : d.note);
+    const detail = d.personnes.slice(0,4).map(p=>`${p.prenoms||''} ${p.nom||''} ${p.partCumulee!=null?`${p.partCumulee} %`:''} (${p.chemins[0].join(' → ')})`).join(' · ');
+    showToast(`${retenues.length} bénéficiaire(s) indirect(s)`, detail || d.note, retenues.length?'ok':'warn', '🔗');
+    if(d.impasses.length) setTimeout(()=>showToast('Chaîne incomplète',
+      d.impasses.map(i=>`${i.denomination||i.siren} : ${i.motif}`).join(' · ') + " — demandez l'organigramme au client", 'warn', '⚠️'), 1600);
+  }catch(err){
+    majEtape('chaine','ko', err.message);
+    showToast('Remontée impossible', err.message, 'danger', '❌');
+  }finally{ if(btn){ btn.disabled=false; btn.textContent=old; } }
+}
+
 // ══ Enrichissement automatique du dossier ═════════════════════════════════
 // Une seule sélection de société déclenche : identité → pièces officielles →
 // lecture des statuts → bénéficiaires effectifs. Chaque étape est affichée.
@@ -8220,6 +8260,7 @@ const ETAPES_ENRICH = [
   {id:'pieces',   libelle:"Pièces officielles (statuts, actes, comptes)"},
   {id:'statuts',  libelle:"Lecture des statuts"},
   {id:'benef',    libelle:"Bénéficiaires effectifs"},
+  {id:'chaine',   libelle:"Chaîne de détention"},
 ];
 let etatEnrich = {};
 
@@ -8297,6 +8338,7 @@ async function enrichirDossier(siren, contexte = {}){
       S.enrich = {...S.enrich, capital: e.capital_social||'', dateStatuts: e.date_statuts||'',
         observations: e.observations||'', dirigeants: e.dirigeants||[], pagesLues: d.pages};
       associesStatuts = (e.associes||[]).filter(a=>(a.nom||'').trim());
+      S._associesPM = (e.associes||[]).filter(a=>!(a.nom||'').trim() && (a.denomination||'').trim());
       // Le représentant légal est pré-rempli si le champ est encore vide
       const dir = (e.dirigeants||[])[0];
       if(dir) remplirSiVide('pm-rep', `${dir.prenoms||''} ${dir.nom||''} — ${dir.qualite||'Dirigeant'}`.trim());
@@ -8332,6 +8374,14 @@ async function enrichirDossier(siren, contexte = {}){
   });
   if(manques.length) majEtape('benef','ko', `À compléter — ${manques.join(' · ')}`);
   v1();
+
+  // 4. Chaîne de détention, si un associé est une personne morale
+  if((S._associesPM||[]).length){
+    majEtape('chaine','encours', `${S._associesPM.length} associé(s) personne morale détecté(s)`);
+    await remonterChaine(null);
+  } else {
+    majEtape('chaine','ok', 'Aucun associé personne morale : chaîne directe');
+  }
 }
 
 // ══ Analyse des statuts par IA (Mistral OCR) ══════════════════════════════
