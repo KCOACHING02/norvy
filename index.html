@@ -1552,6 +1552,14 @@ body{padding-bottom:62px}
           <label style="font-size:.8rem;font-weight:600;color:var(--mid)">Clé API Courrier <span style="font-size:.65rem;font-weight:400;color:var(--light)">(envoi postal Maileva)</span>
             <input id="set-courrier-key" class="step-input" style="margin-top:4px;font-family:monospace;font-size:.75rem" placeholder="votre_cle_maileva">
           </label>
+          <label style="font-size:.8rem;font-weight:600;color:var(--mid)">Bénéficiaires effectifs — import automatique <span style="font-size:.65rem;font-weight:400;color:var(--light)">(à la sélection d'une société française)</span>
+            <select id="set-auto-be" class="step-input" style="margin-top:4px;font-size:.8rem">
+              <option value="off">Désactivé — import manuel uniquement</option>
+              <option value="gratuit">Sources gratuites seulement (RNE / INPI)</option>
+              <option value="payant">Gratuit, puis greffe si vide (30 crédits par société)</option>
+            </select>
+            <span style="font-size:.66rem;color:var(--light);display:block;margin-top:3px">Le résultat est mis en cache 30 jours par SIREN : une même société n'est jamais facturée deux fois.</span>
+          </label>
         </div>
       </div>
       <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
@@ -2312,6 +2320,8 @@ body{padding-bottom:62px}
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <button type="button" class="btn btn-sage" style="font-size:.75rem;padding:7px 13px" onclick="importUbosInpi(this)">📥 Importer depuis l'INPI</button>
+              <button type="button" class="btn btn-outline" style="font-size:.75rem;padding:7px 13px" title="Lecture des statuts classés au dossier par IA — environ 0,15 $" onclick="analyserStatuts(this)">🧠 Lire les statuts (IA)</button>
+              <button type="button" class="btn btn-outline" style="font-size:.75rem;padding:7px 13px" title="Associés et répartition du capital certifiés par le greffe — 30 crédits" onclick="importerAssociesGreffe(this)">📊 Associés (greffe, 30 crédits)</button>
               <button type="button" class="btn btn-secondary" style="font-size:.75rem;padding:7px 13px" onclick="addUbo()">+ Ajouter un bénéficiaire</button>
             </div>
           </div>
@@ -3507,13 +3517,109 @@ function natToNorvy(v){
   const hit = UBO_NAT.find(n => n.toLowerCase().startsWith(String(v).toLowerCase().slice(0,4)));
   return hit || '';
 }
+// Import automatique des bénéficiaires effectifs, déclenché à la sélection d'une société.
+// Cascade : cache local → RNE (gratuit) → greffe (payant, seulement si le réglage l'autorise).
+const BE_CACHE_KEY = 'norvy_be_cache';
+function beCache(){ try { return JSON.parse(localStorage.getItem(BE_CACHE_KEY) || '{}'); } catch { return {}; } }
+function beCacheGet(siren){
+  const e = beCache()[siren];
+  if(!e) return null;
+  return (Date.now() - e.t) < 30*86400000 ? e : null;   // 30 jours
+}
+function beCacheSet(siren, source, associes){
+  const c = beCache(); c[siren] = {t: Date.now(), source, associes};
+  try { localStorage.setItem(BE_CACHE_KEY, JSON.stringify(c)); } catch {}
+}
+function ajouterUbos(liste, source){
+  let ajoutes = 0, ignores = 0, natInconnues = [];
+  liste.forEach(a=>{
+    const nom = (a.nom||'').trim(), prenom = (a.prenoms||a.prenom||'').trim();
+    if(!nom) return;
+    const pct = parseFloat(String(a.pourcentage||'').replace(',','.'));
+    if(!isNaN(pct) && pct < 25){ ignores++; return; }
+    if(S.ubos.some(u=>u.nom.toLowerCase()===nom.toLowerCase() && u.prenom.toLowerCase()===prenom.toLowerCase())) return;
+    const dob = /^\d{4}-\d{2}-\d{2}/.test(a.naissance||'') ? String(a.naissance).slice(0,10) : '';
+    const nat = natToNorvy(a.nationalite);
+    if(a.nationalite && !nat) natInconnues.push(`${nom} (${a.nationalite})`);
+    S.ubos.push({nom, prenom, dob, nat,
+      pct: isNaN(pct)?'':String(pct),
+      nature: (a.modalites||[]).some(m=>/controle|pouvoir|nomination/i.test(m)) ? UBO_NATURE[2] : UBO_NATURE[0],
+      source, naissancePartielle: dob ? '' : (a.naissance||'')});
+    ajoutes++;
+  });
+  renderUbos(); v1();
+  if(natInconnues.length) setTimeout(()=>showToast('Nationalité à préciser',
+    `${natInconnues.join(', ')} — choisissez « pays standard » ou « pays à risque GAFI », ce classement influe sur le score de risque`, 'warn', '🌍'), 900);
+  return {ajoutes, ignores};
+}
+
+async function autoImportBE(siren){
+  const mode = DB.getSettings().autoBE || 'gratuit';
+  if(mode === 'off' || !siren || !window.NorvyProxy) return;
+  if(!['pm','pm-complex'].includes(S.clientType)) return;
+
+  const cache = beCacheGet(siren);
+  if(cache){
+    const r = ajouterUbos(cache.associes, cache.source + ' (cache)');
+    if(r.ajoutes) showToast(`${r.ajoutes} bénéficiaire(s) repris`, `Données ${cache.source} déjà consultées pour ce SIREN — aucun crédit consommé`, 'ok', '💾');
+    return;
+  }
+
+  // 1. RNE (gratuit) — ignoré si le compte n'est pas habilité à ces données
+  const rneKo = Number(localStorage.getItem('norvy_rne_be_ko') || 0);
+  const rneDispo = !rneKo || (Date.now() - rneKo) > 7*86400000;   // nouvelle tentative au bout de 7 jours
+  if(rneDispo) try{
+    const d = await proxyJson(`/api/fr/inpi/${siren}/beneficiaires`);
+    if(!d.beneficiaires?.length && /habilit/i.test(d.note||'')){
+      localStorage.setItem('norvy_rne_be_ko', String(Date.now()));
+      if(mode !== 'payant') showToast("Registre des bénéficiaires non accessible",
+        "Votre compte INPI n'est pas habilité à ces données. Saisissez les bénéficiaires à la main, ou activez le greffe dans Paramètres › Intégrations.", 'warn', 'ℹ️');
+    }
+    if(d.beneficiaires?.length){
+      beCacheSet(siren, 'INPI/RNE', d.beneficiaires);
+      const r = ajouterUbos(d.beneficiaires, 'INPI/RNE');
+      DB.addAudit({type:'dossier',dot:'var(--info-fg)',title:`👥 Bénéficiaires effectifs importés automatiquement — SIREN ${siren}`,
+        detail:`${r.ajoutes} retenu(s) au seuil de 25 %${r.ignores?`, ${r.ignores} écarté(s)`:''} · source RNE (gratuit)`, tags:[{t:'INPI',c:'b'},{t:'Auto',c:'g'}]});
+      showToast(`${r.ajoutes} bénéficiaire(s) importé(s)`, "Source RNE, gratuit. Complétez les dates de naissance.", 'ok', '👥');
+      return;
+    }
+  }catch(e){
+    if(/habilit|non autoris|403|interdit|forbidden|acc(è|e)s/i.test(e.message||'')){
+      localStorage.setItem('norvy_rne_be_ko', String(Date.now()));
+      if(mode !== 'payant') showToast("Registre des bénéficiaires non accessible",
+        "Votre compte INPI n'est pas habilité à ces données. Saisissez les bénéficiaires à la main, ou activez le greffe dans Paramètres › Intégrations.", 'warn', 'ℹ️');
+    }
+  }
+
+  // 2. Greffe (payant) — uniquement si le réglage l'autorise
+  if(mode !== 'payant') return;
+  try{
+    const d = await proxyJson(`/api/fr/greffe/repartition-capital/${siren}`);
+    const pp = (d.associes||[]).filter(a=>a.type==='PP');
+    const pm = (d.associes||[]).filter(a=>a.type==='PM');
+    beCacheSet(siren, 'Datainfogreffe', pp);
+    const r = ajouterUbos(pp, 'Datainfogreffe');
+    DB.addAudit({type:'dossier',dot:'var(--info-fg)',title:`📊 Répartition du capital consultée automatiquement — SIREN ${siren}`,
+      detail:`${r.ajoutes} bénéficiaire(s) retenu(s)${r.ignores?`, ${r.ignores} sous 25 %`:''} · ${pm.length} personne(s) morale(s) · Datainfogreffe, 30 crédits`,
+      tags:[{t:'Infogreffe',c:'b'},{t:'Auto',c:'g'}]});
+    showToast(`${r.ajoutes} bénéficiaire(s) importé(s)`, 'Source greffe · 30 crédits consommés', 'ok', '📊');
+    if(pm.length) setTimeout(()=>showToast(`${pm.length} associé(s) personne morale`,
+      pm.map(a=>`${a.denomination||''}${a.pourcentage?` (${a.pourcentage} %)`:''}`).join(' · ') + ' — remontez la chaîne de détention', 'warn', '🏢'), 1400);
+  }catch(e){
+    showToast('Bénéficiaires non récupérés', e.message + " — saisie manuelle nécessaire", 'warn', '⚠️');
+  }
+}
+
 async function importUbosInpi(btn){
   const siren = sirenOf(document.getElementById('pm-rcs')?.value);
   if(!siren){ showToast('SIREN manquant',"Renseignez un SIREN à 9 chiffres (société française)",'warn','⚠️'); return; }
   const old = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Interrogation du RNE…';
   try{
     const d = await proxyJson(`/api/fr/inpi/${siren}/beneficiaires`);
-    if(!d.beneficiaires.length){ showToast('Aucun bénéficiaire renvoyé', d.note, 'warn', 'ℹ️'); return; }
+    if(!d.beneficiaires.length){
+      if(/habilit/i.test(d.note||'')) localStorage.setItem('norvy_rne_be_ko', String(Date.now()));
+      showToast('Aucun bénéficiaire renvoyé', d.note, 'warn', 'ℹ️'); return;
+    }
     let ajoutes = 0;
     d.beneficiaires.forEach(b=>{
       const nom = (b.nom||'').trim(), prenom = (b.prenoms||'').trim();
@@ -7378,6 +7484,7 @@ function openSettingsModal() {
   document.getElementById('set-cabinet-bank').value = s.cabinetBank || '';
   document.getElementById('set-stripe-key').value = s.stripeKey || '';
   document.getElementById('set-pappers-key').value = s.pappersKey || PAPPERS_API_KEY;
+  document.getElementById('set-auto-be').value = s.autoBE || 'gratuit';
   document.getElementById('set-courrier-key').value = s.courrierKey || '';
   document.getElementById('settings-modal').classList.remove('hidden');
 }
@@ -7396,6 +7503,7 @@ function saveSettingsForm() {
   s.stripeKey = document.getElementById('set-stripe-key').value.trim();
   s.pappersKey = document.getElementById('set-pappers-key').value.trim();
   s.courrierKey = document.getElementById('set-courrier-key').value.trim();
+  s.autoBE = document.getElementById('set-auto-be').value;
   DB.saveSettings(s);
   closeSettingsModal();
   showToast('Paramètres enregistrés', 'Les informations du cabinet ont été mises à jour', 'ok', '✅');
@@ -7604,6 +7712,7 @@ function applyPappersResult(el) {
     document.getElementById('cr-nom').value = el.dataset.name || '';
   } else {
     document.getElementById('pm-den').value = el.dataset.name || '';
+    setTimeout(()=>autoImportBE(sirenOf(el.dataset.rcs)), 400);
     const formeSelect = document.getElementById('pm-for');
     const formeApi = (el.dataset.forme || '').toLowerCase();
     let matched = false;
@@ -7662,6 +7771,115 @@ function applyPappersResult(el) {
     tags:[{t:'Pappers API',c:'b'},{t:el.dataset.forme||'',c:'g'}]
   });
   showToast('Pappers', 'Données de ' + el.dataset.name + ' importées automatiquement', 'ok', '🔍');
+}
+
+// ══ Analyse des statuts par IA (Mistral OCR) ══════════════════════════════
+async function analyserStatuts(btn, refDossier){
+  const folder = refDossier || dossierFolder();
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ Recherche des statuts…';
+  try{
+    const liste = await proxyJson(`/api/dossiers/${folder}/documents`);
+    const candidats = (liste.fichiers||[]).filter(f=>/statut|acte|repartition/i.test(f.fichier));
+    if(!candidats.length){
+      showToast('Aucun document à analyser', "Récupérez d'abord les statuts : bouton « Récupérer et classer automatiquement »", 'warn', '📄');
+      return;
+    }
+    const cible = candidats.sort((a,b)=> (/statut/i.test(b.fichier)?1:0) - (/statut/i.test(a.fichier)?1:0))[0];
+    btn.textContent = '⏳ Lecture des statuts…';
+    const d = await proxyPost(`/api/dossiers/${folder}/analyse-statuts`, {fichier: cible.fichier});
+    const e = d.extrait;
+
+    const pp = (e.associes||[]).filter(a=>/pp|physique/i.test(a.type_personne||'') || (a.nom||'').trim());
+    const pm = (e.associes||[]).filter(a=>/pm|morale/i.test(a.type_personne||'') && !(a.nom||'').trim());
+    const r = ajouterUbos(pp.map(a=>({nom:a.nom, prenoms:a.prenoms, naissance:a.date_naissance,
+      nationalite:a.nationalite, pourcentage:a.pourcentage})), 'Statuts (IA) — à confirmer');
+
+    DB.addAudit({type:'dossier',dot:'var(--info-fg)',title:`🧠 Statuts analysés par IA — ${cible.fichier}`,
+      detail:`${e.denomination||''} · ${e.forme_juridique||''} · capital ${e.capital_social||'?'} · ${(e.associes||[]).length} associé(s), ${(e.dirigeants||[]).length} dirigeant(s) · ${d.pages} page(s) · ${d.source}${e.observations?` · ${e.observations}`:''}`,
+      tags:[{t:'Mistral OCR',c:'b'},{t:'Statuts',c:'g'}]});
+
+    showToast(`${r.ajoutes} bénéficiaire(s) proposé(s)`,
+      `Lu dans ${cible.fichier} (${d.pages} page(s)). ${r.ignores?`${r.ignores} associé(s) sous 25 % écarté(s). `:''}Vérifiez chaque ligne avant de valider.`, 'ok', '🧠');
+
+    const infos = [];
+    if(e.capital_social) infos.push(`capital ${e.capital_social}`);
+    if(e.date_statuts) infos.push(`statuts du ${e.date_statuts}`);
+    if((e.dirigeants||[]).length) infos.push(`dirigeants : ${e.dirigeants.map(x=>`${x.prenoms||''} ${x.nom||''} (${x.qualite||''})`).join(', ')}`);
+    if(infos.length) setTimeout(()=>showToast('Éléments relevés dans les statuts', infos.join(' · '), 'info', '📄'), 1400);
+    if(pm.length) setTimeout(()=>showToast(`${pm.length} associé(s) personne morale`,
+      pm.map(a=>`${a.denomination||''}${a.pourcentage?` (${a.pourcentage} %)`:''}`).join(' · ') + ' — remontez la chaîne de détention', 'warn', '🏢'), 2600);
+    if(e.observations) setTimeout(()=>showToast('À vérifier dans les statuts', e.observations, 'warn', '⚠️'), 3800);
+  }catch(err){
+    showToast('Analyse impossible', err.message, 'danger', '❌');
+  }finally{ btn.disabled=false; btn.textContent=old; }
+}
+
+// ══ Datainfogreffe : associés et répartition du capital (30 crédits) ══════
+async function importerAssociesGreffe(btn){
+  const siren = sirenOf(document.getElementById('pm-rcs')?.value);
+  if(!siren){ showToast('SIREN manquant',"Réservé aux sociétés françaises (SIREN à 9 chiffres)",'warn','⚠️'); return; }
+  if(!confirm("Interroger Datainfogreffe pour obtenir les associés et la répartition du capital ?\n\nCoût : 30 crédits (environ 3 € HT).\n\nLes statuts déposés à l'INPI sont gratuits, mais ne donnent pas toujours la répartition à jour.")) return;
+  const old = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Interrogation du greffe…';
+  try{
+    const d = await proxyJson(`/api/fr/greffe/repartition-capital/${siren}`);
+    const pp = d.associes.filter(a=>a.type==='PP' && a.nom);
+    const pm = d.associes.filter(a=>a.type==='PM');
+    if(!pp.length && !pm.length){ showToast('Aucun associé renvoyé', "Le greffe n'a pas de répartition du capital pour ce SIREN", 'warn', 'ℹ️'); return; }
+
+    let ajoutes = 0, ignores = 0;
+    pp.forEach(a=>{
+      const nom = (a.nom||'').trim(), prenom = (a.prenoms||'').trim();
+      const pct = parseFloat(String(a.pourcentage||'').replace(',','.'));
+      if(!isNaN(pct) && pct < 25){ ignores++; return; }   // seuil AMLR
+      if(S.ubos.some(u=>u.nom.toLowerCase()===nom.toLowerCase() && u.prenom.toLowerCase()===prenom.toLowerCase())) return;
+      const dob = /^\d{4}-\d{2}-\d{2}/.test(a.naissance||'') ? String(a.naissance).slice(0,10) : '';
+      S.ubos.push({nom, prenom, dob, nat:natToNorvy(a.nationalite),
+        pct: isNaN(pct)?'':String(pct), nature: UBO_NATURE[0],
+        source:'Datainfogreffe', naissancePartielle: dob ? '' : (a.naissance||'')});
+      ajoutes++;
+    });
+    renderUbos(); v1();
+
+    const detailPM = pm.map(a=>`${a.denomination||''}${a.pourcentage?` (${a.pourcentage} %)`:''}`).join(' · ');
+    DB.addAudit({type:'dossier',dot:'var(--info-fg)',title:`📊 Répartition du capital consultée — SIREN ${siren}`,
+      detail:`${pp.length} associé(s) personne physique, ${pm.length} personne(s) morale(s)${d.depot?.date?` · dépôt du ${new Date(d.depot.date).toLocaleDateString('fr-LU')}`:''} · source Datainfogreffe (30 crédits)`,
+      tags:[{t:'Infogreffe',c:'b'},{t:'Capital',c:'g'}]});
+
+    showToast(`${ajoutes} bénéficiaire(s) ajouté(s)`,
+      `${ignores?`${ignores} associé(s) sous 25 % non retenus. `:''}Vérifiez les dates de naissance auprès du client.`, 'ok', '📊');
+    if(pm.length) setTimeout(()=>showToast(`${pm.length} associé(s) personne morale`,
+      `${detailPM} — remontez la chaîne de détention pour identifier les bénéficiaires effectifs`, 'warn', '🏢'), 1400);
+  }catch(err){
+    showToast('Interrogation impossible', err.message, 'danger', '❌');
+  }finally{ btn.disabled=false; btn.textContent=old; }
+}
+
+// Le même document en PDF, classé au dossier
+async function classerRepartitionCapital(btn, refDossier){
+  const siren = refDossier
+    ? sirenOf((DB.getDossiers().find(x=>x.ref===refDossier)||{}).rcs)
+    : sirenOf(document.getElementById('pm-rcs')?.value);
+  if(!siren){ showToast('SIREN manquant',"Réservé aux sociétés françaises",'warn','⚠️'); return; }
+  if(!confirm("Commander le PDF de répartition du capital auprès du greffe ?\n\nCoût : 30 crédits (environ 3 € HT).")) return;
+  const folder = refDossier || dossierFolder();
+  const old = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Commande en cours…';
+  try{
+    const saved = await proxyPost(`/api/dossiers/${folder}/documents/greffe`, {siren});
+    const docs = DB.getDocuments();
+    docs.push({id:Date.now(), ref: refDossier || folder, name:'Répartition du capital', docType:'statuts',
+      size:`${Math.round(saved.taille/1024)} Ko`, verified:true, uploadedAt:new Date().toISOString(),
+      url: saved.url, fichier: saved.fichier,
+      meta:`Datainfogreffe · certifié par le greffe · classé le ${new Date().toLocaleDateString('fr-LU')}`});
+    DB.saveDocuments(docs);
+    DB.addAudit({type:'dossier',dot:'var(--info-fg)',title:`📊 Répartition du capital classée — SIREN ${siren}`,
+      detail:`${saved.fichier} · ${Math.round(saved.taille/1024)} Ko · Datainfogreffe (30 crédits)`,
+      tags:[{t:'Infogreffe',c:'b'},{t:'Capital',c:'g'}]});
+    if(refDossier) renderDossierTabContent(refDossier,'docs');
+    showToast('Document classé', `Répartition du capital · ${Math.round(saved.taille/1024)} Ko`, 'ok', '📊');
+  }catch(err){
+    showToast('Commande impossible', err.message, 'danger', '❌');
+  }finally{ btn.disabled=false; btn.textContent=old; }
 }
 
 // ══ Classement automatique des pièces sur le serveur ══════════════════════
@@ -7894,6 +8112,8 @@ function pappersDocsBar(siren, handler, refArg){
       <button type="button" class="btn btn-sage" style="font-size:.73rem;padding:6px 11px" title="Fiche horodatée établie par Norvy à partir des données du RNE — gratuit" onclick="ficheIdentificationRNE(this${refArg?`,'${refArg}'`:''})">🏛️ Fiche d'identification RNE (gratuit)</button>
       <button type="button" class="btn btn-sage" style="font-size:.73rem;padding:6px 11px" title="Choisir une pièce précise parmi les actes déposés — gratuit" onclick="openInpiDocs('${siren}'${refArg?`,'${refArg}'`:''})">📚 Choisir un acte (INPI, gratuit)</button>
       <button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="Ouvre la fiche officielle sur data.inpi.fr pour télécharger l'attestation d'immatriculation (gratuite)" onclick="ouvrirAttestationInpi('${siren}')">📎 Attestation officielle INPI</button>
+      <button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="Répartition du capital certifiée par le greffe (PDF) — 30 crédits" onclick="classerRepartitionCapital(this${refArg?`,'${refArg}'`:''})">📊 Répartition du capital (30 crédits)</button>
+      <button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="Analyse des statuts classés au dossier par Mistral OCR" onclick="analyserStatuts(this${refArg?`,'${refArg}'`:''})">🧠 Lire les statuts (IA)</button>
       ${PAPPERS_DOCS.map(d=>`<button type="button" class="btn btn-outline" style="font-size:.73rem;padding:6px 11px" title="${d.sub} · consomme des crédits Pappers" onclick="${handler}('${d.kind}',${refArg?`'${refArg}',`:''}this)">${d.icon} ${d.label}</button>`).join('')}
     </div></div>`;
 }
